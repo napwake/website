@@ -44,7 +44,6 @@ jobs:
           NAPWAKE_DOCS_URL: https://docs.napwake.dev
           # docs links go to the docs' pages on GitHub until docs.napwake.dev serves the renamed docs, at the
           # product's next release. Delete this line then (src/lib/links.mjs)
-          NAPWAKE_DOCS_MODE: github
           # Cloudflare Web Analytics' beacon on every page. The token is public by design, in every page's
           # source. Without it, no beacon, and /privacy/ says there are no analytics
           PUBLIC_CF_BEACON_TOKEN: c7047552ee6c4a499d46af2474470c26
