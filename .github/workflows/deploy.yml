@@ -40,6 +40,9 @@ jobs:
         env:
           # the docs every docs link points at
           NAPWAKE_DOCS_URL: https://docs.napwake.dev
+          # docs links go to the docs' pages on GitHub until docs.napwake.dev serves the renamed docs, at the
+          # product's next release. Delete this line then (src/lib/links.mjs)
+          NAPWAKE_DOCS_MODE: github
           # for the star count, read once from GitHub's API; if it can't be read, the button says GitHub
           # and the build goes on
           GITHUB_TOKEN: ${{ github.token }}

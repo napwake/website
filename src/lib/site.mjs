@@ -1,7 +1,7 @@
 // The facts every surface says in the same words: the brand guidelines' headline and plain line, and
 // the product docs (origin/main 4f35500, 2026-10-22). Pages, llms.txt, the JSON-LD and the social
 // cards all read them from here, so the website, the README and the docs agree.
-import { SITE, DOCS, doc } from './links.mjs';
+import { SITE, DOCS, doc, hasDoc } from './links.mjs';
 
 // The announcement bar: its id is what a visitor's dismissal remembers, so a new announcement shows again.
 // It must stay true: 0.2.0 is in release candidates until it ships.
@@ -36,7 +36,8 @@ export const PAGES = [
 ];
 export const page = (path) => PAGES.find((p) => p.path === path);
 
-// the docs' pages an assistant or an agent most needs, one line each, from each page's own opening
+// the docs' pages an assistant or an agent most needs, one line each, from each page's own opening. With the
+// docs on GitHub (links.mjs), a page only the next docs will have, such as reference/cli, stays out.
 export const DOC_PAGES = [
   ['getting-started/installation', 'Installation', 'The Helm chart, or the Kustomize manifests as install.yaml; needs Kubernetes 1.30+ and metrics-server.'],
   ['getting-started/quickstart', 'Quickstart', 'One workload from idle to paused while idle, measured in dry-run first.'],
@@ -57,7 +58,7 @@ export const DOC_PAGES = [
   ['reference/cli', 'kubectl plugin reference', 'Every flag, JSON field, exit status and permission of the plugin’s commands.'],
   ['reference/conditions-and-events', 'Conditions and events', 'Every status condition, with its reasons, and every event.'],
   ['operations/troubleshooting', 'Troubleshooting', 'When an idle workload isn’t paused, requests fail instead of waking it, or it keeps cycling.'],
-].map(([path, title, line]) => ({ path, title, line, link: doc(path) }));
+].filter(([path]) => hasDoc(path)).map(([path, title, line]) => ({ path, title, line, link: doc(path) }));
 
 export const abs = (path) => new URL(path, SITE).href;
 export const cardUrl = (card) => abs(`/og/${card}.png`);

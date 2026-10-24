@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import Scene from '../components/Scene.astro';
 import StateDoor from '../components/StateDoor.astro';
 import Link from '../components/Link.astro';
-import { links } from '../lib/links.mjs';
+import { links, DOCS_MODE } from '../lib/links.mjs';
 
 const rooms = [
   { state: 'awake', label: 'home', href: '/', name: 'Home', text: 'What Napwake is, in a minute' },
@@ -27,7 +27,7 @@ const rooms = [
       <ul class="nf__rooms">
         {rooms.map((r) => <li><a href={r.href}><StateDoor state={r.state} size={22} /><span><b>{r.name}</b><span>{r.text}</span></span></a></li>)}
       </ul>
-      <p class="small muted nf__docs">Looking for the docs? They’re at <Link to={links.docs}>docs.napwake.dev</Link>.</p>
+      <p class="small muted nf__docs">Looking for the docs? {DOCS_MODE === 'github' ? <>They’re <Link to={links.docs}>on GitHub</Link>.</> : <>They’re at <Link to={links.docs}>docs.napwake.dev</Link>.</>}</p>
     </div>
   </section>
 </Base>

@@ -30,7 +30,7 @@ export function GET() {
     '## Docs',
     '',
     ...DOC_PAGES.map((d) => `- [${d.title}](${d.link.real}): ${d.line}`),
-    `- [Every docs page as Markdown, in one file](${links.llmsFull.real})`,
+    ...(links.llmsFull ? [`- [Every docs page as Markdown, in one file](${links.llmsFull.real})`] : []),
     '',
     '## FAQ',
     '',

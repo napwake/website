@@ -11,7 +11,7 @@ import { faqPage } from '../lib/jsonld.mjs';
 import { links } from '../lib/links.mjs';
 
 const num = (i) => String(i + 1).padStart(2, '0');
-const isDoc = (l) => l.real.includes('docs.napwake.dev');
+const isDoc = (l) => l.doc === true;
 ---
 <Base title="FAQ" jsonld={[faqPage()]}>
   <section class="intro">
