@@ -21,12 +21,12 @@ import { links } from '../lib/links.mjs';
 // chapters' own facts: an hour with no activity before a pause (idleAfter's default), and the forecast
 // waking it at 08:45 for a team it expects at 09:00 (chapter 3's example).
 const chapters = [
-  { id: 'pause', n: '1', state: 'awake', word: 'Lit for nobody', when: 'Mon 18:40', title: 'It pauses what’s idle',
+  { id: 'pause', n: '1', state: 'awake', word: 'Lit, no one seen', when: 'Mon 18:40', title: 'It pauses what’s idle',
     line: 'The team has gone home. After `idleAfter` with no sign of use, an hour by default, Napwake pauses it.' },
   { id: 'doorman', n: '2', state: 'waking', when: 'Mon 21:15', title: 'A request or a click wakes it',
     line: 'Someone opens it late, and the doorman holds the first request. On a public URL, he can ask first.' },
   { id: 'forecast', n: '3', state: 'awake', pose: 'list', listTime: '08:45', when: 'Tue 08:45', title: 'The forecast wakes it early',
-    line: 'The team usually comes at 09:00, so the forecast wakes it 15 minutes before.' },
+    line: 'The team usually comes at 09:00. With `autoResume` on, the forecast wakes it 15 minutes before.' },
   { id: 'never', n: '4', state: 'asleep', when: 'Tue 18:10', title: 'It never deletes anything',
     line: 'Paused again, with everything still behind the door. Only the pods go.' },
 ];
@@ -124,6 +124,7 @@ const forecast = [
         <ul class="facts">
           <li>Every source is checked and the most recent wins, so a worker with real work and no traffic isn’t paused.</li>
           <li>Memory isn’t a source, since it stays allocated whether or not anyone uses the workload.</li>
+          <li>Requests to an awake workload aren’t a source unless a Prometheus query counts them, such as request rate. So a workload in light use, under its CPU threshold, can be paused while in use, and the next request wakes it. From 0.2.0-rc.9, that wrong pause makes the next wait longer, and <code>kubectl napwake status</code> suggests the setting to change.</li>
           <li>It never pauses a workload it can’t measure, and there’s no learning period. A new workload can pause after its first idle hour.</li>
         </ul>
         <h3 class="h3">Opting in</h3>
@@ -136,8 +137,8 @@ const forecast = [
         <p class="small muted chapter__after">Then <code>kubectl napwake enable my-api -n dev</code> ends dry-run, and it pauses after <code>idleAfter</code> with no sign of use. <Link to={links.concept('idle-detection')}>Idle detection</Link> in the docs has every rule.</p>
       </div>
       <figure class="chapter__art">
-        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="lights" label="Napwake turns off the lights in staging, which nobody has used for an hour. dev is asleep; pr-42 is in use and awake." /></div>
-        <figcaption>Nobody has used staging for <code>idleAfter</code>, so its lights go out. pr-42 is in use, so it stays awake.</figcaption>
+        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="lights" label="Napwake turns off the lights in staging, which has shown no sign of use for an hour. dev is asleep; pr-42 is in use and awake." /></div>
+        <figcaption>Staging has shown no sign of use for <code>idleAfter</code>, so its lights go out. pr-42 is in use, so it stays awake.</figcaption>
       </figure>
     </div>
   </section>
@@ -214,7 +215,7 @@ const forecast = [
         </div>
         <figure class="chapter__art">
           <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="list" props listTime="08:45" label="The morning list, beside staging: Napwake wakes it at 08:45, before the team arrives. Every room is still asleep." /></div>
-          <figcaption>The morning list, before the team arrives. Staging is expected busy at 09:00, so Napwake wakes it at 08:45.</figcaption>
+          <figcaption>The morning list, before the team arrives. Staging is expected busy at 09:00, so with <code>autoResume</code> on, Napwake wakes it at 08:45.</figcaption>
         </figure>
       </div>
       <div class="chapter__more">

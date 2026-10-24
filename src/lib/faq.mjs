@@ -77,19 +77,19 @@ export const FAQ = [
       'No. It’s built for non-production: staging, preview and dev. The first request to a paused workload waits while it starts, and Napwake only pauses and resumes. Scaling under load is for an HPA or KEDA, which it works alongside.',
       'To keep it out of production altogether, label the namespace `napwake.dev/protected: "true"`, or list it in the `protectedNamespaces` Helm value, and Napwake never manages anything there.',
     ],
-    sources: [['Opting in: protected namespaces', doc('guides/opt-in')], ['HPA and KEDA', doc('guides/autoscalers')]],
+    sources: [['Opting in: protected namespaces', doc('guides/opt-in#protected-namespaces')], ['HPA and KEDA', doc('guides/autoscalers')]],
   },
   {
     id: 'public-internet',
     q: 'Is Napwake for environments on the public internet?',
-    short: 'Yes, with `napwake.dev/wake: ask`. A browser then gets a Wake it button, so a person wakes it and robots don’t. Tooling, the CLI and the forecast can wake it too.',
+    short: 'Yes, with `napwake.dev/wake: ask`. A browser then gets a Wake it button, and crawlers, scanners and API calls wake nothing. Tooling, the CLI and the forecast can still wake it.',
     a: [
       'Yes. Set `napwake.dev/wake: ask` on the workload or its namespace, or `defaults.wake: ask` in Helm, and it asks before waking. A browser that reaches it while it’s paused gets a page with a Wake it button, kept out of search engines. Only the click wakes it, and then the usual waking page carries on.',
       'Crawlers, scanners and API calls get a `503` that says how to wake it, and wake nothing. Requests don’t wake it, but other things still do. The forecast (`autoResume`) wakes it before the hours it expects people. A PR bot, a portal, CI or `kubectl napwake wake` can wake it. So can a dependent workload waking, or something scaling it up.',
       'It matters because most requests on the internet are robots, and many present an ordinary browser’s `User-Agent`. Once an environment has its own HTTPS certificate, its hostname is in public certificate logs within minutes, and scanners find it by name. Napwake can’t tell a public URL from a private one. Left on the default, a public one would wake every few minutes.',
       'Behind a VPN, single sign-on or an allowlist, leave it to wake on the first request. If you wake it from a Prometheus activity query, don’t count ingress requests, or filter bots out, since crawlers’ requests count too.',
     ],
-    sources: [['Wake on request: the public internet', doc('concepts/wake-on-request')]],
+    sources: [['Wake on request: the public internet', doc('concepts/wake-on-request#environments-on-the-public-internet')]],
   },
   {
     id: 'savings-without-node-scale-down',

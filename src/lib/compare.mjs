@@ -78,9 +78,9 @@ export const switchAt = (t) => (t >= toMin('20:00') && t < toMin('08:00') ? 'off
 
 // ---------- the words ----------
 // Under each door, in the brand's plain words. "out" is an asleep door; the line for screen readers says who's there.
-export const WORD = { active: 'in use', idle: 'lit for nobody', asleep: 'asleep', waking: 'waking up', out: 'asleep' };
+export const WORD = { active: 'in use', idle: 'lit, no one seen', asleep: 'asleep', waking: 'waking up', out: 'asleep' };
 export const TONE = { active: 'awake', idle: 'awake', asleep: 'asleep', waking: 'waking', out: 'asleep' };
-export const SAY = { active: 'in use', idle: 'lit for nobody', asleep: 'asleep', waking: 'waking up', out: 'asleep, with someone at its door' };
+export const SAY = { active: 'in use', idle: 'lit, no one seen', asleep: 'asleep', waking: 'waking up', out: 'asleep, with someone at its door' };
 export const POSE_SAY = {
   duty: 'The doorman is on duty beside staging.',
   watch: 'The doorman checks his watch. Napwake counts how long a room has been idle.',
@@ -100,13 +100,13 @@ const C = (...lines) => lines.map(([at, text]) => [toMin(at), text]);
 export const CAPTIONS = {
   timetable: C(
     ['17:00', 'Every room stays on until the off time, 20:00.'],
-    ['17:30', 'dev and staging are lit for nobody. The timetable keeps them on until 20:00.'],
+    ['17:30', 'dev and staging are lit, with no one seen. The timetable keeps them on until 20:00.'],
     ['20:00', 'At 20:00 every light goes out, pr-42’s too. Someone was still working there.'],
     ['21:30', 'Every room is dark until 08:00.'],
     ['22:15', 'Someone opens staging at 22:15. Nothing answers until 08:00.'],
     ['22:35', 'Every room is dark until 08:00.'],
     ['08:00', 'At 08:00 every room comes back on, pr-42 and qa too. Nobody will use them today.'],
-    ['09:00', 'The team is in. pr-42 and qa stay lit for nobody until 20:00.'],
+    ['09:00', 'The team is in. pr-42 and qa stay lit, with no one seen, until 20:00.'],
   ),
   proxy: C(
     ['17:00', 'Requests reach these rooms through the proxy. Your Ingress or routes point at it.'],
@@ -122,7 +122,7 @@ export const CAPTIONS = {
   ),
   napwake: C(
     ['17:00', 'Napwake keeps an activity clock for every room. CPU, deploys, your tools’ annotations and Prometheus queries, such as request rate, all count.'],
-    ['17:30', 'Nobody has used dev since 17:30. Napwake pauses it once `idleAfter` passes.'],
+    ['17:30', 'No sign of use on dev after 17:30. Napwake pauses it once `idleAfter` passes.'],
     ['18:30', 'qa’s queue worker has no requests, but its CPU counts as use. qa stays on.'],
     ['19:20', 'qa’s job is done at 19:20. Napwake pauses it once `idleAfter` passes.'],
     ['20:20', 'Someone is working late in pr-42. Their deploys count as use, so Napwake leaves it lit.'],
@@ -145,12 +145,12 @@ export const DEFAULT = MOMENTS[0];
 // state is the rig's: awake with nobody in it is lit for nobody
 export const ONLY = [
   { pose: 'watch', state: 'awake', title: 'It pauses on use.', text: 'Napwake counts how long a room has been idle. CPU, deploys, your own tools and Prometheus queries, such as request rate, all count as use.',
-    alt: 'The doorman checks his watch beside a room lit for nobody. Napwake counts how long a room has been idle.' },
+    alt: 'The doorman checks his watch beside a lit room with no one seen. Napwake counts how long a room has been idle.' },
   { pose: 'door', state: 'waking', title: 'It wakes on the first request.', text: 'At the Service, for any TCP: HTTP, gRPC, Postgres, Redis. The doorman holds the request while the room wakes. Your Ingress doesn’t change.',
     alt: 'The doorman holds the door of a room that is waking up, its amber light on the floor.' },
   { pose: 'list', state: 'awake', listTime: '08:45', title: 'The room is ready before the team.', text: 'Napwake learns each room’s week. With `autoResume`, it wakes a room 15 minutes before an hour it expects busy.',
     alt: 'The doorman reads the morning list beside a lit room. Napwake wakes rooms before the team arrives.' },
-  { pose: 'ask', state: 'asleep', title: 'On a public URL, it can ask first.', text: 'Set `napwake.dev/wake: ask`, and the doorman asks before he wakes a room. A browser gets a Wake it button, so a person wakes it and robots don’t.',
+  { pose: 'ask', state: 'asleep', title: 'On a public URL, it can ask first.', text: 'Set `napwake.dev/wake: ask`, and the doorman asks before he wakes a room. A browser gets a Wake it button, and crawlers, scanners and API calls wake nothing.',
     alt: 'The doorman asks at a shut door, his hand flat on it.' },
   { pose: 'rest', state: 'asleep', title: 'It never deletes anything.', text: 'A pause scales a workload to zero. Only the pods go. The workload, its Services and its data stay.',
     alt: 'The doorman rests his eyes beside an asleep room, with everything still in it.' },

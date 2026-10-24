@@ -31,7 +31,7 @@ const MARK = '<path fill="currentColor" d="M7.6 9.9L7.2 3.6Q7.2 2.6 8.2 2.6Q12 2
 // the pointer, resting on Wake it
 const POINTER = '<path d="M1 1v15.5l4.1-3.9 2.7 6.1 2.6-1.1-2.6-6h5.7z" fill="var(--paper)" stroke="var(--night)" stroke-width="1.3" stroke-linejoin="round"/>';
 ---
-<div class="am" role="img" aria-label={`A browser at ${address}, showing the asleep page: Asleep. Wake it up? This environment was paused while nobody was using it, to save money. Press Wake it to start it again. This page opens it when it's ready. A Wake it button, with the pointer on it. The doorman asks first, so a person wakes it and robots don't.`}>
+<div class="am" role="img" aria-label={`A browser at ${address}, showing the asleep page: Asleep. Wake it up? This environment was paused because it looked unused, to save money. Press Wake it to start it again. This page opens it when it's ready. A Wake it button, with the pointer on it. The doorman asks first. Crawlers, scanners and API calls wake nothing.`}>
   <div class="am__bar" aria-hidden="true"><span class="am__dots"><i></i><i></i><i></i></span><span class="am__url">{address}</span></div>
   <div class="am__page" aria-hidden="true">
     <div class="am__head">{address}</div>
@@ -40,12 +40,12 @@ const POINTER = '<path d="M1 1v15.5l4.1-3.9 2.7 6.1 2.6-1.1-2.6-6h5.7z" fill="va
       <div>
         <div class="am__state"><svg viewBox="0 0 24 24" set:html={ASLEEP} />Asleep</div>
         <p class="am__h1">Wake it up? <span>{address}</span></p>
-        <p class="am__lede">This environment was paused while nobody was using it, to save money. Press Wake it to start it again. This page opens it when it’s ready.</p>
+        <p class="am__lede">This environment was paused because it looked unused, to save money. Press Wake it to start it again. This page opens it when it’s ready.</p>
         <div class="am__ask">
           <span class="am__btn">Wake it<svg class="am__pointer" viewBox="0 0 18 21" set:html={POINTER} /></span>
           <span class="am__takes">Starting takes as long as the app needs.</span>
         </div>
-        <p class="am__why"><svg viewBox="0 0 24 24" set:html={MARK} />The doorman asks first, so a person wakes it and robots don’t.</p>
+        <p class="am__why"><svg viewBox="0 0 24 24" set:html={MARK} />The doorman asks first. Crawlers, scanners and API calls wake nothing.</p>
       </div>
     </div>
     <div class="am__foot"><span>Kept out of search engines</span><span class="am__by"><svg viewBox="0 0 24 24" set:html={MARK} />Paused by Napwake</span></div>

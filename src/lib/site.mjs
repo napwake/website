@@ -19,13 +19,13 @@ export const NEVER = 'It never deletes a workload or its data.';
 export const WHAT = 'Napwake is open source (Apache 2.0): an operator, a kubectl napwake plugin and a Helm chart.';
 export const FOR = 'For platform and infrastructure engineers who run staging, preview and dev environments on their own Kubernetes clusters.';
 // private or public: the same product, wake on request on or off (company decision 0014)
-export const REACH = 'Private ones, behind a VPN, single sign-on or an allowlist, wake on the first request. Public ones can ask first, with `napwake.dev/wake: ask`. Then a browser gets a Wake it button, so a person wakes them and robots don’t. Tooling and the forecast can wake them too.';
+export const REACH = 'Private ones, behind a VPN, single sign-on or an allowlist, wake on the first request. Public ones can ask first, with `napwake.dev/wake: ask`. Then a browser gets a Wake it button, and crawlers, scanners and API calls wake nothing. Tooling and the forecast can still wake them.';
 export const WONT = [
   'Delete anything: its one action is to pause, scaling a workload to zero replicas.',
   'Pause on a timetable. It pauses a workload after `idleAfter` with no sign of use, an hour by default.',
   'Pause anything but Deployments and StatefulSets.',
   'Replace your autoscaler. While a workload runs, its HPA or KEDA decides how many replicas it needs. Napwake only decides whether it should run at all.',
-  'Guess who’s a person. On an environment anyone can reach, set it to ask. Then only a click on Wake it wakes it, and robots are turned away.',
+  'Guess who’s a person. Napwake can’t tell. On an environment anyone can reach, set it to ask. Then requests wake nothing, and a browser gets a Wake it button.',
 ];
 export const STATUS = 'Version 0.2.0 is in release candidates.';
 

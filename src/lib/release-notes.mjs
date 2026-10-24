@@ -9,9 +9,6 @@ export const NOTES = {
       'Napwake pauses the workloads you opt in with a label after `idleAfter` with no sign of use. A request to a paused workload’s Service wakes it through the doorman, with a waking page for browsers. The forecast learns each workload’s week. With `autoResume`, it wakes them ahead of demand.',
       '`kubectl napwake scan` shows what’s idle with nothing installed, and Napwake reports what pausing freed apart from what came off the bill.',
     ],
-    // P30: on v0.2.0-rc.7 the phase gauge keeps old phases at 1, so the stuck alert fires for workloads that
-    // aren't stuck. The fix PR fixes it. Remove this once a release candidate with the fix is out.
-    held: ['`napwake_workload_phase{'],
     highlights: [
       { title: 'Opt in with a label', text: 'On a Deployment, a StatefulSet or a whole namespace, with settings as annotations.', entry: 'Label opt-in' },
       { title: 'Wake on request', text: 'The doorman holds a request to a paused workload while it starts, at its own Service.', entry: 'Wake on request: a request to a paused workload' },

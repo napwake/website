@@ -84,8 +84,8 @@ const others = [
       <ScanDemo />
       <ol class="scan__notes">
         <li><b>Read-only.</b> It runs with your kubeconfig, and installs nothing in the cluster.</li>
-        <li><b>Lit for nobody:</b> your cluster as a hotel at night, with what’s idle right now lit up, and what it costs while it runs, at your nodes’ list prices.</li>
-        <li><b>With Napwake:</b> the lights go off in the rooms nobody’s using, and the last week, replayed from Prometheus, says what pausing would have freed.</li>
+        <li><b>Lit, no one seen:</b> your cluster as a hotel at night, with what’s idle right now lit up, and what it costs while it runs, at your nodes’ list prices.</li>
+        <li><b>With Napwake:</b> the lights go off in the rooms with no one seen, and the last week, replayed from Prometheus, says what pausing would have freed.</li>
       </ol>
       <p class="scan__send"><b>Send it to your team:</b> it’s one self-contained file, with nothing loaded from elsewhere, and it prints cleanly to PDF. <a href="/examples/scan-report/" target="_blank" rel="noopener">Open the example report in a new tab <span aria-hidden="true">↗</span></a></p>
     </div>
@@ -170,7 +170,7 @@ const others = [
         <h3 class="h3">What it won’t do</h3>
         <ul>
           <li><b>Delete anything.</b> Its one action is to pause, which scales a workload to zero. A StatefulSet whose PVCs would be deleted on scale-down is never paused.</li>
-          <li><b>Guess who’s a person.</b> On an environment anyone can reach, set it to ask. Then only a click on Wake it wakes it, and robots are turned away.</li>
+          <li><b>Guess who’s a person.</b> Napwake can’t tell. On an environment anyone can reach, set it to ask. Then requests wake nothing, and a browser gets a Wake it button.</li>
           <li><b>Run to a timetable.</b> It pauses on idleness, not at 8pm. A workload idle all afternoon is paused, and a request at midnight wakes it.</li>
           <li><b>Replace your autoscaler.</b> While a workload runs, its HPA or KEDA decides how many replicas it needs. Napwake only decides whether it should run at all.</li>
         </ul>

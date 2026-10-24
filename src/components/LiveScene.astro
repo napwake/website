@@ -22,8 +22,8 @@ void corridorWidth;
 const steps = [
   { key: 'awake', state: 'awake', pose: 'duty', word: 'Awake', title: 'In use',
     text: 'Someone is working on staging. Napwake keeps its activity clock from CPU, deploys, your tools’ annotations and Prometheus queries, such as request rate.' },
-  { key: 'idle', state: 'awake', pose: 'watch', word: 'Idle', title: 'Nobody is using it',
-    text: 'Nothing has used it for `idleAfter`, one hour by default, so its light is on for nobody. No schedule decides this. The clock does.' },
+  { key: 'idle', state: 'awake', pose: 'watch', word: 'Idle', title: 'No sign of use',
+    text: 'It has shown no sign of use for `idleAfter`, one hour by default. No schedule decides this. The clock does.' },
   { key: 'asleep', state: 'asleep', pose: 'lights', word: 'Asleep', title: 'Paused',
     text: 'Napwake scales it to zero. The Deployment, its Services and its data stay. Only the pods go.' },
   { key: 'waking', state: 'waking', pose: 'door', word: 'Waking up', title: 'A request wakes it',
