@@ -1,6 +1,5 @@
 staging (EKS us-east-1): 31 workloads in 11 namespaces
-Node autoscaler: Karpenter (consolidates when underutilized after 1m)
-What pausing frees comes off the bill only as nodes scale down.
+Your bill: drops only as Karpenter removes nodes (it consolidates when underutilized after 1m)
 History: the last 7 days, from monitoring/prometheus-operated
 
   2 workloads are scaled to zero by hand; Napwake can pause them while idle and wake them on the
@@ -31,8 +30,8 @@ History: the last 7 days, from monitoring/prometheus-operated
   preview-118   statefulset/redis          idle (unmanaged)     CPU under 1% of its request                              $9        136h          4       $7
   staging       deployment/notifications   idle (unmanaged)     CPU under 1% of its request                              $7        118h          8       $5
   staging       statefulset/kafka          idle (unmanaged)     won't pause: PVCs deleted on scale-down                  $103      0h            0       -
-  preview-127   deployment/web             paused (unmanaged)   scaled to zero, not by Napwake                         $0        -             -       -
-  preview-127   deployment/api             paused (unmanaged)   scaled to zero, not by Napwake                         $0        -             -       -
+  preview-127   deployment/web             paused (unmanaged)   scaled to zero, not by Napwake                           $0        -             -       -
+  preview-127   deployment/api             paused (unmanaged)   scaled to zero, not by Napwake                           $0        -             -       -
   staging       deployment/payments-api    active (unmanaged)   CPU 38% of its request                                   $57       69h           19      $23
   staging       statefulset/postgres       active (unmanaged)   CPU 18% of its request                                   $69       50h           16      $21
   preview-124   statefulset/postgres       active (unmanaged)   CPU 12% of its request                                   $34       84h           11      $17
@@ -56,7 +55,7 @@ Notes:
   - the history replay sees CPU and rollouts only; requests and activity annotations aren't in Prometheus, so a workload used with little CPU can look like it would sleep more than it would
   - 1 workload has its replicas set from Git by Argo CD, which would undo every pause: staging/notifications. Have Argo CD leave the replicas to Napwake first: https://docs.napwake.dev/guides/gitops/
 
-Costs use the on-demand and spot list prices of the cluster's 3 node types (m6i.xlarge, m6i.2xlarge and r6i.xlarge, AWS us-east-1). 3 workloads run on spot nodes, priced at spot.
+Prices: AWS us-east-1 list prices · 3 node types · 3 workloads on spot, priced at spot
 Pass --cpu-price and --memory-price for yours.
 
 Next steps:
