@@ -1,0 +1,30 @@
+---
+// Auto follows the system; Light and Dark set data-theme on the root, which tokens.css reads.
+---
+<fieldset class="theme" aria-label="Colour theme">
+  <legend class="visually-hidden">Colour theme</legend>
+  {['auto', 'light', 'dark'].map((t) => (
+    <label><input type="radio" name="theme" value={t} checked={t === 'auto'} /><span>{t === 'auto' ? 'Auto' : t === 'light' ? 'Light' : 'Dark'}</span></label>
+  ))}
+</fieldset>
+<style>
+  .theme { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-md); padding: 2px; margin: 0; gap: 2px; }
+  .theme label { position: relative; }
+  .theme input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .theme span { display: block; padding: 4px 10px; border-radius: var(--radius-sm); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .theme input:checked + span { background: var(--action); color: var(--on-action); }
+  .theme input:focus-visible + span { box-shadow: var(--ring); }
+</style>
+<script>
+  const KEY = 'napwake-theme';
+  const read = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch { return 'auto'; } };
+  const apply = (t: string) => {
+    if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', t);
+  };
+  const current = document.documentElement.getAttribute('data-theme') || read();
+  for (const r of document.querySelectorAll<HTMLInputElement>('.theme input')) {
+    r.checked = r.value === current;
+    r.addEventListener('change', () => { apply(r.value); try { localStorage.setItem(KEY, r.value); } catch { /* storage blocked */ } });
+  }
+</script>

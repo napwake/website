@@ -1,0 +1,72 @@
+---
+// /blog/<post>/: a post, with its byline, date and reading time. Drafts are built only by `astro dev`,
+// marked as drafts and kept out of search engines.
+import Base from '../../layouts/Base.astro';
+import Pose from '../../components/Pose.astro';
+import Terminal from '../../components/Terminal.astro';
+import { POSTS, fmtDate } from '../../lib/blog.mjs';
+import { links } from '../../lib/links.mjs';
+
+export function getStaticPaths() {
+  return POSTS.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+const { post } = Astro.props;
+const { Content } = post;
+---
+<Base title={post.title} description={post.description} noindex={post.draft} type="article">
+  <article class="post">
+    <header class="post__head">
+      <div class="wrap post__head-in">
+        <div>
+          <p class="eyebrow"><a href="/blog/">Blog</a></p>
+          {post.draft && <p class="draft" role="note">Draft. Not published yet.</p>}
+          <h1 class="display-1 post__h1">{post.title}</h1>
+          {post.description && <p class="lede post__lede">{post.description}</p>}
+          <p class="byline"><span class="byline__who">{post.author}</span><span><time datetime={post.date}>{fmtDate(post.date)}</time></span><span>{post.minutes} min read</span></p>
+        </div>
+        <div class="post__art"><Pose name="tip" alt="The doorman tips his hat." width={210} /></div>
+      </div>
+    </header>
+    <div class="wrap">
+      <div class="post__body"><Content /></div>
+      <aside class="try" aria-labelledby="try-h">
+        <h2 class="h3" id="try-h">Try it on your own cluster</h2>
+        <p class="muted">See what’s idle first, with nothing installed.</p>
+        <Terminal command="kubectl napwake scan" label="See what's idle in a cluster" />
+        <p class="actions"><a class="nw-btn nw-btn--primary" href={links.quickstart.href}>Get started</a><a class="nw-btn" href="/blog/">More from the blog</a></p>
+      </aside>
+    </div>
+  </article>
+</Base>
+<style>
+  .post__head { border-bottom: 1px solid var(--line); }
+  .post__head-in { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: var(--space-12); align-items: end; padding-top: var(--space-18); }
+  .post__head .eyebrow { display: flex; }
+  .post__head .eyebrow a { color: inherit; }
+  .post__h1 { margin-bottom: var(--space-4); max-width: 12em; }
+  .post__lede { margin-bottom: var(--space-6); max-width: 34em; }
+  .post__art { display: grid; place-items: end center; }
+  .draft { display: inline-block; margin: 0 0 var(--space-4); padding: 6px 10px; border: 1px dashed var(--accent-text); border-radius: var(--radius-sm); color: var(--accent-text); font: 700 12px/1.5 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; }
+  .byline { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: 0 0 var(--space-8); font: 400 14px/1.4 var(--font-mono); color: var(--muted); }
+  .byline__who { color: var(--text); font-weight: 700; }
+  .post__body { max-width: 40em; padding: var(--space-12) 0 var(--space-8); font-size: 18.5px; line-height: 1.7; }
+  .post__body :global(p) { margin: 0 0 var(--space-6); }
+  .post__body :global(h2) { font: 700 28px/1.25 var(--font-sans); margin: var(--space-12) 0 var(--space-4); }
+  .post__body :global(h3) { font: 700 21px/1.3 var(--font-sans); margin: var(--space-8) 0 var(--space-3); }
+  .post__body :global(pre) { background: var(--code-bg) !important; color: var(--code-text) !important; border-radius: var(--radius-md); padding: var(--space-4) 18px; overflow-x: auto; font: 400 14px/1.55 var(--font-mono); margin: 0 0 var(--space-6); }
+  .post__body :global(pre code) { background: none; padding: 0; white-space: pre; color: inherit; }
+  .post__body :global(pre span) { color: inherit !important; }
+  .post__body :global(ul), .post__body :global(ol) { padding-left: 1.2em; margin: 0 0 var(--space-6); }
+  .post__body :global(blockquote) { margin: 0 0 var(--space-6); padding-left: var(--space-4); border-left: 3px solid var(--lamp); color: var(--muted); }
+  .try { max-width: 40em; margin: 0 0 var(--space-18); padding: var(--space-6); border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--surface); }
+  .try .h3 { margin-bottom: var(--space-2); }
+  .try :global(.term) { margin: var(--space-4) 0; }
+  .try :global(.nw-term) { border: 1px solid var(--line); }
+  .try .actions { margin: 0; }
+  @media (max-width: 760px) {
+    .post__head-in { grid-template-columns: minmax(0, 1fr); gap: 0; padding-top: var(--space-12); }
+    .post__art { order: -1; place-items: start; }
+    .post__art :global(svg) { width: 120px; }
+    .post__body { font-size: 17px; padding-top: var(--space-8); }
+  }
+</style>

@@ -1,0 +1,65 @@
+name: Deploy
+
+# Builds napwake.dev and publishes it with GitHub Pages, on every push to main and when run by hand.
+# Pages' source must be "GitHub Actions" in the repo's settings, with the custom domain napwake.dev
+# (public/CNAME says the same).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Nothing by default. Each job asks for only what it needs.
+permissions: {}
+
+# One deploy at a time. A newer push waits for the one under way, rather than cancelling it halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node, the version engines names in package.json
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+          package-manager-cache: false
+      - name: Install the locked dependencies
+        run: npm ci
+      - name: Build the site
+        run: npm run build
+        env:
+          # the docs every docs link points at
+          NAPWAKE_DOCS_URL: https://docs.napwake.dev
+          # for the star count, read once from GitHub's API; if it can't be read, the button says GitHub
+          # and the build goes on
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload the site for Pages
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist/
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

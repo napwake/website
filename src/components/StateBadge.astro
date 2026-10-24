@@ -1,0 +1,12 @@
+---
+// A state's door and its word: plain (ASLEEP), product (paused) or both (ASLEEP · paused).
+import StateDoor from './StateDoor.astro';
+import { WORDS } from '../lib/art.mjs';
+const { state = 'asleep', vocabulary = 'plain', glyph = true, size = 18 } = Astro.props;
+const word = vocabulary === 'product' ? WORDS.product[state] : WORDS.plain[state];
+---
+<span class:list={['nw-badge', `nw-badge--${state}`, vocabulary === 'product' && 'nw-badge--product']}>
+  {glyph && <StateDoor state={state} size={size} />}
+  <span class="nw-badge__word">{word}</span>
+  {vocabulary === 'both' && <span class="nw-badge__also">· {WORDS.product[state]}</span>}
+</span>

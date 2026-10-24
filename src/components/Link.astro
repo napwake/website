@@ -1,0 +1,5 @@
+---
+// A link from src/lib/links.mjs.
+const { to, class: cls = '', ...rest } = Astro.props;
+---
+<a href={to.href} class={cls || undefined} {...rest}><slot /></a>

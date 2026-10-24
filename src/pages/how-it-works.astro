@@ -1,0 +1,366 @@
+---
+import { code } from '../lib/text.mjs';
+// How it works: the doors, step by step. Every claim from the product's docs, checked 2026-10-22:
+// concepts/idle-detection.md, wake-on-request.md, forecasting.md, lifecycle.md, dependencies.md;
+// guides/pause.md, opt-in.md, dry-run.md; getting-started/kubectl-plugin.md.
+// The wake chapter's two doors, 2026-10-23: the docs' click-to-wake branch (concepts/wake-on-request,
+// guides/public-previews), the CTO's click-to-wake plan, and the asleep page's hand-off.
+import Base from '../layouts/Base.astro';
+import Scene from '../components/Scene.astro';
+import Terminal from '../components/Terminal.astro';
+import StateDoor from '../components/StateDoor.astro';
+import WakingMock from '../components/WakingMock.astro';
+import AsleepMock from '../components/AsleepMock.astro';
+import Link from '../components/Link.astro';
+import Button from '../components/Button.astro';
+import DayChart from '../components/DayChart.astro';
+import RoomDay from '../components/RoomDay.astro';
+import { links } from '../lib/links.mjs';
+
+// The chapters, as one room's day: staging from Monday evening to Tuesday evening. The times follow the
+// chapters' own facts: an hour with no activity before a pause (idleAfter's default), and the forecast
+// waking it at 08:45 for a team it expects at 09:00 (chapter 3's example).
+const chapters = [
+  { id: 'pause', n: '1', state: 'awake', word: 'Lit for nobody', when: 'Mon 18:40', title: 'It pauses what’s idle',
+    line: 'The team has gone home. After `idleAfter` with no sign of use, an hour by default, Napwake pauses it.' },
+  { id: 'doorman', n: '2', state: 'waking', when: 'Mon 21:15', title: 'A request or a click wakes it',
+    line: 'Someone opens it late, and the doorman holds the first request. On a public URL, he can ask first.' },
+  { id: 'forecast', n: '3', state: 'awake', pose: 'list', listTime: '08:45', when: 'Tue 08:45', title: 'The forecast wakes it early',
+    line: 'The team usually comes at 09:00, so the forecast wakes it 15 minutes before.' },
+  { id: 'never', n: '4', state: 'asleep', when: 'Tue 18:10', title: 'It never deletes anything',
+    line: 'Paused again, with everything still behind the door. Only the pods go.' },
+];
+
+const activity = [
+  ['CPU', 'Above `cpuThreshold` of what the pods request, 10% by default. Set it per workload, per namespace or for the cluster', 'metrics-server'],
+  ['A deploy', 'The pod template changes: a new image, an environment variable', 'nothing'],
+  ['A request', 'The doorman held a request for it while it was paused', 'nothing'],
+  ['napwake.dev/last-activity', 'Your own tooling sets a newer time, say a developer portal when someone opens an environment', 'your tooling'],
+  ['napwake.dev/active-until', 'A time in the future, to hold it awake, say for a demo', 'your tooling'],
+  ['A Prometheus query', 'Any query you give it, such as request rate, returns more than zero', 'Prometheus'],
+];
+
+// The two doors: what a person sees first, and what's true at each.
+const paths = [
+  {
+    id: 'door-private', where: 'Behind your VPN or SSO', what: 'The first request wakes it.', mock: 'waking',
+    facts: [
+      'Once a caller sends something, the doorman holds the connection and wakes the workload. It works on TCP, so it holds HTTP, gRPC, Postgres and Redis alike.',
+      'A caller that connects and sends nothing for 3 seconds wakes it too, as for MySQL, where the server speaks first.',
+      'It holds a connection until a pod is Ready, for up to <code>wake.maxWait</code>. That’s 2 minutes by default, and at most an hour. After that, it closes the connection, and the wake goes on.',
+      'A browser gets the waking page at once. It reloads every 3 seconds, and the first reload after a pod is Ready reaches the app. It names no namespace, workload or Service.',
+      'Known probes, scrapers and uptime monitors, such as kube-probe, Prometheus, Datadog and Pingdom, get a <code>503</code>. A TCP health check that connects and closes is closed. A request for a hidden file, such as <code>/.env</code>, gets a <code>404</code>. None of them wake it.',
+    ],
+  },
+  {
+    id: 'door-public', where: 'On a public URL', what: 'With <code>napwake.dev/wake: ask</code>, a person wakes it.', mock: 'asleep',
+    facts: [
+      'On the internet, most requests are robots, and many pass for browsers. Once an environment has its own HTTPS certificate, its hostname is in public certificate logs within minutes. Left on the default, it would wake every few minutes.',
+      'So set it to ask, and the doorman asks first. A browser gets the asleep page, kept out of search engines. Loading it wakes nothing.',
+      '<b>Wake it</b> sends a token signed for that workload and that pause, good for 10 minutes. Only that wakes it, and the waking page carries on.',
+      'A click wakes it at most once a minute. A bot that clicks is rare. Each wake it causes keeps the workload up for at least <code>idleAfter</code>.',
+      'Anything else is turned away, and wakes nothing. Over HTTP it gets a <code>503</code> that says how to wake it. Known probes are answered as behind a VPN.',
+    ],
+  },
+];
+
+// Who wakes it, at each door. `both` when the two doors agree.
+const callers = [
+  { who: 'A person, in a browser',
+    private: ['waking', 'Wakes it by opening a page, and gets the waking page.'],
+    public: ['asleep', 'Gets the asleep page. Only a click on <b>Wake it</b> wakes it.'] },
+  { who: 'Scripts, API clients, gRPC and database drivers',
+    private: ['waking', 'Held until a pod is Ready, for up to <code>wake.maxWait</code>. After that, it’s closed, and the wake goes on.'],
+    public: ['asleep', 'Turned away. Over HTTP, a <code>503</code> that says how to wake it. Nothing wakes.'] },
+  { who: 'Crawlers and scanners',
+    private: ['waking', 'Wake it, unless they ask for a hidden file.'],
+    public: ['asleep', 'A <code>503</code>. Nothing wakes.'] },
+  { who: 'Known probes, scrapers and uptime monitors', both: ['asleep', 'A <code>503</code> at both doors. Nothing wakes.'] },
+  { who: 'Tooling, such as a pull request bot, a portal or a chat command, by an annotation or <code>kubectl napwake wake</code>',
+    both: ['waking', 'Wakes it, at both doors. A condition on the workload tells the tool the wake was taken up.'] },
+  { who: 'CI, through an activity annotation, or a dependent waking', both: ['waking', 'Wakes it, at both doors.'] },
+  { who: 'The forecast, if you turn it on',
+    both: ['waking', 'Wakes it 15 minutes before an hour it expects busy, at both doors. Where it asks first, the forecast learns those hours from people’s clicks and tooling’s wakes.'] },
+];
+
+// kubectl-plugin.md, "Replay the Forecast": the docs' example, columns trimmed
+const forecast = [
+  'staging: the forecast replayed over 28 days of CPU history from monitoring/prometheus-operated, times in UTC',
+  '',
+  [{ text: 'NAMESPACE   NAME              FORECAST             READY  COLD  WOKEN', tone: 'dim' }],
+  'preview-42  api               acts from day one    9/10   1     08:45, 25m ahead',
+  'preview-42  worker (managed)  acts from Mon 2 Nov  3/10   7     09:45, 20m ahead',
+  'preview-42  reports           not within 4 weeks   0/6    6     -',
+];
+---
+<Base title="How it works">
+  <section class="intro">
+    <div class="wrap">
+      <div class="intro__in">
+        <p class="eyebrow">How it works</p>
+        <h1 class="display-1 intro__h1">One room, through a day.</h1>
+        <p class="lede intro__lede">Napwake pauses a workload once it’s idle, and wakes it when it’s wanted again. Each door below is a moment in one room’s day, and opens its chapter.</p>
+      </div>
+      <RoomDay doors={chapters} />
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="chapter" id="pause" aria-labelledby="pause-title">
+    <div class="wrap chapter__in">
+      <div class="chapter__head">
+        <p class="eyebrow"><span class="plate">1</span> Pause on use</p>
+        <h2 id="pause-title" class="display-2">It pauses what’s idle.</h2>
+        <p class="chapter__lede">No timetable decides it. Napwake keeps an <b>activity clock</b> for every workload it manages, the last time anything showed it was in use. When the clock is older than <code>idleAfter</code>, one hour by default, the workload is paused. Any single sign of activity resets it.</p>
+      </div>
+      <div class="chapter__text chapter__body">
+        <h3 class="h3">What counts as activity</h3>
+        <div class="table-wrap stack">
+          <table>
+            <thead><tr><th scope="col">Source</th><th scope="col">Counts when</th><th scope="col">Needs</th></tr></thead>
+            <tbody>{activity.map(([s, w, n]) => <tr><th scope="row">{s.startsWith('napwake') ? <code>{s}</code> : s}</th><td data-label="Counts when" set:html={code(w)} /><td class="muted nowrap" data-label="Needs">{n}</td></tr>)}</tbody>
+          </table>
+        </div>
+        <ul class="facts">
+          <li>Every source is checked and the most recent wins, so a worker with real work and no traffic isn’t paused.</li>
+          <li>Memory isn’t a source, since it stays allocated whether or not anyone uses the workload.</li>
+          <li>It never pauses a workload it can’t measure, and there’s no learning period. A new workload can pause after its first idle hour.</li>
+        </ul>
+        <h3 class="h3">Opting in</h3>
+        <p>A label on a workload or a whole namespace, with settings as annotations, in the manifests or Helm values you already keep in Git. Start in dry-run. It measures what it would pause and free, and never pauses anything. It can’t see requests, so a workload used with little CPU looks idler than it is. A Prometheus query on its request rate at the ingress fixes that.</p>
+        <Terminal command={[]} copy={false} label="deployment.yaml, opted in, in dry-run" output={[
+          [{ text: '# deployment.yaml', tone: 'dim' }],
+          'metadata:', '  name: my-api', '  namespace: dev', '  labels:',
+          '    napwake.dev/managed: "true"', '  annotations:', '    napwake.dev/dry-run: "true"', '    napwake.dev/idle-after: "1h"',
+        ]} />
+        <p class="small muted chapter__after">Then <code>kubectl napwake enable my-api -n dev</code> ends dry-run, and it pauses after <code>idleAfter</code> with no sign of use. <Link to={links.concept('idle-detection')}>Idle detection</Link> in the docs has every rule.</p>
+      </div>
+      <figure class="chapter__art">
+        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="lights" label="Napwake turns off the lights in staging, which nobody has used for an hour. dev is asleep; pr-42 is in use and awake." /></div>
+        <figcaption>Nobody has used staging for <code>idleAfter</code>, so its lights go out. pr-42 is in use, so it stays awake.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="chapter" id="doorman" aria-labelledby="doorman-title">
+    <div class="wrap">
+      <div class="chapter__in">
+        <div class="chapter__head">
+          <p class="eyebrow"><span class="plate">2</span> How it wakes</p>
+          <h2 id="doorman-title" class="display-2">The doorman wakes it on a request, or asks first.</h2>
+          <p class="chapter__lede">A paused workload has no pods, so nothing would answer its Service. Its Services point at the doorman instead. Behind a VPN, single sign-on or an allowlist, the first request wakes it. On a public URL, set it to ask, and only a person’s click wakes it.</p>
+        </div>
+        <div class="chapter__text chapter__body">
+          <ol class="steps">
+            <li><b>The route.</b> When a workload pauses, the operator adds an EndpointSlice to each of its Services, pointing at the doorman. The doorman is a small proxy, its own Deployment of two replicas beside the operator. The Service, its ClusterIP and its DNS name don’t change.</li>
+            <li><b>The door.</b> A connection reaches the doorman. Behind a VPN, once the caller has sent something, he holds it and wakes the workload. On a public URL set to ask, he waits for a person’s click instead. A wake takes the workload’s dependencies with it, such as the database it uses.</li>
+            <li><b>The hand-over.</b> As soon as a pod is Ready, by its readiness probe, a held connection goes through, with the bytes the caller already sent.</li>
+            <li><b>Out of the way.</b> Once the workload is running, the doorman’s EndpointSlices go and traffic reaches the pods directly again.</li>
+          </ol>
+          <p>Waking on a request is the default, with nothing to configure. Asking first is <code>napwake.dev/wake: ask</code> on a workload or its namespace, or <code>defaults.wake: ask</code> in Helm for the whole cluster. Napwake can’t tell a public URL from a private one, so the setting is yours.</p>
+        </div>
+        <figure class="chapter__art">
+          <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'waking', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="door" label="The doorman holds the door of staging, which is waking up, its amber light on the floor. dev is asleep, and pr-42 is awake." /></div>
+          <figcaption>A request reached staging, behind the VPN. The doorman holds it while staging starts, and dev stays asleep.</figcaption>
+        </figure>
+      </div>
+      <div class="chapter__more">
+        <div class="paths">
+          {paths.map((p) => (
+            <div class="path">
+              <div class="path__head">
+                <h3 id={p.id} class="h3">{p.where}</h3>
+                <p class="path__what" set:html={p.what} />
+              </div>
+              <div class="path__mock">{p.mock === 'waking' ? <WakingMock /> : <AsleepMock />}</div>
+              <ul class="facts path__facts">{p.facts.map((f) => <li set:html={f} />)}</ul>
+            </div>
+          ))}
+        </div>
+        <h3 class="h3 callers__h">Who wakes it, at each door</h3>
+        <div class="table-wrap stack callers">
+          <table>
+            <caption class="visually-hidden">Who wakes a paused workload, behind your VPN or SSO and on a public URL set to ask</caption>
+            <thead><tr><th scope="col">The caller, while it’s asleep</th><th scope="col">Behind your VPN or SSO</th><th scope="col">On a public URL, set to ask</th></tr></thead>
+            <tbody>
+              {callers.map((c) => (
+                <tr>
+                  <th scope="row" set:html={c.who} />
+                  {c.both
+                    ? <td colspan="2" class="callers__both" data-label="Both doors"><span class="callers__out"><StateDoor state={c.both[0]} size={18} /><span set:html={c.both[1]} /></span></td>
+                    : [
+                        <td data-label="Behind your VPN or SSO"><span class="callers__out"><StateDoor state={c.private[0]} size={18} /><span set:html={c.private[1]} /></span></td>,
+                        <td data-label="On a public URL, set to ask"><span class="callers__out"><StateDoor state={c.public[0]} size={18} /><span set:html={c.public[1]} /></span></td>,
+                      ]}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted chapter__after"><Link to={links.concept('wake-on-request')}>Wake on request</Link> in the docs covers readiness probes, timeouts behind an Ingress, and the Services it can’t route.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="chapter" id="forecast" aria-labelledby="forecast-title">
+    <div class="wrap">
+      <div class="chapter__in">
+        <div class="chapter__head">
+          <p class="eyebrow"><span class="plate">3</span> The forecast</p>
+          <h2 id="forecast-title" class="display-2">It wakes the team’s rooms 15 minutes early.</h2>
+          <p class="chapter__lede">Napwake learns each workload’s daily and weekly pattern with a Holt-Winters double seasonal model, fed every hour from its CPU and from the requests that wake it. With <code>autoResume</code> on, it wakes a paused workload 15 minutes before an hour it expects to be busy, so the first person in doesn’t wait.</p>
+        </div>
+        <figure class="chapter__art">
+          <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="list" props listTime="08:45" label="The morning list, beside staging: Napwake wakes it at 08:45, before the team arrives. Every room is still asleep." /></div>
+          <figcaption>The morning list, before the team arrives. Staging is expected busy at 09:00, so Napwake wakes it at 08:45.</figcaption>
+        </figure>
+      </div>
+      <div class="chapter__more">
+        <DayChart />
+      </div>
+      <div class="chapter__more">
+        <ul class="facts facts--grid">
+          <li>It learns before it acts. It learns its first week without scoring it. On office hours it acts from the Tuesday of the second week. With a few weeks of history in Prometheus, it acts from the first day.</li>
+          <li>Weekends stay asleep, once the first weekend teaches it they’re quiet.</li>
+          <li>The activity clock pauses workloads, and the forecast never does. A confident forecast holds off a pause before an hour it expects busy. It brings one forward only if you turn on <code>pauseEarly</code>.</li>
+          <li>Check it first. <code>kubectl napwake forecast</code> replays it over your workloads’ own history before you trust <code>autoResume</code> with them.</li>
+        </ul>
+        <Terminal command="kubectl napwake forecast -n preview-42" output={forecast} label="kubectl napwake forecast and its output" />
+        <p class="small muted chapter__after">Example output from the plugin’s docs, columns trimmed. <Link to={links.concept('forecasting')}>Forecasting</Link> in the docs has the model, the confidence it acts at, and the simulator that tests it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="chapter" id="never" aria-labelledby="never-title">
+    <div class="wrap chapter__in">
+      <div class="chapter__head">
+        <p class="eyebrow"><span class="plate">4</span> What a pause changes</p>
+        <h2 id="never-title" class="display-2">It never deletes anything.</h2>
+        <p class="chapter__lede">Its one action is to pause, which scales a workload to zero replicas. The Deployment or StatefulSet stays, and so do its PVCs and their data. Only the pods are removed.</p>
+      </div>
+      <div class="chapter__text chapter__body">
+        <div class="ledger">
+          <div>
+            <h3 class="ledger__h"><StateDoor state="awake" size={18} /> Stays</h3>
+            <ul><li>The Deployment or StatefulSet</li><li>Its Services, ClusterIP and DNS name</li><li>Its PVCs and their data</li><li>Its replica count, recorded to restore</li></ul>
+          </div>
+          <div>
+            <h3 class="ledger__h"><StateDoor state="asleep" size={18} /> Changes while it’s paused</h3>
+            <ul><li>Replicas: zero</li><li>Its Services route to the doorman</li><li>A KEDA ScaledObject is held at zero</li><li>The pods are gone</li></ul>
+          </div>
+        </div>
+        <ul class="facts">
+          <li>It writes down what a pause will change before it scales anything, in its status and on the workload’s <code>napwake.dev/paused-from</code> annotation. So a pause cut short by a restart is finished or undone, and a resume goes back to the replicas it had.</li>
+          <li>Some things it won’t pause: a StatefulSet whose PVCs would be deleted on scale-down, Kubernetes’ own namespaces, and Napwake itself.</li>
+          <li>It doesn’t fight you. Scaled up by anyone else, a paused workload counts as woken. Scaled to zero by hand, it’s left alone. If a GitOps tool undoes a pause, Napwake reports how to fix it.</li>
+        </ul>
+        <p class="small muted chapter__after"><Link to={links.guide('pause')}>Pause and resume</Link> in the docs has each step of a pause.</p>
+      </div>
+      <figure class="chapter__art">
+        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="rest" label="Every room is asleep, and the doorman rests his eyes at his post." /></div>
+        <figcaption>Every room asleep, and everything still in its room. Only the pods are gone.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section next">
+    <div class="wrap next__in">
+      <div>
+        <h2 class="display-2">See it on your own cluster.</h2>
+        <p class="muted"><code>kubectl napwake scan</code> shows what’s idle and what pausing would free, with nothing installed.</p>
+      </div>
+      <div class="actions">
+        <Button to={links.install} variant="primary">Install</Button>
+        <a class="nw-btn nw-btn--secondary" href="/compare/">How it compares</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro { padding: var(--space-18) 0 var(--space-12); }
+  /* the headline and the lede side by side, as on the home page's hero; then the room's day */
+  .intro__in { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--space-12); align-items: end; margin-bottom: var(--space-12); }
+  .intro__in > .eyebrow { grid-column: 1 / -1; }
+  .intro__h1 { max-width: 9em; }
+  .intro__lede { margin: 0; padding-bottom: 6px; }
+
+  .chapter { padding: var(--space-18) 0; border-top: 1px solid var(--line); scroll-margin-top: 0; }
+  .chapter__in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); column-gap: var(--space-12); row-gap: var(--space-8); align-items: start; }
+  .chapter__head, .chapter__text { grid-column: 1; min-width: 0; }
+  .chapter__head h2 { margin-bottom: var(--space-4); }
+  .chapter__head .chapter__lede { margin: 0; }
+  .chapter__body > :first-child { margin-top: 0; }
+  .chapter__text .h3 { margin: var(--space-8) 0 var(--space-3); }
+  .chapter__body > .h3:first-child { margin-top: 0; }
+  .chapter__lede { font-size: 18.5px; line-height: 1.6; }
+  .chapter__art { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: var(--space-6); }
+  .chapter__art .scene-frame { border: 1px solid var(--line); border-radius: var(--radius-lg); }
+  /* wide blocks follow the grid, so the sticky scene stops at the end of the text beside it */
+  .chapter__more { margin-top: var(--space-8); }
+  .chapter__after { margin-top: var(--space-3); }
+  .chapter :global(.term), .chapter :global(.nw-callout) { margin-top: var(--space-6); }
+  .facts { list-style: none; padding: 0; margin: var(--space-6) 0 0; display: grid; gap: var(--space-3); }
+  .facts--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-12); row-gap: var(--space-4); margin-bottom: var(--space-8); }
+  .facts li { position: relative; padding-left: var(--space-6); color: var(--text); }
+  .facts li::before { content: ""; position: absolute; left: 0; top: .5em; width: 9px; height: 11px; border-radius: 4.5px 4.5px 0 0; background: var(--brand); }
+  .steps { margin: var(--space-6) 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: var(--space-4); }
+  .steps li { counter-increment: s; position: relative; padding-left: 40px; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: var(--bg); font: 700 12px/1 var(--font-mono); }
+  .steps li:nth-child(2)::before { background: var(--lamp); color: var(--night); }
+  td.nowrap { white-space: nowrap; }
+  /* the wake chapter's two doors; subgrid lines up their heads, pictures and facts */
+  .paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: var(--space-12); row-gap: var(--space-6); }
+  .path { display: grid; grid-row: span 3; grid-template-rows: subgrid; min-width: 0; }
+  .path__head { border-top: 2px solid var(--line); padding-top: var(--space-4); }
+  .path__head .h3 { margin-bottom: var(--space-1); }
+  .path__what { margin: 0; color: var(--muted); }
+  .path__mock { align-self: start; min-width: 0; }
+  .path__facts { margin-top: var(--space-2); align-content: start; }
+  .path__facts li { font-size: 16px; line-height: 1.55; }
+  .callers__h { margin: var(--space-12) 0 var(--space-3); }
+  .callers table { table-layout: fixed; font-size: 15px; }
+  .callers thead th:first-child { width: 30%; }
+  .callers tbody th { white-space: normal; }
+  .callers__out { display: flex; gap: var(--space-2); align-items: flex-start; }
+  .callers__out :global(.nw-door) { margin-top: 2px; }
+  .callers__both { background: var(--bg); }
+  .ledger { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin: var(--space-6) 0 0; }
+  .ledger > div { border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-6); background: var(--surface); }
+  .ledger__h { display: flex; align-items: center; gap: var(--space-2); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-3); }
+  .ledger ul { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-2); font-size: 16px; }
+  .next__in { display: flex; justify-content: space-between; align-items: end; gap: var(--space-8); flex-wrap: wrap; }
+  .next h2 { margin-bottom: var(--space-3); }
+  .next p { margin: 0; }
+
+  @media (max-width: 1000px) {
+    .intro__in { grid-template-columns: minmax(0, 1fr); }
+    .intro__lede { margin-top: var(--space-6); }
+    .chapter__in { grid-template-columns: minmax(0, 1fr); }
+    .chapter__art { grid-column: 1; grid-row: auto; position: static; order: 1; max-width: 560px; }
+    .chapter__head { order: 0; }
+    .chapter__body { order: 2; }
+    .chapter__head, .chapter__text { grid-column: 1; }
+    .paths { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; row-gap: var(--space-12); }
+    .path { grid-row: auto; grid-template-rows: none; row-gap: var(--space-6); }
+  }
+  @media (max-width: 760px) { .facts--grid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 600px) {
+    .intro { padding: var(--space-12) 0 var(--space-8); }
+    .intro__in { margin-bottom: var(--space-6); }
+    .chapter { padding: var(--space-12) 0; }
+    .ledger { grid-template-columns: minmax(0, 1fr); }
+    .stack { background: none; border: 0; overflow: visible; }
+    .stack table, .stack tbody, .stack tr, .stack th, .stack td { display: block; }
+    .stack thead { display: none; }
+    .stack tr { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-2); }
+    .stack th, .stack td { padding: 2px 0; border: 0; white-space: normal; }
+    .stack td[data-label]::before { content: attr(data-label) " "; display: block; font: 700 11px/1.6 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-top: var(--space-2); }
+    .callers__both { background: none; }
+    .callers__both[data-label]::before { display: none; }
+    .chapter__lede { font-size: 17px; }
+  }
+</style>

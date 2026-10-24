@@ -1,0 +1,188 @@
+---
+// How it compares, by approach: CMO decision 0006 (2026-10-23) and its brief. Three ways to stop paying for idle
+// staging: a timetable, a scale-to-zero proxy, and Napwake. Other tools appear only as small-print examples of an
+// approach, with no stars, versions, licences, praise or links, and no "fits better" section. Every line about the
+// other two approaches is from Kede's positioning research, checked 2026-10-22, said as "most" or "typically" where
+// the tools differ (src/lib/compare.mjs). Napwake's lines are from its docs.
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+import Terminal from '../components/Terminal.astro';
+import ThreeWays from '../components/ThreeWays.astro';
+import { corridor } from '../lib/art.mjs';
+import { APPROACHES, ONLY, TABLE, CHECKED } from '../lib/compare.mjs';
+import { code } from '../lib/text.mjs';
+import { links } from '../lib/links.mjs';
+
+// What only Napwake does: one corridor, the doorman five times, each beside the door his job is about.
+// Each vignette is one door and one pose, drawn by the rig like How it works' room panels. The floor is the band's.
+const VW = 250, VH = 262, VFY = 222, VDOOR = 136, PGAP = 112, GAP = 30;
+const only = ONLY.map((o, i) => ({
+  ...o,
+  // clipped at the floor's edge, and wide sideways, so the light can run on along the floor
+  svg: `<defs><clipPath id="only-clip${i}"><rect x="-2000" y="0" width="4000" height="${VH}"/></clipPath></defs><g clip-path="url(#only-clip${i})">` + corridor({
+    w: VW, h: VH, floorY: VFY, x0: VDOOR - (PGAP - GAP), sc: 1, wall: false,
+    rooms: [{ state: o.state, label: '' }], doormanAt: 0, pose: o.pose, labels: false, stateLabels: false,
+    // the list and the watch are the jobs' props; at the ask, his hand lies flat on the leaf, where the asleep page stands him
+    props: o.pose === 'list' || o.pose === 'watch', listTime: o.listTime ?? null, shiftDoorman: o.pose === 'ask' ? 1 : null,
+  }) + '</g>',
+}));
+const cols = APPROACHES.map((a) => a.key);
+---
+<Base title="How it compares">
+  <section class="intro" aria-labelledby="intro-title">
+    <div class="wrap intro__in">
+      <p class="eyebrow">How it compares</p>
+      <h1 id="intro-title" class="display-1 intro__h1">Three ways to stop paying for idle staging.</h1>
+      <p class="lede intro__lede">Napwake, a timetable or a scale-to-zero proxy. Here are the same four rooms through one evening and the next morning, run each way. Step through it, or drag the time.</p>
+    </div>
+    <ThreeWays />
+    <p class="wrap small muted tw-note">Napwake pauses a room after <code>idleAfter</code> with no sign of use. This evening uses the default, an hour. Set it per workload, per namespace or for the whole cluster. The morning has <code>autoResume</code> on, with a forecast that has learned the team’s week.</p>
+  </section>
+
+  <section class="section only" aria-labelledby="only-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">01</span> What only Napwake does</p>
+        <h2 id="only-title" class="display-2">Only Napwake does all five.</h2>
+        <p>A timetable or a proxy may do one or two of them.</p>
+      </div>
+    </div>
+    <div class="only__band">
+      <ol class="wrap only__list">
+        {only.map((o, i) => (
+          <li class={`only__item only__item--${o.pose}`}>
+            <div class="only__art">
+              <svg viewBox={`0 0 ${VW} ${VH}`} role="img" aria-label={o.alt} focusable="false" set:html={o.svg} />
+            </div>
+            <div class="only__text">
+              <h3 class="only__h"><span class="only__n" aria-hidden="true">{i + 1}</span>{o.title}</h3>
+              <p set:html={code(o.text)} />
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="table-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">02</span> Side by side</p>
+        <h2 id="table-title" class="display-2">Three approaches, five questions.</h2>
+      </div>
+      <div class="table-wrap side">
+        <table>
+          <caption class="visually-hidden">Napwake, a timetable and a scale-to-zero proxy: what decides, what wakes it, what the first person sees, what you change, and what happens to work with no traffic</caption>
+          <colgroup><col class="side__q" /><col class="side__us" /><col /><col /></colgroup>
+          <thead>
+            <tr><td></td>{APPROACHES.map((a) => <th scope="col" class:list={[a.key === 'napwake' && 'is-us']}>{a.name}</th>)}</tr>
+          </thead>
+          <tbody>
+            {TABLE.map((row) => (
+              <tr>
+                <th scope="row">{row.q}</th>
+                {cols.map((k, i) => <td class:list={[k === 'napwake' && 'is-us']} data-label={APPROACHES[i].name} set:html={code(row[k])} />)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted side__note">What the table says of a timetable or a proxy is true of most tools of that kind, by their own docs, checked {CHECKED}. Napwake’s column is from its docs.</p>
+    </div>
+  </section>
+
+  <section class="section next" aria-labelledby="next-title">
+    <div class="wrap next__in">
+      <div class="next__text">
+        <h2 id="next-title" class="display-2">See it on your own cluster.</h2>
+        <p class="lede next__lede">One command shows what’s idle in your cluster and what pausing would free, with nothing installed.</p>
+        <div class="actions">
+          <Button to={links.install} variant="primary">Install</Button>
+          <a class="nw-btn nw-btn--secondary" href="/how-it-works/">How it works</a>
+        </div>
+      </div>
+      <Terminal command="kubectl napwake scan" label="kubectl napwake scan, with nothing installed" class="next__term" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro { padding: var(--space-18) 0 0; }
+  .intro__in { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: var(--space-12); align-items: end; padding-bottom: var(--space-12); }
+  .intro__in > .eyebrow { grid-column: 1 / -1; }
+  .tw-note { margin-top: var(--space-4); }
+  /* code on the scene's wall and in Napwake's lit column: the code ground nearly matches them, so the page colour and a hairline */
+  :global(.tw__cap code), td.is-us :global(code) { background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+  .intro__h1 { max-width: 10em; }
+  .intro__lede { margin: 0; padding-bottom: 6px; }
+
+  /* ---------- what only Napwake does: one corridor, five doors, the doorman at each ---------- */
+  .only { padding-bottom: var(--space-12); }
+  .only .section__head { margin-bottom: var(--space-8); }
+  .only__band { overflow-x: clip; }
+  /* one corridor: each door's wall and floor run into the next, and out to the page's edges */
+  .only__list { list-style: none; margin: 0 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: var(--space-4); isolation: isolate; }
+  .only__item { display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+  .only__art { position: relative; --l: calc(-1 * var(--space-2)); --r: calc(-1 * var(--space-2)); }
+  .only__item:first-child .only__art { --l: calc(50% - 50vw); }
+  .only__item:last-child .only__art { --r: calc(50% - 50vw); }
+  .only__art::before, .only__art::after { content: ""; position: absolute; left: var(--l); right: var(--r); z-index: -1; }
+  .only__art::before { top: 0; bottom: calc(40 / 262 * 100%); background: var(--scene-wall); box-shadow: inset 0 1px 0 var(--line); }
+  .only__art::after { top: calc(222 / 262 * 100%); bottom: 0; background: var(--scene-floor); }
+  /* a waking room's light runs on along the floor, past its own door's panel (the drawing clips it at the floor's edge) */
+  .only__art svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .only__text { padding: var(--space-6) var(--space-1) 0; }
+  .only__h { display: flex; gap: var(--space-2); align-items: baseline; font: 700 19px/1.3 var(--font-sans); margin: 0 0 var(--space-2); }
+  .only__n { flex: none; display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 5px; border-radius: var(--radius-sm); background: var(--brand); color: var(--bg); font: 700 12px/1 var(--font-mono); transform: translateY(-2px); }
+  .only__text p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--muted); }
+
+  /* ---------- the table: three approaches, Napwake's lit ---------- */
+  .side table { table-layout: fixed; font-size: 15px; line-height: 1.5; }
+  .side .side__q { width: 19%; }
+  .side thead th { font: 700 13px/1.4 var(--font-mono); letter-spacing: .04em; text-transform: none; color: var(--text); padding-top: var(--space-4); padding-bottom: var(--space-4); }
+  .side thead td { background: var(--bg); }
+  .side tbody th { white-space: normal; font-weight: 700; }
+  .side .is-us { background: color-mix(in srgb, var(--brand) 9%, var(--surface)); }
+  .side thead th.is-us { color: var(--brand); box-shadow: inset 0 3px 0 var(--brand); }
+  .side__note { margin-top: var(--space-4); max-width: 60em; }
+
+  /* ---------- the close ---------- */
+  .next__in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
+  .next h2 { margin-bottom: var(--space-4); }
+  .next__lede { margin-bottom: var(--space-6); }
+
+  @media (max-width: 1000px) {
+    .intro__in { grid-template-columns: minmax(0, 1fr); }
+    .intro__lede { margin-top: var(--space-6); }
+    .next__in { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+  }
+  @media (max-width: 1000px) and (min-width: 601px) {
+    /* three doors a floor, then two: every item's wall and floor reach the page's edges */
+    .only__list { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: var(--space-8); }
+    .only__item .only__art { --l: calc(-1 * var(--space-2)); --r: calc(-1 * var(--space-2)); }
+    .only__item:nth-child(3n + 1) .only__art { --l: calc(50% - 50vw); }
+    .only__item:nth-child(3n) .only__art, .only__item:last-child .only__art { --r: calc(50% - 50vw); }
+  }
+  @media (max-width: 760px) {
+    .side { border: 0; background: none; overflow: visible; }
+    .side table, .side tbody, .side tr, .side th, .side td { display: block; }
+    .side thead { display: none; }
+    .side tr { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); margin-bottom: var(--space-3); overflow: hidden; }
+    .side tbody th { padding: var(--space-3) var(--space-4) var(--space-2); border: 0; font-size: 16px; }
+    .side td { padding: var(--space-2) var(--space-4) var(--space-3); border: 0; border-top: 1px solid var(--line); }
+    .side td::before { content: attr(data-label); display: block; font: 700 11px/1.6 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+    .side td.is-us::before { color: var(--brand); }
+  }
+  @media (max-width: 600px) {
+    .intro { padding-top: var(--space-12); }
+    .intro__in { padding-bottom: var(--space-8); }
+    /* a phone: one door a line, the text beside it */
+    .only__list { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-2); }
+    .only__item { grid-template-columns: 128px minmax(0, 1fr); grid-template-rows: none; column-gap: var(--space-4); align-items: center; }
+    .only__item .only__art, .only__item:first-child .only__art, .only__item:last-child .only__art { --l: calc(-1 * var(--gutter)); --r: 0px; margin-left: calc(-1 * var(--gutter) / 2); }
+    .only__art svg { overflow: hidden; }
+    .only__text { padding: var(--space-3) 0; }
+    .only__h { font-size: 17px; }
+    .only__text p { font-size: 15px; }
+  }
+</style>

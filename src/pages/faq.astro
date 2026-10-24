@@ -1,0 +1,140 @@
+---
+// FAQ: the questions people ask assistants, each answered so it stands on its own, with its sources.
+// Answers and sources live in src/lib/faq.mjs; the FAQPage JSON-LD and llms.txt are built from them too.
+import Base from '../layouts/Base.astro';
+import Pose from '../components/Pose.astro';
+import Terminal from '../components/Terminal.astro';
+import Link from '../components/Link.astro';
+import Button from '../components/Button.astro';
+import { FAQ, html } from '../lib/faq.mjs';
+import { faqPage } from '../lib/jsonld.mjs';
+import { links } from '../lib/links.mjs';
+
+const num = (i) => String(i + 1).padStart(2, '0');
+const isDoc = (l) => l.real.includes('docs.napwake.dev');
+---
+<Base title="FAQ" jsonld={[faqPage()]}>
+  <section class="intro">
+    <div class="wrap">
+      <p class="eyebrow">FAQ</p>
+      <h1 class="display-1 intro__h1">Questions people ask about Napwake.</h1>
+      <p class="lede">Short answers, each one complete on its own, with the page it comes from. They’re the same words the docs use, so whatever you read them in, a person or an assistant, gets the same facts.</p>
+    </div>
+  </section>
+
+  <section class="lobby" aria-labelledby="dir-title">
+    <div class="wrap lobby__in">
+      <div class="lobby__doorman"><Pose name="point" alt="The doorman points to the directory of questions." width={230} /></div>
+      <nav class="board" aria-labelledby="dir-title">
+        <p class="board__head" id="dir-title">Directory <span>{FAQ.length} questions</span></p>
+        <ol>
+          {FAQ.map((f, i) => <li><a href={`#${f.id}`}><span class="board__n">{num(i)}</span><span class="board__q">{f.q}</span></a></li>)}
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <section class="answers" aria-label="Answers">
+    <div class="wrap">
+      {FAQ.map((f, i) => (
+        <article class="qa" id={f.id} aria-labelledby={`${f.id}-q`}>
+          <div class="qa__head">
+            <p class="qa__n"><span class="plate">{num(i)}</span><a class="qa__link" href={`#${f.id}`} aria-label={`Link to: ${f.q}`}>Link</a></p>
+            <h2 class="h2 qa__q" id={`${f.id}-q`}>{f.q}</h2>
+            {f.commands && <div class="qa__art"><Pose name="rounds" alt="Doing the rounds with a clipboard: Napwake checks which rooms are empty." width={170} /><p class="small muted">Doing the rounds: <code>scan</code> checks which rooms are empty before anything changes.</p></div>}
+          </div>
+          <div class="qa__main">
+            <div class="qa__a">
+              {f.a.map((p, j) => <p class:list={[j === 0 && 'qa__first']} set:html={html(p)} />)}
+            </div>
+            {f.commands && <Terminal command={f.commands} label="Scan, then try one workload in dry-run" />}
+            <div class="qa__src">
+              <span class="qa__src-label">{f.sources.some(([, l]) => !isDoc(l) && l !== links.apache) ? `Sources, checked ${f.checked || '2026-10-22'}` : 'From the docs'}</span>
+              <ul>{f.sources.map(([t, l]) => <li>{isDoc(l) ? <Link to={l}>{t}</Link> : <a href={l.href} rel="noopener">{t}</a>}</li>)}</ul>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section more">
+    <div class="wrap more__in">
+      <div>
+        <h2 class="display-2">Something else?</h2>
+        <p class="muted">The docs have the details behind every answer here. Using an assistant? Point it at <a href="/llms.txt">napwake.dev/llms.txt</a>, a plain-text summary of Napwake with every page and these answers.</p>
+      </div>
+      <div class="actions">
+        <Button to={links.docs} variant="primary">Read the docs</Button>
+        <a class="nw-btn" href="/how-it-works/">How it works</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro { padding: var(--space-18) 0 var(--space-8); }
+  .intro__h1 { max-width: 11em; margin-bottom: var(--space-6); }
+  .intro .lede { max-width: 38em; }
+
+  /* the lobby: the doorman beside a directory board, fixed in the night palette whatever the theme */
+  .lobby { padding: var(--space-6) 0 var(--space-18); }
+  .lobby__in { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: var(--space-6); align-items: end; }
+  .lobby__doorman { display: grid; place-items: end center; padding-bottom: var(--space-2); }
+  .board { background: var(--night); color: var(--paper); border-radius: var(--radius-xl); padding: var(--space-6) var(--space-6) var(--space-4); border: 6px solid var(--coat-deep); }
+  .board__head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 var(--space-3); padding: 0 var(--space-3) var(--space-3); border-bottom: 2px solid var(--lamp); font: 700 13px/1.6 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--lamp); }
+  .board__head span { color: var(--paper); opacity: .7; letter-spacing: .06em; }
+  .board ol { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: var(--space-6); }
+  .board li { break-inside: avoid; }
+  .board a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: var(--space-3); padding: 9px var(--space-3); border-radius: var(--radius-sm); color: var(--paper); text-decoration: none; font: 400 15px/1.4 var(--font-mono); }
+  .board a:hover { background: var(--coat-deep); }
+  .board a:focus-visible { box-shadow: 0 0 0 2px var(--night), 0 0 0 4px var(--lamp); }
+  .board__n { color: var(--lamp); font-weight: 700; }
+
+  .answers { border-top: 1px solid var(--line); }
+  .qa { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-12); padding: var(--space-12) 0; border-bottom: 1px solid var(--line); scroll-margin-top: var(--space-4); }
+  .qa:last-child { border-bottom: 0; }
+  .qa__head { align-self: start; position: sticky; top: var(--space-6); }
+  .qa__main { min-width: 0; max-width: 46em; }
+  .qa__n { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-3); }
+  .qa__n .plate { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 22px; padding: 0 6px; border-radius: var(--radius-sm); background: var(--brand); color: var(--bg); font: 700 12px/22px var(--font-mono); letter-spacing: .04em; }
+  .qa__link { font: 700 12px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-decoration: none; opacity: 0; transition: opacity var(--duration-ui-short) var(--ease-calm); }
+  .qa:hover .qa__link, .qa__link:focus-visible, .qa:target .qa__link { opacity: 1; }
+  .qa__q { margin: 0; max-width: 18em; }
+  .qa:target .qa__q { text-decoration: underline; text-decoration-color: var(--lamp); text-decoration-thickness: 3px; text-underline-offset: 6px; }
+  .qa__a p { margin: 0 0 var(--space-3); }
+  .qa__first { font-size: 19px; line-height: 1.55; }
+  .qa :global(.term) { margin: var(--space-6) 0 var(--space-2); }
+  .qa__src { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-4); margin-top: var(--space-6); padding-top: var(--space-3); border-top: 1px dashed var(--line); font-size: 14px; }
+  .qa__src-label { font: 700 11.5px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .qa__src ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--space-4); }
+  .qa__src li a { display: inline-flex; align-items: center; min-height: 26px; }
+  .qa__art { display: grid; justify-items: start; gap: var(--space-3); margin-top: var(--space-8); }
+  .qa__art p { max-width: 18em; margin: 0; }
+
+  .more__in { display: flex; justify-content: space-between; align-items: end; gap: var(--space-8); flex-wrap: wrap; }
+  .more h2 { margin-bottom: var(--space-3); }
+  .more p { margin: 0; max-width: 40em; }
+
+  @media (max-width: 1000px) {
+    .board ol { columns: 1; }
+    .qa { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+    .qa__head { position: static; }
+    .qa__art { grid-template-columns: auto 1fr; align-items: center; margin-top: var(--space-4); }
+    .qa__art :global(svg) { width: 110px; }
+  }
+  @media (max-width: 760px) {
+    .lobby__in { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .lobby__doorman { place-items: start; justify-content: start; }
+    .lobby__doorman :global(svg) { width: 130px; }
+    .qa { padding: var(--space-8) 0; }
+  }
+  @media (max-width: 600px) {
+    .intro { padding: var(--space-12) 0 var(--space-6); }
+    .lobby { padding-bottom: var(--space-12); }
+    .board { padding: var(--space-4) var(--space-3) var(--space-3); }
+    .board a { font-size: 14px; padding: 8px var(--space-2); }
+    .qa__first { font-size: 17.5px; }
+    .qa__link { display: none; }
+  }
+</style>

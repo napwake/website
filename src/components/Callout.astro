@@ -1,0 +1,12 @@
+---
+// The design system's Callout: tone 'note' (what to know) or 'needs-you' (something to fix, calmly).
+import StateDoor from './StateDoor.astro';
+const { title, tone = 'note' } = Astro.props;
+---
+<aside class:list={['nw-callout', `nw-callout--${tone}`]}>
+  {tone === 'needs-you' && <StateDoor state="error" size={22} />}
+  <div class="nw-callout__body">
+    {title && <p class="nw-callout__title">{title}</p>}
+    <div class="nw-callout__text"><slot /></div>
+  </div>
+</aside>

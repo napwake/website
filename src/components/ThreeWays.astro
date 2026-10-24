@@ -1,0 +1,280 @@
+---
+// Three ways, one night: the same corridor, dev, staging, pr-42 and qa, from Monday 17:00 to Tuesday 09:30, run by a
+// Napwake, a timetable and a scale-to-zero proxy, one row each, under one clock. CMO decision 0006: compare approaches.
+// Every room is drawn once with all its pictures as layers (art.mjs roomLayers), and the doorman once in each pose,
+// so the browser only switches data attributes. Lights go off light first, as the design system's motion says.
+// It opens on the first of ten moments and moves only when the reader asks: Next and Back step through the
+// moments, and the clock, a labelled range input that also works by keyboard, goes anywhere between. Each row's
+// words change with it, and a polite live region says what changed.
+import { roomLayers, wallSwitch, doormanLayer, finishFilter } from '../lib/art.mjs';
+import { code, bare } from '../lib/text.mjs';
+import { ROOMS, APPROACHES, stateAt, poseAt, POSES, switchAt, WORD, TONE, captionAt, describe, DEFAULT, MOMENTS, END, clock, day, dayLong, toMin } from '../lib/compare.mjs';
+
+// the corridor's geometry, in the rig's units: four doors, a wider gap before staging where the doorman stands
+const W = 544, H = 252, FY = 212, X0 = 30, DW = 78, GAP = 30, PGAP = 112;
+const XS = [X0, X0 + DW + PGAP, X0 + DW + PGAP + DW + GAP, X0 + DW + PGAP + 2 * (DW + GAP)];
+const GAP_X = X0 + DW + PGAP / 2;
+const pc = (n, of) => `${Math.round((n / of) * 100000) / 1000}%`;
+const t0 = DEFAULT;
+
+const rows = APPROACHES.map((a, i) => {
+  const fid = `twf${i}`;
+  let svg = `<defs>${finishFilter(fid)}</defs>`;
+  if (a.key === 'timetable') svg += `<g filter="url(#${fid})">${wallSwitch(GAP_X, 128)}</g>`;
+  svg += ROOMS.map((r, j) => roomLayers(XS[j], FY, { filter: fid, state: stateAt(a.key, r, t0), name: r })).join('');
+  if (a.key === 'napwake') {
+    const rooms = ROOMS.map((label) => ({ state: 'asleep', label }));
+    svg += POSES.map((p) => `<g class="dm dm--${p}">${doormanLayer({ w: W, h: H, rooms, x0: X0, floorY: FY, doormanAt: 1, pose: p, props: p === 'watch' || p === 'list', listTime: '08:45' })}</g>`).join('');
+  }
+  return {
+    ...a, svg,
+    states: ROOMS.map((r) => stateAt(a.key, r, t0)),
+    caption: captionAt(a.key, t0), say: describe(a.key, t0),
+  };
+});
+const ticks = ['17:00', '20:00', '00:00', '04:00', '08:00'].map((c) => ({ c: c === '00:00' ? 'midnight' : c, p: toMin(c) / END }));
+---
+<figure class="tw" data-tw data-t={t0} aria-labelledby="tw-title">
+  <figcaption id="tw-title" class="visually-hidden">The same four rooms, dev, staging, pr-42 and qa, from Monday 17:00 to Tuesday 09:30, run three ways: by a timetable, by a scale-to-zero proxy, and by Napwake.</figcaption>
+
+  <div class="tw__bar" data-bar hidden>
+    <div class="wrap tw__bar-in">
+      <p class="tw__clock" aria-hidden="true"><span class="tw__day" data-day>{day(t0)}</span><span class="tw__time" data-clock>{clock(t0)}</span></p>
+      <div class="tw__track">
+        <label class="tw__label" for="tw-time">Drag the time</label>
+        <input id="tw-time" class="tw__range" type="range" min="0" max={END} step="1" value={t0} aria-valuetext={`${dayLong(t0)} ${clock(t0)}`} aria-describedby="tw-keys" data-range />
+        <div class="tw__ticks" aria-hidden="true">{ticks.map((k) => <span style={`--p:${k.p}`}>{k.c}</span>)}</div>
+        <p id="tw-keys" class="visually-hidden">From Monday 17:00 to Tuesday 09:30. Arrow keys move five minutes, Page Up and Page Down an hour.</p>
+      </div>
+      <div class="tw__ctl">
+        <div class="tw__steps" role="group" aria-label="Step through the evening">
+          <button type="button" class="tw__back" data-back disabled>← Back</button>
+          <span class="tw__count" data-count>1 of {MOMENTS.length}</span>
+          <button type="button" class="tw__next" data-next>Next: {clock(MOMENTS[1])} →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tw__rows">
+    {rows.map((r) => (
+      <div class:list={['tw__row', `tw__row--${r.key}`]} data-row={r.key} data-pose={r.key === 'napwake' ? poseAt(t0) : undefined} data-switch={r.key === 'timetable' ? switchAt(t0) : undefined}>
+        <div class="wrap tw__row-in">
+          <div class="tw__name">
+            <p class="tw__h">{r.name}</p>
+            <p class="tw__also">{r.also}</p>
+          </div>
+          <div class="tw__stage">
+            <div class="tw__art">
+              <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false" set:html={r.svg} />
+              {ROOMS.map((room) => <span class="tw__room" aria-hidden="true" style={`left:${pc(XS[ROOMS.indexOf(room)] + DW / 2, W)}`}>{room}</span>)}
+              {ROOMS.map((room, j) => <span class="tw__word" aria-hidden="true" data-word={room} data-tone={TONE[r.states[j]]} style={`left:${pc(XS[j] + DW / 2, W)};top:${pc(FY + 6, H)}`}>{WORD[r.states[j]]}</span>)}
+              {r.key === 'timetable' && <span class="tw__sw" aria-hidden="true" style={`left:${pc(GAP_X, W)};top:${pc(160, H)}`}>off 20:00<br />on 08:00</span>}
+            </div>
+          </div>
+          <div class="tw__say">
+            <p class="tw__cap" data-cap set:html={`<span>${code(r.caption)}</span>`} />
+            <p class="visually-hidden" data-say>{bare(r.say)}</p>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-live></p>
+</figure>
+
+<style>
+  .tw { margin: 0; background: var(--scene-wall); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow-x: clip; }
+
+  /* ---------- the clock: sticky while the rows scroll under it ---------- */
+  .tw__bar { position: sticky; top: 0; z-index: 3; background: var(--scene-wall); border-bottom: 1px solid var(--line); }
+  .tw__bar-in { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; column-gap: var(--space-8); align-items: center; padding-top: var(--space-4); padding-bottom: var(--space-3); }
+  .tw__clock { margin: 0; display: flex; align-items: baseline; gap: var(--space-2); }
+  .tw__day { font: 700 13px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tw__time { font: 800 56px/1 var(--font-display); color: var(--text); font-variant-numeric: tabular-nums; min-width: 2.6em; }
+  .tw__track { position: relative; padding-bottom: 20px; }
+  .tw__label { display: block; font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .tw__range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; border-radius: var(--radius-sm); }
+  .tw__range::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--line); }
+  .tw__range::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+  .tw__range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%; background: var(--action); border: 3px solid var(--scene-wall); box-shadow: 0 0 0 1px var(--action); }
+  .tw__range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--action); border: 3px solid var(--scene-wall); box-shadow: 0 0 0 1px var(--action); }
+  .tw__range:focus-visible { box-shadow: var(--ring); }
+  .tw__ticks { position: absolute; left: 11px; right: 11px; bottom: 0; height: 16px; }
+  .tw__ticks span { position: absolute; left: calc(var(--p) * 100%); transform: translateX(-50%); font: 400 12px/16px var(--font-mono); color: var(--muted); white-space: nowrap; }
+  .tw__ticks span:first-child { transform: none; margin-left: -11px; }
+  .tw__ctl { display: grid; gap: var(--space-2); justify-items: end; }
+  .tw__steps button { font: 700 13px/1 var(--font-mono); letter-spacing: .04em; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 9px 12px; min-height: 36px; cursor: pointer; transition: border-color var(--duration-ui-short) var(--ease-calm), background-color var(--duration-ui-short) var(--ease-calm); }
+  .tw__steps { display: flex; align-items: center; gap: var(--space-2); justify-content: flex-end; }
+  .tw__steps button:hover:not(:disabled) { border-color: var(--muted); }
+  .tw__steps button:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+  .tw__steps button:disabled { cursor: default; opacity: .45; }
+  .tw__next { min-width: 150px; border-color: var(--action) !important; background: var(--action) !important; color: var(--on-action) !important; }
+  .tw__next:hover { filter: brightness(1.08); }
+  .tw__count { font: 400 12px/1 var(--font-mono); color: var(--muted); min-width: 4.5em; text-align: center; }
+
+  /* ---------- the rows: a corridor each, the floor running the width of the page ---------- */
+  .tw__row + .tw__row { border-top: 1px solid var(--line); }
+  .tw__row-in { display: grid; grid-template-columns: 220px 520px minmax(0, 1fr); column-gap: var(--space-8); align-items: end; padding-top: var(--space-4); }
+  .tw__name, .tw__say { align-self: center; padding-bottom: 38px; }
+  .tw__h { margin: 0 0 var(--space-1); font: 700 21px/1.25 var(--font-sans); color: var(--text); }
+  .tw__row--napwake .tw__h { color: var(--brand); }
+  .tw__also { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+  .tw__cap { margin: 0; font-size: 17px; line-height: 1.5; color: var(--text); min-height: 4.5em; display: flex; align-items: center; }
+  .tw__row--napwake .tw__cap { box-shadow: inset 3px 0 0 var(--brand); padding-left: var(--space-4); }
+  .tw__stage { position: relative; }
+  .tw__art { position: relative; }
+  /* the floor, behind the doors, exactly where the drawing's floor is, and as wide as the page */
+  .tw__art::before { content: ""; position: absolute; top: calc(212 / 252 * 100%); bottom: 0; left: -100vw; right: -100vw; background: var(--scene-floor); z-index: 0; }
+  .tw__art svg { position: relative; z-index: 1; display: block; width: 100%; height: auto; }
+  .tw__room, .tw__word, .tw__sw { position: absolute; z-index: 2; transform: translateX(-50%); text-align: center; font-family: var(--font-mono); pointer-events: none; }
+  .tw__room { top: 0; font-size: 12px; line-height: 1; color: var(--scene-label); }
+  /* each state's word on a small plate in the page's colour, like a mat at the door: on the light floor itself the
+     state colours miss 4.5:1 (the design system's flagged pair); on the plate they all pass, in both themes */
+  .tw__word { width: max-content; max-width: 19%; padding: 1px 5px 2px; border-radius: var(--radius-sm); background: var(--bg); font-size: 12px; line-height: 1.15; font-weight: 700; letter-spacing: .02em; color: var(--asleep); transition: color var(--duration-ui-short) var(--ease-calm); }
+  .tw__word[data-tone="awake"] { color: var(--awake); }
+  .tw__word[data-tone="waking"] { color: var(--waking); }
+  .tw__sw { width: 18%; font-size: 11px; line-height: 1.3; color: var(--scene-label); }
+
+  /* ---------- the rooms: every picture drawn, the state picks which show ---------- */
+  .tw :global(.nr > g) { transition: opacity var(--duration-ui-short) var(--ease-calm); }
+  .tw :global(.nr .r-lit), .tw :global(.nr .r-guest), .tw :global(.nr .r-open), .tw :global(.nr .r-lamp), .tw :global(.nr .r-wake), .tw :global(.nr .r-out) { opacity: 0; }
+  .tw :global(.nr .r-shut) { transform-box: fill-box; transform-origin: 0 50%; transition: opacity 150ms var(--ease-calm) 600ms, transform var(--duration-ui-long) var(--ease-calm) 600ms; }
+  /* going dark, light first: the lamp goes out, then the room's light from 150 ms, then the leaf swings shut from 600 ms */
+  .tw :global(.nr[data-s="asleep"] .r-lit), .tw :global(.nr[data-s="out"] .r-lit),
+  .tw :global(.nr[data-s="asleep"] .r-guest), .tw :global(.nr[data-s="out"] .r-guest) { transition-duration: var(--duration-ui-long); transition-delay: 150ms; }
+  .tw :global(.nr[data-s="asleep"] .r-open), .tw :global(.nr[data-s="out"] .r-open) { transition-delay: 600ms; }
+  /* shut out: the guest steps outside once the door has shut */
+  .tw :global(.nr[data-s="out"] .r-out) { opacity: 1; transition-delay: 1200ms; }
+  /* lighting up: the leaf swings open and the room lights as it does; the lamp comes on once it's open */
+  .tw :global(.nr[data-s="idle"] .r-shut), .tw :global(.nr[data-s="active"] .r-shut), .tw :global(.nr[data-s="waking"] .r-shut) { opacity: 0; transform: scaleX(.06); transition: transform var(--duration-ui-long) var(--ease-calm), opacity 150ms var(--ease-calm) 450ms; }
+  .tw :global(.nr[data-s="idle"] .r-lit), .tw :global(.nr[data-s="active"] .r-lit) { opacity: 1; transition-duration: var(--duration-ui-long); }
+  .tw :global(.nr[data-s="active"] .r-guest) { opacity: 1; transition-delay: 300ms; }
+  .tw :global(.nr[data-s="idle"] .r-open), .tw :global(.nr[data-s="active"] .r-open) { opacity: 1; transition-delay: 300ms; }
+  .tw :global(.nr[data-s="idle"] .r-lamp), .tw :global(.nr[data-s="active"] .r-lamp) { opacity: 1; transition-delay: 600ms; }
+  /* waking up: amber, ajar, and the wedge breathes */
+  .tw :global(.nr[data-s="waking"] .r-wake) { opacity: 1; }
+  .tw :global(.nr .wedge) { opacity: var(--light-wedge); transform-box: fill-box; transform-origin: 0 0; }
+  .tw :global(.nr[data-s="waking"] .wedge) { animation: tw-breathe var(--duration-breathe) var(--ease-breathe) infinite; }
+  @keyframes tw-breathe { 50% { opacity: .3; transform: scaleX(.88); } }
+
+  /* the doorman, in the pose for the rooms he minds; the timetable's switch */
+  .tw :global(.dm), .tw :global(.sw) { opacity: 0; transition: opacity 240ms var(--ease-calm); }
+  .tw__row[data-pose="duty"] :global(.dm--duty), .tw__row[data-pose="watch"] :global(.dm--watch), .tw__row[data-pose="door"] :global(.dm--door),
+  .tw__row[data-pose="list"] :global(.dm--list), .tw__row[data-pose="rest"] :global(.dm--rest),
+  .tw__row[data-switch="on"] :global(.sw--on), .tw__row[data-switch="off"] :global(.sw--off) { opacity: 1; }
+
+  @media (max-width: 1180px) {
+    .tw__row-in { grid-template-columns: 180px minmax(0, 460px) minmax(0, 1fr); column-gap: var(--space-6); }
+    .tw__art::before { top: calc(212 / 252 * 100%); }
+  }
+  @media (max-width: 900px) {
+    .tw__bar-in { grid-template-columns: auto minmax(0, 1fr); row-gap: var(--space-2); column-gap: var(--space-4); }
+    .tw__clock { grid-column: 1; grid-row: 1; }
+    .tw__ctl { grid-column: 2; grid-row: 1; }
+    .tw__track { grid-column: 1 / -1; grid-row: 2; }
+    .tw__time { font-size: 44px; }
+    .tw__row-in { grid-template-columns: minmax(0, 1fr); padding-top: var(--space-6); }
+    .tw__name { padding-bottom: var(--space-3); }
+    .tw__name, .tw__say { align-self: start; }
+    .tw__stage { margin: 0 calc(-1 * var(--gutter)); }
+    .tw__say { padding: var(--space-3) 0 var(--space-6); }
+    .tw__cap { min-height: 3em; align-items: flex-start; }
+    .tw__h { font-size: 19px; }
+  }
+  @media (max-width: 600px) {
+    .tw__bar-in { padding-top: var(--space-3); padding-bottom: var(--space-2); }
+    .tw__time { font-size: 38px; }
+    .tw__label { font-size: 11px; }
+    /* a phone: the clock, the track, then the moments, all still sticky */
+    .tw__ctl { display: contents; }
+    .tw__steps { grid-column: 1 / -1; grid-row: 3; justify-content: space-between; }
+    .tw__steps button { padding: 8px 10px; min-height: 36px; font-size: 12px; }
+    .tw__next { min-width: 0; }
+    .tw__room { font-size: 11px; }
+    .tw__word { font-size: 11px; max-width: 21%; padding: 1px 4px 2px; }
+    .tw__sw { font-size: 10px; }
+    .tw__cap { font-size: 16px; min-height: 3em; }
+  }
+</style>
+
+<script>
+  import { ROOMS, APPROACHES, stateAt, poseAt, switchAt, WORD, TONE, captionAt, describe, END, MOMENTS, clock, day, dayLong } from '../lib/compare.mjs';
+  import { code, bare } from '../lib/text.mjs';
+
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-tw]')) {
+    const $ = <T extends Element>(s: string, el: ParentNode = root) => el.querySelector<T>(s)!;
+    const bar = $<HTMLElement>('[data-bar]');
+    const range = $<HTMLInputElement>('[data-range]');
+    const clockEl = $<HTMLElement>('[data-clock]'), dayEl = $<HTMLElement>('[data-day]');
+    const live = $<HTMLElement>('[data-live]');
+    const back = $<HTMLButtonElement>('[data-back]'), next = $<HTMLButtonElement>('[data-next]'), count = $<HTMLElement>('[data-count]');
+    const rows = APPROACHES.map((a) => {
+      const el = $<HTMLElement>(`[data-row="${a.key}"]`);
+      return {
+        key: a.key, name: a.name, el,
+        rooms: ROOMS.map((r) => $<SVGGElement>(`.nr[data-room="${r}"]`, el)),
+        words: ROOMS.map((r) => $<HTMLElement>(`[data-word="${r}"]`, el)),
+        cap: $<HTMLElement>('[data-cap]', el), say: $<HTMLElement>('[data-say]', el),
+        told: captionAt(a.key, Number(root.dataset.t)),
+      };
+    });
+    const still = matchMedia('(prefers-reduced-motion: reduce)');
+    let t = Number(root.dataset.t), shown = '', tell: number | undefined;
+
+    // paint the moment t: only what changed, as attributes and text
+    function render(nt: number) {
+      t = Math.max(0, Math.min(END, nt));
+      const m = Math.floor(t), c = clock(m);
+      if (c !== shown) {
+        shown = c;
+        clockEl.textContent = c; dayEl.textContent = day(m);
+        range.setAttribute('aria-valuetext', `${dayLong(m)} ${c}`);
+        // the step it's at, or the one it has passed; Next names where it goes
+        const at = MOMENTS.reduce((k, mm, i) => (m >= mm - 0.5 ? i : k), -1);
+        const exact = at >= 0 && Math.abs(MOMENTS[at] - m) < 1;
+        count.textContent = exact ? `${at + 1} of ${MOMENTS.length}` : '';
+        back.disabled = MOMENTS.findLastIndex((mm) => mm < m - 0.5) < 0;
+        const nx = MOMENTS.findIndex((mm) => mm > m + 0.5);
+        next.textContent = nx < 0 ? 'Start over' : `Next: ${clock(MOMENTS[nx])} →`;
+      }
+      if (document.activeElement !== range) range.value = String(t);
+      for (const r of rows) {
+        ROOMS.forEach((room, j) => {
+          const s = stateAt(r.key, room, t);
+          if (r.rooms[j].dataset.s === s) return;
+          r.rooms[j].dataset.s = s;
+          r.words[j].textContent = WORD[s]; r.words[j].dataset.tone = TONE[s];
+        });
+        if (r.key === 'napwake') r.el.dataset.pose = poseAt(t);
+        if (r.key === 'timetable') r.el.dataset.switch = switchAt(t);
+        const cap = captionAt(r.key, t);
+        if (r.cap.dataset.c !== cap) { r.cap.dataset.c = cap; r.cap.innerHTML = `<span>${code(cap)}</span>`; }
+        const say = bare(describe(r.key, t));
+        if (r.say.textContent !== say) r.say.textContent = say;
+      }
+      // once the clock settles, say what changed
+      clearTimeout(tell);
+      tell = window.setTimeout(() => {
+        const changed = rows.filter((r) => captionAt(r.key, t) !== r.told);
+        changed.forEach((r) => (r.told = captionAt(r.key, t)));
+        if (changed.length) live.textContent = changed.map((r) => `${r.name}: ${bare(r.told)}`).join(' ');
+      }, 700);
+    }
+    // the reader moves the clock: by dragging, by keyboard, or by a moment
+    range.addEventListener('input', () => render(Number(range.value)));
+    const KEYS: Record<string, number> = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5, PageUp: 60, PageDown: -60 };
+    range.addEventListener('keydown', (e) => {
+      const by = KEYS[e.key];
+      if (!by) return;
+      e.preventDefault();
+      const nt = Math.max(0, Math.min(END, (by > 0 ? Math.floor(t / Math.abs(by)) * Math.abs(by) : Math.ceil(t / Math.abs(by)) * Math.abs(by)) + by));
+      range.value = String(nt); render(nt);
+    });
+    next.addEventListener('click', () => { const nx = MOMENTS.findIndex((mm) => mm > t + 0.5); render(nx < 0 ? MOMENTS[0] : MOMENTS[nx]); });
+    back.addEventListener('click', () => { const bk = MOMENTS.findLastIndex((mm) => mm < t - 0.5); if (bk >= 0) render(MOMENTS[bk]); });
+
+    bar.hidden = false;
+  }
+</script>

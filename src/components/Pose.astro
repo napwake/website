@@ -1,0 +1,10 @@
+---
+// One of the doorman's poses, drawn by the rig, with the print finish. Caption it in plain words, by the doorman's rule: only the door is his job.
+import { pose as drawPose } from '../lib/art.mjs';
+const { name, alt, width = 240, class: cls = '', props = true, ground = true, w, h, cx, floor } = Astro.props;
+const opts = { props, ground };
+if (w) opts.w = w; if (h) opts.h = h; if (cx != null) opts.cx = cx; if (floor) opts.floor = floor;
+const { viewBox, markup } = drawPose(name, opts);
+---
+<svg class:list={['pose', cls]} viewBox={viewBox} width={width} role={alt ? 'img' : undefined} aria-label={alt} aria-hidden={alt ? undefined : 'true'} focusable="false" set:html={markup} />
+<style>.pose { height: auto; overflow: visible; }</style>

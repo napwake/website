@@ -1,0 +1,217 @@
+---
+// Brand: a short page. The files are in github.com/napwake/brand; the rules are its TRADEMARKS.md and
+// guidelines, said here in plain words.
+import Base from '../layouts/Base.astro';
+import Pose from '../components/Pose.astro';
+import StateBadge from '../components/StateBadge.astro';
+import Room from '../components/Room.astro';
+import { links } from '../lib/links.mjs';
+
+const credit = 'Doorman illustrations by Napwake, CC BY 4.0';
+// guidelines/doorman.md, "The eleven poses": the pose, what it's for, and its alt text, captioned by the
+// doorman's rule (only the door is his job; everything else is Napwake's, even with him in the picture)
+const poses = [
+  ['duty', 'On duty', 'Napwake, running', 'The doorman on duty.'],
+  ['door', 'Holds the door', 'The doorman waking a room when someone knocks', 'The doorman holds the door of a waking room.'],
+  ['lights', 'Lights out', 'Napwake putting an empty room to sleep', 'Lights out: Napwake puts an empty room to sleep.'],
+  ['list', 'The morning list', 'Napwake waking rooms before the team arrives', 'The morning list: Napwake wakes rooms before the team arrives.'],
+  ['rounds', 'Does the rounds', 'Napwake checking which rooms are empty', 'Doing the rounds with a clipboard: Napwake checks which rooms are empty.'],
+  ['watch', 'Checks his watch', 'How long a room has been idle, as Napwake counts it', 'A pocket watch: Napwake counts how long a room has been idle.'],
+  ['note', 'Pins a note', 'Something needs you', 'A note pinned on a door: something needs you.'],
+  ['rest', 'Resting his eyes', 'Everything is asleep', 'The doorman rests his eyes: everything is asleep.'],
+  ['shrug', 'No room by that name', 'Page not found', 'The doorman shrugs: no room by that name.'],
+  ['point', 'This way', 'Getting started, next steps', 'The doorman points the way.'],
+  ['tip', 'Tips his hat', 'Thanks, and what’s new', 'The doorman tips his hat.'],
+];
+---
+<Base title="Brand and trademarks">
+  <section class="intro">
+    <div class="wrap intro__in">
+      <div>
+        <p class="eyebrow">Brand</p>
+        <h1 class="display-1">The doorman, and how to use him.</h1>
+        <p class="lede">The logo, the doorman illustrations, the doors and the colours are in one public repository. Use the illustrations freely, with credit. Use the name and logo to point to Napwake, unchanged.</p>
+        <div class="actions"><a class="nw-btn nw-btn--primary" href={links.brand.href}>github.com/napwake/brand</a></div>
+      </div>
+      <div class="intro__art"><Pose name="tip" alt="The doorman tips his hat." width={230} /></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="logo-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">01</span> The logo</p>
+        <h2 id="logo-title" class="display-2">One logo, always the same drawing.</h2>
+        <p>The doorman’s head under his top hat, beside the drawn wordmark. The colour file goes on light grounds, the dark file on Night. Anywhere else, use one colour. Never redrawn, re-coloured or retyped.</p>
+      </div>
+      <div class="logos">
+        <figure class="logos__panel logos__panel--paper"><img src="/media/logo/lockup-horizontal.svg" width="300" height="86" alt="The Napwake logo, in colour, for light grounds" /><figcaption>lockup-horizontal.svg</figcaption></figure>
+        <figure class="logos__panel logos__panel--night"><img src="/media/logo/lockup-horizontal-dark.svg" width="300" height="86" alt="The Napwake logo, for dark grounds" /><figcaption>lockup-horizontal-dark.svg</figcaption></figure>
+        <figure class="logos__panel logos__panel--paper logos__panel--small"><img src="/media/logo/symbol.svg" width="86" height="86" alt="The Napwake symbol: the doorman's head under his top hat" /><figcaption>symbol.svg</figcaption></figure>
+        <figure class="logos__panel logos__panel--coat logos__panel--small"><img src="/media/logo/symbol-on-coat.svg" width="86" height="86" alt="The Napwake symbol in one colour, on the brand's teal" /><figcaption>symbol-on-coat.svg</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="doorman-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">02</span> The doorman</p>
+        <h2 id="doorman-title" class="display-2">Eleven poses, each a real job.</h2>
+        <p>He’s Napwake’s doorman, the part of Napwake that holds the first request to a paused workload while it wakes. On a public preview set to ask, he asks first. Those are the only jobs his captions give him. Everything else in these pictures is Napwake’s work. He has no name.</p>
+      </div>
+      <ul class="poses">
+        {poses.map(([n, t, u, alt]) => (
+          <li class="pose-card">
+            <Pose name={n} alt={alt} width={140} />
+            <p class="pose-card__t">{t}</p>
+            <p class="pose-card__u">{u}</p>
+            <code class="pose-card__f">doorman-{n}.svg</code>
+          </li>
+        ))}
+        <li class="pose-card pose-card--more">
+          <p class="pose-card__t">A twelfth?</p>
+          <p class="pose-card__u">A new pose shows a new real job. He’s drawn from numbers (lean, turn, lids, arms) by the brand’s rig, never traced, so he stays the same doorman.</p>
+          <a href={`${links.brand.href}/blob/main/guidelines/doorman.md`}>How he’s built</a>
+        </li>
+      </ul>
+      <div class="credit card">
+        <div>
+          <h3 class="h3">Use them anywhere, with this credit</h3>
+          <p>The illustrations are under <a href={links.ccby.href}>CC BY 4.0</a>: in talks, posts, slides and stickers, even commercially, changed or not, as long as you credit them and link the repository.</p>
+        </div>
+        <div class="credit__line">
+          <code data-credit>{credit}</code>
+          <button type="button" class="credit__copy" data-copy-credit hidden>Copy</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="doors-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">03</span> The doors</p>
+        <h2 id="doors-title" class="display-2">Four states, read at a glance.</h2>
+        <p>Every room is an arched door. Always put the state’s word beside its door. Colour is never the only signal.</p>
+      </div>
+      <ul class="doors">
+        {['asleep', 'waking', 'awake', 'error'].map((s) => (
+          <li><Room state={s} w={200} h={240} class="doors__art" /><StateBadge state={s} vocabulary="both" /></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="trademarks" aria-labelledby="tm-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">04</span> Trademarks</p>
+        <h2 id="tm-title" class="display-2">The name and the logo, in plain words.</h2>
+        <p>“Napwake”, its logo and wordmark, and the doorman’s head as the logo uses it are trademarks. The code’s Apache 2.0 licence and the illustrations’ CC BY 4.0 don’t cover them. <a href={links.trademarks.href}>TRADEMARKS.md</a> says how you may use them.</p>
+      </div>
+      <div class="tm">
+        <div class="tm__col">
+          <h3 class="tm__h tm__h--yes">You may</h3>
+          <ul>
+            <li>Use the name to talk about Napwake, in articles, talks, tutorials, comparisons and videos.</li>
+            <li>Say your project works with Napwake: “for Napwake”, “works with Napwake”.</li>
+            <li>Use the logo, unchanged, to point to Napwake: on a slide, in a list of integrations, beside a link.</li>
+          </ul>
+        </div>
+        <div class="tm__col">
+          <h3 class="tm__h tm__h--no">You may not</h3>
+          <ul>
+            <li>Use the name or logo in the name or logo of your own product, service, company or domain.</li>
+            <li>Change the logo’s shape, colours or proportions, or combine it with another mark.</li>
+            <li>Suggest Napwake endorses, sponsors or is part of something it isn’t.</li>
+            <li>Sell merchandise with the logo without asking first.</li>
+          </ul>
+        </div>
+        <div class="tm__col tm__col--note">
+          <h3 class="tm__h">Forks</h3>
+          <p>A fork is welcome. If you hand a changed build to others, give it a name of its own, so nobody mistakes it for Napwake.</p>
+          <p class="muted">Not sure? <a href={links.brand.href}>Open an issue</a> in the brand repository and ask.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro { padding: var(--space-18) 0 var(--space-12); }
+  .intro__in { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--space-12); align-items: end; }
+  .intro h1 { max-width: 11em; margin-bottom: var(--space-6); }
+  .intro .lede { margin-bottom: var(--space-6); max-width: 34em; }
+  .intro__art { display: grid; place-items: end center; }
+
+  .logos { display: grid; grid-template-columns: 1fr 1fr 220px 220px; gap: var(--space-4); }
+  .logos__panel { display: grid; place-items: center; gap: var(--space-4); border-radius: var(--radius-xl); padding: var(--space-12) var(--space-6) var(--space-4); border: 1px solid var(--line); }
+  .logos__panel img { height: 72px; width: auto; }
+  .logos__panel--small img { height: 86px; }
+  .logos__panel figcaption { font: 400 12px/1.4 var(--font-mono); margin: 0; color: var(--scene-label); }
+  .logos__panel--paper { background: var(--paper); }
+  .logos__panel--paper figcaption { color: var(--night); opacity: .72; }
+  .logos__panel--night { background: var(--night); }
+  .logos__panel--night figcaption { color: var(--paper); opacity: .72; }
+  .logos__panel--coat { background: var(--coat); }
+  .logos__panel--coat figcaption { color: var(--paper); }
+
+  .poses { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-4); }
+  .pose-card--more { align-content: end; background: transparent; border-style: dashed; gap: var(--space-2) !important; }
+  .pose-card--more a { font-size: 14px; }
+  .pose-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); padding: var(--space-4); display: grid; grid-template-rows: auto auto 1fr auto; justify-items: start; gap: 2px; }
+  .pose-card :global(.pose) { justify-self: center; margin-bottom: var(--space-2); }
+  .pose-card__t { margin: 0; font-weight: 700; }
+  .pose-card__u { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .pose-card__f { margin-top: var(--space-2); font-size: 12px !important; }
+
+  .credit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-8); align-items: center; margin-top: var(--space-8); }
+  .credit .h3 { margin-bottom: var(--space-2); }
+  .credit p { margin: 0; color: var(--muted); }
+  .credit__line { display: flex; align-items: center; gap: var(--space-2); }
+  .credit__line code { white-space: normal !important; font-size: 14px !important; padding: 10px 12px !important; }
+  .credit__copy { font: 700 12px/1 var(--font-mono); letter-spacing: .04em; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; cursor: pointer; }
+
+  .doors { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+  .doors li { display: grid; gap: var(--space-3); justify-items: start; }
+  .doors :global(.doors__art) { width: 100%; height: auto; background: var(--scene-wall); border-radius: var(--radius-lg); border: 1px solid var(--line); }
+
+  .tm { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); }
+  .tm__col { border-top: 3px solid var(--line); padding-top: var(--space-4); }
+  .tm__h { font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-3); }
+  .tm__h--yes { color: var(--awake); }
+  .tm__col:has(.tm__h--yes) { border-top-color: var(--glyph-green); }
+  .tm__h--no { color: var(--error); }
+  .tm__col:has(.tm__h--no) { border-top-color: var(--glyph-red); }
+  .tm ul { margin: 0; padding-left: 1.1em; display: grid; gap: var(--space-3); }
+
+  @media (max-width: 1100px) { .poses { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (max-width: 1000px) {
+    .logos { grid-template-columns: 1fr 1fr; }
+    .doors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tm { grid-template-columns: minmax(0, 1fr); }
+    .credit { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  }
+  @media (max-width: 760px) {
+    .intro__in { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+    .intro__art { place-items: start; order: -1; }
+    .intro__art :global(svg) { width: 140px; }
+  }
+  @media (max-width: 600px) {
+    .intro { padding: var(--space-8) 0; }
+    .logos { grid-template-columns: minmax(0, 1fr); }
+    .logos__panel img { height: 56px; }
+    .poses { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+    .pose-card :global(.pose) { width: 120px; }
+  }
+</style>
+<script>
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-copy-credit]')) {
+    const text = b.parentElement!.querySelector('[data-credit]')!.textContent || '';
+    b.hidden = !navigator.clipboard;
+    b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(`${text}, https://github.com/napwake/brand`); b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy'), 1600); } catch { /* clipboard refused */ }
+    });
+  }
+</script>

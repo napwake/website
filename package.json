@@ -1,0 +1,22 @@
+{
+  "name": "napwake-website",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "napwake.dev: the Napwake website",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": "^22.12.0"
+  },
+  "scripts": {
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "sync-brand": "node scripts/sync-brand.mjs",
+    "screens": "node scripts/screens.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "3.7.4",
+    "astro": "7.3.8"
+  }
+}

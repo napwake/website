@@ -1,0 +1,13 @@
+---
+// The primary lockup: the colour file on light, the dark file on dark. Never re-coloured or retyped.
+const { height = 34, class: cls = '' } = Astro.props;
+const width = Math.round(height * 430.5 / 124);
+---
+<span class:list={['logo', cls]} style={`--h:${height}px;--w:${width}px`}>
+  <img class="on-light" src="/media/logo/lockup-horizontal.svg" width={width} height={height} alt="Napwake" />
+  <img class="on-dark" src="/media/logo/lockup-horizontal-dark.svg" width={width} height={height} alt="Napwake" />
+</span>
+<style>
+  .logo { display: inline-block; width: var(--w); height: var(--h); }
+  .logo img { width: var(--w); height: var(--h); }
+</style>

@@ -1,0 +1,25 @@
+---
+// An empty state: the doorman in the pose for it, one plain line, and where to go next.
+import Pose from './Pose.astro';
+const { pose = 'rest', title, alt, size = 'md', class: cls = '' } = Astro.props;
+---
+<div class:list={['empty', `empty--${size}`, cls]}>
+  <div class="empty__art"><Pose name={pose} alt={alt} width={size === 'lg' ? 260 : 170} /></div>
+  <div class="empty__body">
+    <p class="empty__title">{title}</p>
+    <div class="empty__text"><slot /></div>
+  </div>
+</div>
+<style>
+  .empty { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+  .empty__art { display: grid; place-items: end center; }
+  .empty__title { font: 700 21px/1.3 var(--font-sans); margin: 0 0 var(--space-2); }
+  .empty--lg .empty__title { font: 800 72px/.95 var(--font-display); margin-bottom: var(--space-4); }
+  .empty__text { color: var(--muted); }
+  .empty__text :global(p:last-child) { margin-bottom: 0; }
+  @media (max-width: 600px) {
+    .empty { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+    .empty__art { place-items: start; }
+    .empty--lg .empty__title { font-size: 48px; }
+  }
+</style>

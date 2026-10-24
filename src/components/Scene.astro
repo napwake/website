@@ -1,0 +1,8 @@
+---
+// The corridor: one arched door per workload, each in its state, drawn by the rig from state, never by hand.
+import { corridor, describeRooms } from '../lib/art.mjs';
+const { rooms, doormanAt = -1, pose = 'door', w = 1280, h = 400, x0 = 40, sc = 1, floorY = null, label, labels = true, stateLabels = true, props = false, shiftDoorman = null, listTime = null, class: cls = '', decorative = false } = Astro.props;
+const markup = corridor({ w, h, rooms, x0, sc, floorY, doormanAt, pose, labels, stateLabels, props, shiftDoorman, listTime });
+const alt = label || `A corridor of doors: ${describeRooms(rooms)}.`;
+---
+<svg class:list={['scene', cls]} viewBox={`0 0 ${w} ${h}`} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : alt} aria-hidden={decorative ? 'true' : undefined} focusable="false" preserveAspectRatio="xMidYMid slice" set:html={markup} />

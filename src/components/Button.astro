@@ -1,0 +1,5 @@
+---
+// The design system's Button: one primary per view, secondary for the rest; labels are verbs or the page they open.
+const { to, variant = 'secondary', size, class: cls = '' } = Astro.props;
+---
+<a href={to.href} class:list={['nw-btn', `nw-btn--${variant}`, size && `nw-btn--${size}`, cls]}><slot /></a>

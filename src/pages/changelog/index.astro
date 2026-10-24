@@ -1,0 +1,315 @@
+---
+// /changelog/: what's new in each Napwake release, newest first. Built from the product's CHANGELOG.md
+// and its published GitHub releases (src/lib/changelog.mjs), with a plain-words summary and highlights
+// per release (src/lib/release-notes.mjs). 0.2.0 shows as in release candidates until it ships.
+import Base from '../../layouts/Base.astro';
+import Pose from '../../components/Pose.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { RELEASES, EARLY, SOURCE } from '../../lib/changelog.mjs';
+import { links, REPO_NOW } from '../../lib/links.mjs';
+
+const fmt = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const FOLD = 8; // entries a long section shows before "Show all"
+const rcName = (tag) => tag.replace(/^v\d+\.\d+\.\d+-/, '');
+const short = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+---
+<Base title="Changelog">
+  <section class="intro">
+    <div class="wrap intro__in">
+      <div>
+        <p class="eyebrow">Changelog</p>
+        <h1 class="display-1 intro__h1">What’s new in Napwake.</h1>
+        <p class="lede">Each release in plain words first, then every change, from the project’s CHANGELOG.md. Newest first.</p>
+        <p class="intro__links small"><a href={links.releases.href}>Releases on GitHub</a><a href={`${REPO_NOW}/releases.atom`}>Atom feed of releases</a><a href={links.changelogFile.href}>CHANGELOG.md</a></p>
+      </div>
+      <div class="intro__art"><Pose name="tip" alt="The doorman tips his hat: what’s new." width={190} /></div>
+    </div>
+  </section>
+
+  {RELEASES.length === 0 && (
+    <section class="section"><div class="wrap"><div class="empty-frame">
+      <EmptyState pose="rest" title="No releases yet." alt="The doorman rests his eyes at his post." size="lg">
+        <p>Napwake’s first release is 0.2.0. Its notes appear here once its first release candidate is published.</p>
+      </EmptyState>
+    </div></div></section>
+  )}
+
+  {RELEASES.map((r) => (
+    <section class="rel" id={r.id} aria-labelledby={`${r.id}-h`} data-release>
+      <div class="wrap">
+        <header class="rel__top">
+          <div class="rel__name">
+            <h2 class="rel__v" id={`${r.id}-h`}><a href={`#${r.id}`}>{r.version}</a></h2>
+            {r.status === 'rc'
+              ? <p class="rel__status rel__status--rc"><span class="rel__tag">Release candidate</span> <span>{rcName(r.rc.tag)} · {fmt(r.rc.date)}</span></p>
+              : <p class="rel__status"><span class="rel__tag rel__tag--out">Released</span> <span>{fmt(r.date)}</span></p>}
+          </div>
+          {r.status === 'rc' && (
+            <ol class="rcs" aria-label={`Release candidates of ${r.version}, oldest first`}>
+              {[...r.rcs].reverse().map((t) => <li class:list={[t.tag === r.rc.tag && 'is-now']}><a href={t.url} rel="noopener"><b>{rcName(t.tag)}</b><span>{short(t.date)}</span></a></li>)}
+              <li class="rcs__next"><span><b>{r.version}</b><span>when it ships</span></span></li>
+            </ol>
+          )}
+        </header>
+
+        {r.summary.length > 0 && (
+          <div class="rel__new">
+            <h3 class="rel__label">What’s new</h3>
+            <div class="rel__summary">{r.summary.map((p) => <p set:html={p} />)}</div>
+          </div>
+        )}
+        {r.summary.length === 0 && r.intro.length > 0 && <div class="rel__summary">{r.intro.map((p) => <p set:html={p} />)}</div>}
+
+        {r.highlights.length > 0 && (
+          <ul class="hl">
+            {r.highlights.map((h) => <li><a href={h.to ? `#${h.to}` : `#${r.id}-changes`} data-open={h.to}><b>{h.title}</b><span>{h.text}</span></a></li>)}
+          </ul>
+        )}
+
+        {r.prose.map((s) => (
+          <div class="sec sec--prose" id={`${r.id}-${s.key}`}>
+            <div class="sec__head">
+              <h3 class="sec__h">{s.name}</h3>
+              <p class="sec__about small muted">{s.about}</p>
+            </div>
+            <div class="prose-sec">
+              {s.blocks.map((b) => b.type === 'p'
+                ? <p set:html={b.html} />
+                : (
+                  <div class="table-wrap">
+                    <table>
+                      <thead><tr>{b.head.map((h) => <th scope="col" set:html={h} />)}</tr></thead>
+                      <tbody>{b.rows.map((row) => <tr>{row.map((c, i) => i === 0 ? <th scope="row" set:html={c} /> : <td data-label={b.head[i]?.replace(/<[^>]+>/g, '')} set:html={c} />)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
+
+        <div class="rel__changes" id={`${r.id}-changes`}>
+          <div class="bar" role="search">
+            <div class="bar__tabs" role="group" aria-label="Show a section">
+              <button type="button" class="tab" aria-pressed="true" data-sec="all">All <span>{r.count}</span></button>
+              {r.sections.map((s) => <button type="button" class="tab" aria-pressed="false" data-sec={s.key}>{s.name} <span>{s.items.length}</span></button>)}
+            </div>
+            <label class="bar__find"><span class="visually-hidden">Find a change</span><input type="search" placeholder={`Find in ${r.count} changes`} data-find /></label>
+            <p class="bar__count small muted" aria-live="polite" data-count></p>
+          </div>
+
+          {r.sections.map((s) => (
+            <div class="sec" data-sec-block={s.key} id={`${r.id}-${s.key}`}>
+              <div class="sec__head">
+                <h3 class="sec__h">{s.name} <span>{s.items.length}</span></h3>
+                <p class="sec__about small muted">{s.about}</p>
+              </div>
+              <ul class="entries">
+                {s.items.map((it) => (
+                  <li class="entry" id={it.id} data-text={it.search}>
+                    {it.long ? (
+                      <details>
+                        <summary>{it.lead ? <><b set:html={it.leadOnly} /><span class="entry__pre">{it.preview}</span></> : <span class="entry__pre entry__pre--solo">{it.preview}</span>}</summary>
+                        <div class="entry__full">
+                          <p set:html={it.rest} />
+                          {it.children.length > 0 && <ul>{it.children.map((c) => <li set:html={c} />)}</ul>}
+                        </div>
+                      </details>
+                    ) : (
+                      <p class="entry__short">{it.lead && <b set:html={it.lead} />}{it.lead && ' '}<span set:html={it.rest} /></p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {s.items.length > FOLD && <button type="button" class="unfold" data-unfold hidden>Show all {s.items.length} {s.name.toLowerCase()}</button>}
+            </div>
+          ))}
+          <p class="nothing" data-nothing hidden>No change in this release matches that.</p>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  {EARLY && (
+    <section class="early">
+      <div class="wrap">
+        <p class="small muted">Versions {EARLY.first.version} ({fmt(EARLY.first.date)}) to {EARLY.last.version} ({fmt(EARLY.last.date)}) were early experiments under the old name. Their notes are in <a href={links.changelogFile.href}>CHANGELOG.md</a> on GitHub.</p>
+        <p class="small muted">Releases and dates as published on {SOURCE}. The entries are from the project’s CHANGELOG.md.</p>
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .intro { padding: var(--space-18) 0 var(--space-8); }
+  .intro__in { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: var(--space-12); align-items: end; }
+  .intro__h1 { margin-bottom: var(--space-6); }
+  .intro .lede { max-width: 34em; margin-bottom: var(--space-4); }
+  .intro__links { display: flex; flex-wrap: wrap; gap: 0 var(--space-6); margin: 0; }
+  .intro__links a { display: inline-flex; align-items: center; min-height: 28px; }
+  .intro__art { display: grid; place-items: end center; }
+  .empty-frame { border: 1px dashed var(--line); border-radius: var(--radius-xl); padding: var(--space-12) var(--space-8); }
+
+  .rel { border-top: 1px solid var(--line); padding: var(--space-12) 0 var(--space-18); }
+  .rel__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--space-8); margin-bottom: var(--space-12); }
+  .rel__v { font: 800 112px/.85 var(--font-display); margin: 0; }
+  .rel__v a { color: inherit; text-decoration: none; }
+  .rel__status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin: var(--space-4) 0 0; font: 400 14px/1.4 var(--font-mono); color: var(--muted); }
+  .rel__tag { font: 700 12px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: var(--radius-sm); border: 1px solid var(--accent-text); color: var(--accent-text); }
+  .rel__tag--out { border-color: var(--brand); color: var(--brand); }
+
+  .rcs { list-style: none; margin: 0; padding: 0; display: flex; align-items: flex-start; }
+  .rcs li { position: relative; display: grid; justify-items: center; min-width: 74px; }
+  .rcs li::before { content: ""; position: absolute; top: 6px; left: 0; right: 0; border-top: 2px solid var(--line); }
+  .rcs li:first-child::before { left: 50%; }
+  .rcs li.rcs__next::before { right: 50%; border-top-style: dashed; }
+  .rcs a, .rcs li > span { position: relative; display: grid; justify-items: center; gap: 4px; padding-top: 20px; color: var(--muted); text-decoration: none; font: 400 12px/1.2 var(--font-mono); }
+  .rcs a::before, .rcs li > span::before { content: ""; position: absolute; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line); box-sizing: border-box; }
+  .rcs b { color: var(--text); font-weight: 700; }
+  .rcs a:hover b { color: var(--link); }
+  .rcs .is-now a::before { background: var(--lamp); border-color: var(--lamp); }
+  .rcs .rcs__next > span::before { border-style: dashed; }
+  .rcs .rcs__next b { color: var(--muted); }
+
+  .rel__new { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-8); margin-bottom: var(--space-8); }
+  .rel__label { font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-top: 6px; }
+  .rel__summary { max-width: 44em; }
+  .rel__summary p { font-size: 20px; line-height: 1.55; margin: 0 0 var(--space-4); }
+  .rel__summary p:first-child { font-weight: 700; }
+
+  .hl { list-style: none; margin: 0 0 var(--space-12) calc(200px + var(--space-8)); padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+  .hl a { display: grid; gap: 4px; height: 100%; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); color: var(--text); text-decoration: none; transition: border-color var(--duration-ui-short) var(--ease-calm); }
+  .hl a:hover { border-color: var(--action); }
+  .hl b { font-weight: 700; }
+  .hl span { font-size: 14px; line-height: 1.45; color: var(--muted); }
+
+  .bar { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); padding: var(--space-3) 0; margin-bottom: var(--space-6); background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar__tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .tab { font: 700 14px/1.2 var(--font-sans); padding: 7px 12px; border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+  .tab span { font: 700 12px/1 var(--font-mono); color: var(--muted); margin-left: 4px; }
+  .tab:hover { border-color: var(--action); }
+  .tab[aria-pressed="true"] { background: var(--action); border-color: var(--action); color: var(--on-action); }
+  .tab[aria-pressed="true"] span { color: inherit; opacity: .8; }
+  .bar__find { margin-left: auto; }
+  .bar__find input { font: 400 15px/1.3 var(--font-sans); width: 240px; padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .bar__find input:focus-visible { outline: none; box-shadow: var(--ring); }
+  .bar__count { flex-basis: 100%; margin: 0; }
+  .bar__count:empty { display: none; }
+
+  .sec { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-8); padding: var(--space-6) 0; border-top: 1px solid var(--line); scroll-margin-top: 80px; }
+  .bar + .sec { border-top: 0; }
+  .sec__head { position: sticky; top: 76px; align-self: start; }
+  .sec__h { font: 700 21px/1.3 var(--font-sans); margin: 0 0 var(--space-1); }
+  .sec__h span { font: 700 13px/1 var(--font-mono); color: var(--muted); margin-left: 4px; }
+  .sec__about { margin: 0; }
+  .entries { list-style: none; margin: 0; padding: 0; max-width: 50em; }
+  .entry { border-bottom: 1px solid var(--line); scroll-margin-top: 90px; }
+  .entry:last-child { border-bottom: 0; }
+  .entry summary { list-style: none; cursor: pointer; display: grid; gap: 2px; padding: 12px 0 12px 22px; position: relative; }
+  .entry summary::-webkit-details-marker { display: none; }
+  .entry summary::before { content: ""; position: absolute; left: 2px; top: 19px; width: 0; height: 0; border-left: 6px solid var(--muted); border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform var(--duration-ui-short) var(--ease-calm); }
+  .entry details[open] summary::before { transform: rotate(90deg); }
+  .entry summary:hover b { color: var(--link); }
+  .entry summary:focus-visible { box-shadow: var(--ring); border-radius: var(--radius-sm); }
+  .entry b { font-weight: 700; font-size: 16px; line-height: 1.45; }
+  .entry__pre { font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+  .entry__pre--solo { color: var(--text); font-size: 15.5px; }
+  .entry details[open] .entry__pre { display: none; }
+  .entry__full { padding: 0 0 var(--space-4) 22px; font-size: 15.5px; line-height: 1.65; }
+  .entry__full p { margin: 0 0 var(--space-2); }
+  .entry__full ul { margin: var(--space-2) 0 0; padding-left: 1.1em; display: grid; gap: var(--space-2); color: var(--text); }
+  .entry__short { margin: 0; padding: 12px 0 12px 22px; font-size: 15.5px; line-height: 1.55; position: relative; }
+  .entry__short::before { content: ""; position: absolute; left: 3px; top: 21px; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
+  .entry:target summary b, .entry.is-hit b { text-decoration: underline; text-decoration-color: var(--lamp); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+  .nothing { padding: var(--space-6) 0; color: var(--muted); }
+  .sec.is-folded .entry:nth-child(n+9) { display: none; }
+  .unfold { grid-column: 2; justify-self: start; margin: 0 0 0 22px; font: 700 14px/1.3 var(--font-sans); padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+  .unfold:hover { border-color: var(--action); }
+  .sec--prose { margin-bottom: var(--space-12); border-bottom: 1px solid var(--line); padding-bottom: var(--space-8); }
+  .sec--prose .sec__head { position: static; }
+  .prose-sec { max-width: 50em; min-width: 0; font-size: 15.5px; line-height: 1.6; }
+  .prose-sec p { margin: 0 0 var(--space-4); }
+  .prose-sec p:last-child { margin-bottom: 0; }
+  .prose-sec .table-wrap { margin: 0 0 var(--space-4); }
+  .prose-sec tbody th { white-space: normal; }
+  .early { border-top: 1px solid var(--line); padding: var(--space-8) 0 var(--space-12); }
+  .early p { max-width: 52em; margin: 0 0 var(--space-2); }
+
+  @media (max-width: 1000px) {
+    .rel__new, .sec { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    .hl { margin-left: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sec__head { position: static; }
+    .unfold { grid-column: 1; }
+  }
+  @media (max-width: 760px) {
+    .intro__in { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+    .intro__art { place-items: start; order: -1; }
+    .intro__art :global(svg) { width: 120px; }
+    .rel__v { font-size: 84px; }
+    .rcs { width: 100%; }
+    .rcs li { min-width: 0; flex: 1 1 0; }
+    .rcs a, .rcs li > span { font-size: 11px; text-align: center; }
+    .bar__find { margin-left: 0; flex: 1 1 100%; }
+    .bar__find input { width: 100%; }
+    .bar { position: static; }
+  }
+  @media (max-width: 600px) {
+    .intro { padding: var(--space-12) 0 var(--space-6); }
+    .hl { grid-template-columns: minmax(0, 1fr); }
+    .rel__summary p { font-size: 17.5px; }
+    .rel__top { margin-bottom: var(--space-8); }
+    /* a table of words, such as Renamed: a card per row, each cell under its column's name, as How it works' tables */
+    .prose-sec .table-wrap { background: none; border: 0; overflow: visible; }
+    .prose-sec table, .prose-sec tbody, .prose-sec tr, .prose-sec th, .prose-sec td { display: block; }
+    .prose-sec thead { display: none; }
+    .prose-sec tr { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-2); }
+    .prose-sec th, .prose-sec td { padding: 2px 0; border: 0; }
+    .prose-sec td[data-label]::before { content: attr(data-label); display: block; font: 700 11px/1.6 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-top: var(--space-2); }
+  }
+</style>
+
+<script>
+  for (const rel of document.querySelectorAll<HTMLElement>('[data-release]')) {
+    const tabs = [...rel.querySelectorAll<HTMLButtonElement>('[data-sec]')];
+    const find = rel.querySelector<HTMLInputElement>('[data-find]')!;
+    const count = rel.querySelector<HTMLElement>('[data-count]')!;
+    const nothing = rel.querySelector<HTMLElement>('[data-nothing]')!;
+    const blocks = [...rel.querySelectorAll<HTMLElement>('[data-sec-block]')];
+    const total = rel.querySelectorAll('.entry').length;
+    let sec = 'all';
+    // a long section shows its first entries and a button for the rest; filtering shows everything that matches
+    const folds = blocks.filter((b) => b.querySelector('[data-unfold]'));
+    folds.forEach((b) => { b.classList.add('is-folded'); const u = b.querySelector<HTMLButtonElement>('[data-unfold]')!; u.hidden = false; u.addEventListener('click', () => { b.classList.remove('is-folded'); u.hidden = true; }); });
+    const apply = () => {
+      const q = find.value.trim().toLowerCase();
+      const filtering = !!q || sec !== 'all';
+      folds.forEach((b) => { const u = b.querySelector<HTMLElement>('[data-unfold]')!; if (filtering) { b.classList.remove('is-folded'); u.hidden = true; } });
+      let shown = 0;
+      for (const b of blocks) {
+        const inSec = sec === 'all' || b.dataset.secBlock === sec;
+        let n = 0;
+        for (const e of b.querySelectorAll<HTMLElement>('.entry')) {
+          const ok = inSec && (!q || (e.dataset.text || '').includes(q));
+          e.hidden = !ok; e.classList.toggle('is-hit', !!q && ok);
+          if (ok) n++;
+        }
+        b.hidden = n === 0; shown += n;
+      }
+      nothing.hidden = shown !== 0;
+      count.textContent = q || sec !== 'all' ? `${shown} of ${total} changes` : '';
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => { sec = t.dataset.sec || 'all'; tabs.forEach((x) => x.setAttribute('aria-pressed', String(x === t))); apply(); }));
+    find.addEventListener('input', apply);
+  }
+  // a link to one change opens it, whatever filter is on
+  const openHash = () => {
+    const el = location.hash && document.getElementById(location.hash.slice(1));
+    if (!el || !el.classList.contains('entry')) return;
+    el.hidden = false;
+    const block = el.closest('[data-sec-block]') as HTMLElement | null;
+    block?.removeAttribute('hidden'); block?.classList.remove('is-folded');
+    const u = block?.querySelector<HTMLElement>('[data-unfold]'); if (u) u.hidden = true;
+    el.querySelector('details')?.setAttribute('open', '');
+    el.scrollIntoView({ block: 'start' });
+  };
+  addEventListener('hashchange', openHash); openHash();
+</script>

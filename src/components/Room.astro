@@ -1,0 +1,6 @@
+---
+// One arched door in its state, with the finish: for cards and diagrams.
+import { room } from '../lib/art.mjs';
+const { state, w = 160, h = 200, label, stateLabel = false, wall = false, floor = true, alt, class: cls = '' } = Astro.props;
+---
+<svg class:list={['room', cls]} viewBox={`0 0 ${w} ${h}`} role={alt ? 'img' : undefined} aria-label={alt} aria-hidden={alt ? undefined : 'true'} focusable="false" set:html={room(state, { w, h, label, stateLabel, wall, floor })} />

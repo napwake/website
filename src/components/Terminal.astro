@@ -1,0 +1,25 @@
+---
+// The design system's TerminalBlock: commands after a muted "$ " that copying skips, then output.
+// output: lines; a line is a string or a list of spans; a span is a string or { text, tone }.
+// Output is copied from the docs and trimmed, never invented.
+const { command = [], output = [], label, class: cls = '', copy = true } = Astro.props;
+const commands = Array.isArray(command) ? command : [command];
+const lines = output.map((l) => (Array.isArray(l) ? l : [l]).map((s) => (typeof s === 'string' ? { text: s } : s)));
+---
+<div class:list={['term', cls]}>
+  <pre class="nw-term" tabindex="0" aria-label={label}><code>{commands.map((c) => (<><span class="nw-term__prompt">$ </span><span class="cmd">{c}</span>{'\n'}</>))}{lines.map((l, i) => (<>{l.map((s) => s.tone ? <span class={`nw-term__${s.tone}`}>{s.text}</span> : s.text)}{i < lines.length - 1 ? '\n' : ''}</>))}</code></pre>
+  {copy && commands.length > 0 && <button type="button" class="term__copy" data-copy={commands.join('\n')} hidden>Copy</button>}
+</div>
+<style>
+  .term { position: relative; min-width: 0; }
+  .term__copy { position: absolute; top: 10px; right: 10px; font: 700 12px/1 var(--font-mono); letter-spacing: .04em; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 6px 9px; cursor: pointer; }
+  .term__copy:hover { color: var(--text); }
+</style>
+<script>
+  for (const b of document.querySelectorAll<HTMLButtonElement>('.term__copy')) {
+    b.hidden = !navigator.clipboard;
+    b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copy || ''); b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy'), 1600); } catch { /* clipboard refused */ }
+    });
+  }
+</script>

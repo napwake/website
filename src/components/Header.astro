@@ -1,0 +1,119 @@
+---
+// The header: the logo and the newest version (which links to the changelog), four quiet links, the
+// GitHub button with the star count read at build time, and one primary button. The phone menu, which
+// has room, also lists the FAQ and the changelog; the footer has every page.
+import Logo from './Logo.astro';
+import Link from './Link.astro';
+import GitHubButton from './GitHubButton.astro';
+import { links } from '../lib/links.mjs';
+import { LATEST_TAG } from '../lib/changelog.mjs';
+import { BLOG } from '../lib/blog.mjs';
+
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/how-it-works/', label: 'How it works' },
+  { href: '/compare/', label: 'Compare' },
+  { to: links.docs, label: 'Docs' },
+  BLOG && { href: '/blog/', label: 'Blog' },
+].filter(Boolean);
+const menu = [
+  { href: '/how-it-works/', label: 'How it works' },
+  { href: '/compare/', label: 'Compare' },
+  { href: '/faq/', label: 'FAQ' },
+  { to: links.docs, label: 'Docs' },
+  { href: '/changelog/', label: 'Changelog' },
+  BLOG && { href: '/blog/', label: 'Blog' },
+].filter(Boolean);
+const here = (h) => h && (path === h || path.startsWith(h));
+const pill = LATEST_TAG; // the newest published release or release candidate
+const start = links.quickstart;
+---
+<header class:list={['hdr', nav.length > 4 && 'hdr--many']}>
+  <div class="wrap hdr__in">
+    <div class="hdr__id">
+      <a class="hdr__home" href="/" aria-label="Napwake, home"><Logo height={32} /></a>
+      {pill && <a class="hdr__pill" href="/changelog/" aria-label={`Version ${pill.tag}: the changelog`}>{pill.tag}</a>}
+    </div>
+    <nav class="hdr__nav" aria-label="Main">
+      <ul>
+        {nav.map((n) => <li>{n.to ? <Link to={n.to}>{n.label}</Link> : <a href={n.href} aria-current={here(n.href) ? 'page' : undefined}>{n.label}</a>}</li>)}
+      </ul>
+    </nav>
+    <div class="hdr__acts">
+      <GitHubButton class="hdr__gh" />
+      <a class="nw-btn nw-btn--primary nw-btn--small hdr__start" href={start.href}>Get started</a>
+    </div>
+    <details class="hdr__menu">
+      <summary aria-label="Menu">Menu</summary>
+      <div class="hdr__panel">
+        <ul>
+          <li><a href="/" aria-current={path === '/' ? 'page' : undefined}>Home</a></li>
+          {menu.map((n) => <li>{n.to ? <Link to={n.to}>{n.label}</Link> : <a href={n.href} aria-current={here(n.href) ? 'page' : undefined}>{n.label}{n.href === '/changelog/' && pill && <span class="hdr__ver">{pill.tag}</span>}</a>}</li>)}
+        </ul>
+        <div class="hdr__panel-acts">
+          <GitHubButton wide />
+          <a class="nw-btn nw-btn--primary" href={start.href}>Get started</a>
+        </div>
+      </div>
+    </details>
+  </div>
+</header>
+<style>
+  .hdr { border-bottom: 1px solid var(--line); background: var(--bg); position: relative; z-index: 5; }
+  .hdr__in { display: flex; align-items: center; gap: var(--space-6); min-height: 72px; }
+  .hdr__id { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+  .hdr__home { display: inline-flex; border-radius: var(--radius-sm); }
+  .hdr__pill { font: 700 11px/1 var(--font-mono); letter-spacing: .02em; color: var(--muted); text-decoration: none; background: var(--code-bg); border-radius: var(--radius-sm); padding: 4px 6px; }
+  .hdr__pill:hover { color: var(--text); background: var(--line); }
+  .hdr__nav { margin-left: auto; }
+  .hdr__nav ul { display: flex; gap: var(--space-6); list-style: none; margin: 0; padding: 0; }
+  .hdr__nav a, .hdr__panel a:not(.nw-btn):not(.gh) { color: var(--text); text-decoration: none; font-weight: 700; font-size: 16px; }
+  .hdr__nav a:hover { color: var(--link); }
+  .hdr__nav a[aria-current="page"] { color: var(--link); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; }
+  .hdr__acts { display: flex; align-items: center; gap: var(--space-3); flex: none; }
+  .hdr__start { height: 36px; padding-top: 0; padding-bottom: 0; }
+  .hdr--many .hdr__nav ul { gap: var(--space-4); }
+  .hdr--many .hdr__nav a { font-size: 15px; }
+
+  .hdr__menu { display: none; position: relative; }
+  .hdr__menu summary { list-style: none; cursor: pointer; font: 700 14px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-md); color: var(--text); }
+  .hdr__menu summary::-webkit-details-marker { display: none; }
+  .hdr__menu[open] summary { border-color: var(--action); }
+  .hdr__panel { position: absolute; right: 0; top: calc(100% + 8px); width: min(300px, calc(100vw - 2 * var(--gutter))); padding: var(--space-2); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+  .hdr__panel ul { list-style: none; margin: 0; padding: 0; }
+  .hdr__panel li a { display: block; padding: 10px 12px; border-radius: var(--radius-sm); }
+  .hdr__panel li a:hover { background: var(--bg); }
+  .hdr__panel li a[aria-current="page"] { color: var(--link); }
+  .hdr__ver { margin-left: var(--space-2); font: 700 12px/1 var(--font-mono); color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 3px 6px; }
+  .hdr__panel-acts { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-2) var(--space-2); margin-top: var(--space-2); border-top: 1px solid var(--line); }
+  .hdr__panel-acts .nw-btn { justify-content: center; }
+
+  /* tablet: the links go into the menu; the GitHub button and Get started stay */
+  @media (max-width: 980px) {
+    .hdr__nav { display: none; }
+    .hdr__menu { display: block; }
+    .hdr__acts { margin-left: auto; }
+    .hdr__in { gap: var(--space-3); }
+  }
+  @media (max-width: 1180px) {
+    .hdr--many .hdr__nav { display: none; }
+    .hdr--many .hdr__menu { display: block; }
+    .hdr--many .hdr__acts { margin-left: auto; }
+  }
+  /* phone: the logo, Get started and the menu; GitHub is in the menu */
+  @media (max-width: 600px) {
+    .hdr__in { min-height: 64px; }
+    .hdr__pill { display: none; }
+    .hdr :global(.hdr__gh) { display: none; }
+    .hdr__start { padding: .3em .9em; }
+  }
+  @media (max-width: 380px) { .hdr__start { display: none; } }
+</style>
+<script>
+  // close the menu on Escape, and when a link in it is followed; ?menu=open opens it, to check it
+  for (const d of document.querySelectorAll<HTMLDetailsElement>('.hdr__menu')) {
+    if (new URLSearchParams(location.search).get('menu') === 'open') d.open = true;
+    d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && d.open) { d.open = false; d.querySelector('summary')?.focus(); } });
+    d.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => (d.open = false)));
+  }
+</script>

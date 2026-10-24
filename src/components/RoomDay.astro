@@ -1,0 +1,82 @@
+---
+// One room through a day: a row of four doors, each a moment in staging's day and a link to its chapter.
+// Drawn by the rig's corridor(), one room per panel, so each panel is the same room at another time.
+// The doorman holds the waking door. A door may also show one of his poses beside it, as the forecast's
+// door shows the morning list ("Napwake wakes rooms before the team arrives"). Hover or focus lights the door a little (ease-calm,
+// duration-ui-long); under reduced motion the change is instant. On a phone the doors stack into a list.
+import { corridor } from '../lib/art.mjs';
+import { code } from '../lib/text.mjs';
+const { doors = [] } = Astro.props;
+
+const W = 320, H = 250, SC = 0.9, FY = 208, DW = 78 * SC, DH = 156 * SC, PGAP = 112, GAP = 30;
+const WORD = { asleep: 'Asleep', waking: 'Waking up', awake: 'Awake' };
+const f = (n) => Math.round(n * 10) / 10;
+
+// a little more light where the door already lets it out: under a shut door, on the floor of a lit room,
+// along a waking room's wedge. The rig's own shapes, in the scene's light tokens.
+function glow(state, x) {
+  const s = (n) => f(n * SC);
+  if (state === 'asleep') return `<path d="M${f(x)} ${FY}h${f(DW)}l${s(22)} ${s(9)}H${f(x - s(10))}z" fill="var(--lamp)" opacity=".4"/><path d="M${f(x + 1)} ${f(FY - s(4.2))}h${f(DW - 2)}v${s(4.2)}h-${f(DW - 2)}z" fill="var(--lamp)"/>`;
+  if (state === 'waking') return `<path d="M${f(x + DW * 0.5)} ${FY} H${f(x + DW)} L${f(x + DW + s(130))} ${f(FY + s(60))} H${f(x + DW * 0.5 + s(30))} Z" fill="var(--scene-amber)" opacity=".3"/>`;
+  return `<path d="M${f(x)} ${FY} H${f(x + DW)} L${f(x + DW + s(80))} ${f(FY + s(60))} H${f(x - s(80))} Z" fill="var(--scene-green-glow)" opacity=".28"/><circle cx="${f(x + DW / 2)}" cy="${f(FY - DH - s(16))}" r="${s(19)}" fill="var(--scene-green-glow)" opacity=".3"/>`;
+}
+
+const panels = doors.map((d) => {
+  const pose = d.pose ?? (d.state === 'waking' ? 'door' : null);
+  // the doorman and his door as one group, so the wedge stays inside its panel
+  const x = pose ? 120 : f((W - DW) / 2);
+  const art = corridor({
+    w: W, h: H, floorY: FY, x0: pose ? x - (PGAP - GAP) * SC : x, sc: SC,
+    rooms: [{ state: d.state, label: 'staging' }], doormanAt: pose ? 0 : -1, pose: pose ?? 'door', stateLabels: false,
+    props: pose != null && pose !== 'door', listTime: d.listTime ?? null,
+  });
+  return { ...d, svg: art + `<g class="rday__glow">${glow(d.state, x)}</g>` };
+});
+---
+<nav class="rday" aria-label="The chapters, as one room’s day">
+  <ol class="rday__list">
+    {panels.map((d) => (
+      <li>
+        <a class="rday__link" href={`#${d.id}`}>
+          <span class="rday__panel">
+            <svg class="rday__art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false" set:html={d.svg} />
+          </span>
+          <span class="rday__when">{d.when}</span>
+          <span class="rday__text">
+            <span class={`rday__state nw-badge nw-badge--${d.state}`}>{d.word ?? WORD[d.state]}</span>
+            <span class="rday__title"><span class="rday__n">{d.n}</span> {d.title}</span>
+            <span class="rday__line" set:html={code(d.line)} />
+          </span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>
+<style>
+  .rday__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+  .rday__link { position: relative; display: grid; grid-template-rows: auto 1fr; gap: var(--space-4); height: 100%; color: var(--text); text-decoration: none; border-radius: var(--radius-lg); }
+  .rday__link:focus-visible { box-shadow: var(--ring); }
+  .rday__panel { position: relative; display: block; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; background: var(--scene-wall); transition: border-color var(--duration-ui-short) var(--ease-calm); }
+  .rday__art { display: block; width: 100%; height: auto; }
+  .rday__art :global(.rday__glow) { opacity: 0; transition: opacity var(--duration-ui-long) var(--ease-calm); }
+  .rday__link:hover .rday__art :global(.rday__glow), .rday__link:focus-visible .rday__art :global(.rday__glow) { opacity: 1; }
+  .rday__link:hover .rday__panel, .rday__link:focus-visible .rday__panel { border-color: var(--action); }
+  .rday__when { position: absolute; top: var(--space-3); left: var(--space-3); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 1px 7px; }
+  .rday__text { display: grid; gap: var(--space-2); align-content: start; padding: 0 var(--space-1); }
+  .rday__title { display: flex; gap: var(--space-2); align-items: baseline; font-weight: 700; line-height: 1.3; transition: color var(--duration-ui-short) var(--ease-calm); }
+  .rday__link:hover .rday__title, .rday__link:focus-visible .rday__title { color: var(--link); }
+  .rday__n { flex: none; display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 5px; border-radius: var(--radius-sm); background: var(--brand); color: var(--bg); font: 700 12px/1 var(--font-mono); transform: translateY(-1px); }
+  .rday__line { color: var(--muted); font-size: 15.5px; line-height: 1.5; }
+
+  @media (max-width: 1000px) { .rday__list { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-8); } }
+  @media (max-width: 600px) {
+    .rday__list { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .rday__list li + li .rday__link { border-top: 1px solid var(--line); border-top-left-radius: 0; border-top-right-radius: 0; }
+    .rday__link { grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; column-gap: var(--space-4); row-gap: var(--space-2); padding: var(--space-4) 0; }
+    .rday__panel { grid-column: 1; grid-row: 1; }
+    .rday__art { width: 112px; height: 112px; }
+    .rday__when { position: static; grid-column: 1; grid-row: 2; justify-self: start; font-size: 11px; }
+    .rday__text { grid-column: 2; grid-row: 1 / span 2; padding: 0; gap: var(--space-1); }
+    .rday__line { font-size: 15px; }
+  }
+</style>

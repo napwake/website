@@ -1,0 +1,57 @@
+---
+// Page not found: the doorman shrugs in a corridor of the rooms that do exist, each a link.
+import Base from '../layouts/Base.astro';
+import Scene from '../components/Scene.astro';
+import StateDoor from '../components/StateDoor.astro';
+import Link from '../components/Link.astro';
+import { links } from '../lib/links.mjs';
+
+const rooms = [
+  { state: 'awake', label: 'home', href: '/', name: 'Home', text: 'What Napwake is, in a minute' },
+  { state: 'awake', label: 'how-it-works', href: '/how-it-works/', name: 'How it works', text: 'Pausing, the doorman, the forecast' },
+  { state: 'awake', label: 'compare', href: '/compare/', name: 'How it compares', text: 'Three ways to stop paying for idle staging' },
+  { state: 'awake', label: 'brand', href: '/brand/', name: 'Brand', text: 'The doorman, the logo, the rules' },
+];
+---
+<Base title="No room by that name" noindex>
+  <section class="nf">
+    <div class="wrap nf__in">
+      <p class="eyebrow">404</p>
+      <h1 class="display-1 nf__h1">No room by that name.</h1>
+      <p class="lede nf__lede">There’s nothing at <code class="nf__path" data-path>this address</code>. These are the rooms on this floor.</p>
+    </div>
+    <div class="nf__band">
+      <Scene w={1600} h={300} x0={558} rooms={rooms} doormanAt={2} pose="shrug" label="The doorman shrugs in a corridor of four open rooms: home, how-it-works, compare and brand. None of them is the one you asked for." />
+    </div>
+    <div class="wrap">
+      <ul class="nf__rooms">
+        {rooms.map((r) => <li><a href={r.href}><StateDoor state={r.state} size={22} /><span><b>{r.name}</b><span>{r.text}</span></span></a></li>)}
+      </ul>
+      <p class="small muted nf__docs">Looking for the docs? They’re at <Link to={links.docs}>docs.napwake.dev</Link>.</p>
+    </div>
+  </section>
+</Base>
+<style>
+  .nf { padding: var(--space-18) 0 var(--space-12); }
+  .nf__h1 { margin-bottom: var(--space-4); }
+  .nf__lede { margin-bottom: var(--space-8); }
+  .nf__path { white-space: normal !important; overflow-wrap: anywhere; }
+  .nf__band { background: var(--scene-wall); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .nf__band :global(svg) { width: 100%; height: 300px; }
+  .nf__rooms { list-style: none; margin: var(--space-8) 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
+  .nf__rooms a { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); color: var(--text); text-decoration: none; height: 100%; transition: border-color var(--duration-ui-short) var(--ease-calm); }
+  .nf__rooms a:hover { border-color: var(--action); }
+  .nf__rooms a > span { display: grid; gap: 2px; }
+  .nf__rooms a span span { font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .nf__docs { margin-top: var(--space-6); }
+  @media (max-width: 900px) { .nf__rooms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) {
+    .nf { padding: var(--space-12) 0 var(--space-8); }
+    .nf__rooms { grid-template-columns: minmax(0, 1fr); }
+    .nf__band :global(svg) { height: 230px; width: 100%; }
+  }
+</style>
+<script>
+  const el = document.querySelector('[data-path]');
+  if (el && location.pathname !== '/404.html') el.textContent = location.pathname;
+</script>

@@ -1,0 +1,70 @@
+staging (EKS us-east-1): 31 workloads in 11 namespaces
+Node autoscaler: Karpenter (consolidates when underutilized after 1m)
+What pausing frees comes off the bill only as nodes scale down.
+History: the last 7 days, from monitoring/prometheus-operated
+
+  2 workloads are scaled to zero by hand; Napwake can pause them while idle and wake them on the
+  next request instead.
+  19 workloads are idle right now, reserving 28.5 vCPU and 77.5 GiB of memory.
+  They cost $871/month while running, $1.19 an hour: each hour asleep frees that.
+  Replaying the last 7 days, Napwake would have paused 24 of 26 unmanaged workloads for 2,796 hours in all,
+  and freed $159: about $691/month.
+  Not counted: 1 that won't pause (PVCs deleted on scale-down) and 2 scaled to zero by hand.
+
+  NAMESPACE     WORKLOAD                   STATE                BECAUSE                                                  COST/MO   COULD SLEEP   WAKES   COULD FREE/MO
+  staging       statefulset/search         idle (unmanaged)     CPU 2% of its request                                    $206      108h          5       $132
+  load-test     deployment/locust          idle (unmanaged)     no activity for 6d; last deployed 30 days ago            $102      163h          1       $99
+  staging       deployment/checkout-api    idle (unmanaged)     no activity for 3h                                       $85       111h          14      $56
+  demo          deployment/api             idle (unmanaged)     no activity for 4d; last deployed 41 days ago            $57       160h          1       $54
+  preview-121   statefulset/postgres       idle (unmanaged)     CPU under 1% of its request; last deployed 23 days ago   $34       155h          1       $32
+  preview-118   statefulset/postgres       idle (unmanaged)     CPU 1% of its request                                    $34       136h          4       $28
+  demo          deployment/web             idle (unmanaged)     no activity for 4d; last deployed 41 days ago            $28       160h          1       $27
+  preview-121   deployment/api             idle (unmanaged)     no activity for 2d; last deployed 23 days ago            $28       153h          2       $26
+  qa            statefulset/postgres       idle (unmanaged)     CPU 1% of its request                                    $34       121h          5       $25
+  preview-118   deployment/api             idle (unmanaged)     no activity for 9h                                       $28       124h          9       $21
+  qa            deployment/api             idle (unmanaged)     no activity for 15h                                      $28       119h          5       $20
+  staging       deployment/web             idle (unmanaged)     no activity for 1h                                       $28       104h          21      $18
+  preview-121   deployment/web             idle (unmanaged)     CPU under 1% of its request; last deployed 23 days ago   $14       151h          2       $13
+  preview-118   deployment/worker          idle (unmanaged)     CPU under 1% of its request                              $14       134h          4       $11
+  preview-118   deployment/web             idle (unmanaged)     CPU under 1% of its request                              $14       131h          6       $11
+  qa            deployment/web             idle (unmanaged)     CPU under 1% of its request                              $14       121h          5       $10
+  preview-118   statefulset/redis          idle (unmanaged)     CPU under 1% of its request                              $9        136h          4       $7
+  staging       deployment/notifications   idle (unmanaged)     CPU under 1% of its request                              $7        118h          8       $5
+  staging       statefulset/kafka          idle (unmanaged)     won't pause: PVCs deleted on scale-down                  $103      0h            0       -
+  preview-127   deployment/web             paused (unmanaged)   scaled to zero, not by Napwake                         $0        -             -       -
+  preview-127   deployment/api             paused (unmanaged)   scaled to zero, not by Napwake                         $0        -             -       -
+  staging       deployment/payments-api    active (unmanaged)   CPU 38% of its request                                   $57       69h           19      $23
+  staging       statefulset/postgres       active (unmanaged)   CPU 18% of its request                                   $69       50h           16      $21
+  preview-124   statefulset/postgres       active (unmanaged)   CPU 12% of its request                                   $34       84h           11      $17
+  data          deployment/etl-runner      active (unmanaged)   CPU 82% of its request                                   $114      20h           7       $14
+  ...and 4 more; --limit 0 lists them all
+
+  9 dependencies found. Once Napwake manages both ends of one, it wakes the dependency with the workload that needs it, and keeps it up while that workload runs:
+  staging       deployment/checkout-api   ->   statefulset/postgres         DATABASE_URL
+  staging       deployment/checkout-api   ->   deployment/payments-api      PAYMENTS_URL
+  preview-121   deployment/api            ->   statefulset/postgres         DATABASE_URL
+  preview-118   deployment/api            ->   statefulset/postgres         DATABASE_URL
+  preview-118   deployment/api            ->   statefulset/redis            REDIS_URL
+  preview-118   deployment/api            ->   messaging/statefulset/nats   NATS_URL
+  qa            deployment/api            ->   statefulset/postgres         DATABASE_URL
+  preview-118   deployment/worker         ->   statefulset/postgres         PGHOST
+  preview-124   deployment/api            ->   statefulset/postgres         DATABASE_URL
+
+Notes:
+  - 2 workloads set no CPU requests, so their use can't be measured: kube-tools/agent, ops/exporter
+  - 23 infrastructure workloads are left out of the totals and next steps: monitoring (9), argocd (7), ingress-nginx (3) and 2 more. Napwake never pauses Kubernetes' own workloads or itself; anything else, infrastructure included, pauses only if you opt it in
+  - the history replay sees CPU and rollouts only; requests and activity annotations aren't in Prometheus, so a workload used with little CPU can look like it would sleep more than it would
+  - 1 workload has its replicas set from Git by Argo CD, which would undo every pause: staging/notifications. Have Argo CD leave the replicas to Napwake first: https://docs.napwake.dev/guides/gitops/
+
+Costs use the on-demand and spot list prices of the cluster's 3 node types (m6i.xlarge, m6i.2xlarge and r6i.xlarge, AWS us-east-1). 3 workloads run on spot nodes, priced at spot.
+Pass --cpu-price and --memory-price for yours.
+
+Next steps:
+  1. Install Napwake in the cluster:
+       helm install napwake oci://ghcr.io/napwake/charts/napwake -n napwake-system --create-namespace
+  2. Measure a workload first; nothing is paused in dry-run:
+       kubectl annotate statefulset search -n staging napwake.dev/dry-run=true
+       kubectl label statefulset search -n staging napwake.dev/managed=true
+  3. When you're happy with what it measures, start pausing it while idle:
+       kubectl napwake enable statefulset/search -n staging
+

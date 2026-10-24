@@ -1,0 +1,39 @@
+---
+// The announcement bar above the header (ANNOUNCEMENT in site.mjs). A visitor who
+// dismisses it doesn't see that announcement again; a new id shows again. Base.astro hides it before paint.
+import { ANNOUNCEMENT } from '../lib/site.mjs';
+const a = ANNOUNCEMENT;
+---
+<div class="announce" data-announce-id={a.id} role="region" aria-label="Announcement">
+  <div class="wrap announce__in">
+    <p><span class="announce__text">{a.text}</span><span class="announce__dot" aria-hidden="true"> · </span><a href={a.link.href}>{a.link.label} <span aria-hidden="true">→</span></a></p>
+    <button type="button" class="announce__x" data-dismiss>Dismiss</button>
+  </div>
+</div>
+<style>
+  .announce { background: var(--lamp); color: var(--night); }
+  :global(html[data-announce-off]) .announce { display: none; }
+  .announce__in { display: flex; align-items: center; justify-content: center; gap: var(--space-4); min-height: 40px; position: relative; }
+  .announce p { margin: 0; font-size: 15px; line-height: 1.4; padding: var(--space-2) 0; text-align: center; }
+  .announce__text { font-weight: 700; }
+  .announce a { color: var(--night); font-weight: 700; text-decoration-thickness: 1px; }
+  .announce a:hover { text-decoration-thickness: 2px; }
+  .announce a:focus-visible, .announce__x:focus-visible { box-shadow: 0 0 0 2px var(--lamp), 0 0 0 4px var(--night); }
+  .announce__x { position: absolute; right: var(--gutter); font: 700 11.5px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--night); background: transparent; border: 1px solid var(--night); border-radius: var(--radius-sm); padding: 6px 8px; cursor: pointer; opacity: .8; }
+  .announce__x:hover { opacity: 1; }
+  @media (max-width: 600px) {
+    .announce__in { justify-content: space-between; }
+    .announce p { text-align: left; font-size: 14px; }
+    .announce__dot { display: none; }
+    .announce p a { display: block; }
+    .announce__x { position: static; flex: none; }
+  }
+</style>
+<script>
+  for (const bar of document.querySelectorAll<HTMLElement>('[data-announce-id]')) {
+    bar.querySelector('[data-dismiss]')?.addEventListener('click', () => {
+      document.documentElement.setAttribute('data-announce-off', '');
+      try { localStorage.setItem('napwake-announce-dismissed', bar.dataset.announceId || ''); } catch { /* storage blocked: hidden for this page only */ }
+    });
+  }
+</script>

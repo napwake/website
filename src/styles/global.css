@@ -1,0 +1,156 @@
+/* napwake.dev. Every colour, size, radius and timing is a token from tokens.css (synced from github.com/napwake/brand).
+   What this file adds is composed from tokens only: the focus ring, the scene's theme-dependent opacities, layout. */
+
+@font-face { font-family: "Big Shoulders Display"; font-weight: 800; font-style: normal; font-display: swap; src: url("/fonts/BigShouldersDisplay-800.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-weight: 200 800; font-style: normal; font-display: swap; src: url("/fonts/AtkinsonHyperlegibleNext-400.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url("/fonts/AtkinsonHyperlegibleMono-400.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Mono"; font-weight: 700; font-style: normal; font-display: swap; src: url("/fonts/AtkinsonHyperlegibleMono-700.woff2") format("woff2"); }
+
+:root {
+  color-scheme: light;
+  /* tokens.css carries focus-ring as one value per theme; composed here from bg and action, as its note describes */
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--action);
+  --scene-cast: var(--cast-shadow-light);
+  --scene-grain: var(--grain-light);
+  --page: 1200px;
+  --gutter: var(--space-6);
+  --section: var(--space-18);
+  /* design system v13 tokens (tokens.json, 2026-10-23) that napwake/brand's tokens.css doesn't carry yet,
+     with v13's values; remove these once npm run sync-brand brings them */
+  --scene-guest: var(--night);
+  --duration-stagger: 340ms;
+  --duration-beat: 1.2s;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; --scene-cast: var(--cast-shadow-dark); --scene-grain: var(--grain-dark); }
+}
+:root[data-theme="dark"] { color-scheme: dark; --scene-cast: var(--cast-shadow-dark); --scene-grain: var(--grain-dark); }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 400 17px/1.6 var(--font-sans);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--ring); border-radius: var(--radius-sm); }
+::selection { background: var(--lamp); color: var(--night); }
+p { margin: 0 0 var(--space-4); }
+h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+code, kbd, pre, samp { font-family: var(--font-mono); }
+:not(pre) > code { font-size: .88em; background: var(--code-bg); color: var(--code-text); padding: .1em .35em; border-radius: var(--radius-sm); white-space: nowrap; overflow-wrap: anywhere; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: var(--space-4); top: -100px; z-index: 10; background: var(--action); color: var(--on-action); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); font-weight: 700; text-decoration: none; }
+.skip:focus { top: var(--space-4); }
+
+/* theme-specific images: the logo has one file per ground and is never re-coloured */
+.on-dark { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .on-light { display: none; } :root:not([data-theme="light"]) .on-dark { display: block; } }
+:root[data-theme="dark"] .on-light { display: none; }
+:root[data-theme="dark"] .on-dark { display: block; }
+
+/* ---------- type ---------- */
+.display-1 { font: 800 72px/.95 var(--font-display); letter-spacing: 0; }
+.display-2 { font: 800 48px/1 var(--font-display); letter-spacing: 0; }
+.h2 { font: 700 28px/1.25 var(--font-sans); }
+.h3 { font: 700 21px/1.3 var(--font-sans); }
+.small { font-size: 14px; line-height: 1.5; }
+.muted { color: var(--muted); }
+.lede { font-size: 20px; line-height: 1.5; color: var(--text); max-width: 40em; }
+.eyebrow { display: inline-flex; align-items: center; gap: var(--space-2); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 var(--space-4); }
+.eyebrow .plate { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 20px; line-height: 20px; padding: 0 6px; border-radius: var(--radius-sm); background: var(--brand); color: var(--bg); letter-spacing: .04em; }
+.mono { font-family: var(--font-mono); }
+.prose { max-width: 40em; }
+.prose p, .prose li { color: var(--text); }
+.prose ul { padding-left: 1.2em; margin: 0 0 var(--space-4); }
+.prose li { margin-bottom: var(--space-2); }
+
+/* ---------- layout ---------- */
+.wrap { width: 100%; max-width: calc(var(--page) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+.section { padding: var(--section) 0; border-top: 1px solid var(--line); }
+.section--flush { border-top: 0; }
+.section__head { display: grid; gap: var(--space-4); margin-bottom: var(--space-12); max-width: 46em; }
+.section__head > p { margin: 0; }
+.section__head > p:not(.eyebrow) { color: var(--muted); font-size: 18px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-12); align-items: start; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); }
+
+/* ---------- buttons (the design system's Button) ---------- */
+.nw-btn { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; font: 700 16px/1.6 var(--font-sans); padding: .625em 2em; border: 2px solid var(--action); border-radius: var(--radius-md); background: transparent; color: var(--action); cursor: pointer; text-decoration: none; transition: color var(--duration-ui-short) var(--ease-calm), background-color var(--duration-ui-short) var(--ease-calm); }
+.nw-btn--primary { background: var(--action); color: var(--on-action); }
+.nw-btn:hover, .nw-btn:focus-visible { background: var(--action); border-color: var(--action); color: var(--on-action); text-decoration: none; }
+.nw-btn--small { padding: .3em 1.1em; font-size: 15px; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+
+
+/* ---------- state badge and door (the design system's StateBadge, StateDoor) ---------- */
+.nw-door { display: inline-block; flex: none; vertical-align: middle; }
+.nw-badge { display: inline-flex; align-items: center; gap: var(--space-2); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; vertical-align: middle; }
+.nw-badge--asleep { color: var(--asleep); }
+.nw-badge--waking { color: var(--waking); }
+.nw-badge--awake { color: var(--awake); }
+.nw-badge--error { color: var(--error); }
+.nw-badge--product { text-transform: none; letter-spacing: 0; }
+.nw-badge__also { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+/* ---------- terminal (the design system's TerminalBlock) ---------- */
+.nw-term { margin: 0; background: var(--code-bg); color: var(--code-text); border-radius: var(--radius-md); padding: var(--space-4) 18px 20px; font: 400 14px/1.55 var(--font-mono); white-space: pre; overflow-x: auto; tab-size: 4; }
+.nw-term code { font: inherit; background: none; padding: 0; white-space: inherit; color: inherit; }
+.nw-term__prompt { color: var(--muted); user-select: none; }
+.nw-term__paused { color: var(--asleep); }
+.nw-term__resuming { color: var(--accent-text); font-weight: 700; }
+.nw-term__running { color: var(--awake); }
+.nw-term__attention { color: var(--error); font-weight: 700; }
+.nw-term__dim { color: var(--muted); }
+.nw-term__bold { font-weight: 700; }
+
+/* ---------- callout (the design system's Callout) ---------- */
+.nw-callout { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4) 18px; color: var(--text); }
+.nw-callout__title { margin: 0 0 var(--space-1); font-weight: 700; }
+.nw-callout--needs-you .nw-callout__title { color: var(--error); }
+.nw-callout__text > :first-child { margin-top: 0; }
+.nw-callout__text > :last-child { margin-bottom: 0; }
+.nw-callout .nw-door { margin-top: 3px; }
+
+/* ---------- cards ---------- */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); padding: var(--space-6); }
+
+/* ---------- scenes ---------- */
+.scene { display: block; width: 100%; height: auto; }
+.scene-frame { background: var(--scene-wall); border-radius: 0; overflow: hidden; }
+figure { margin: 0; }
+figcaption { font: 400 14px/1.5 var(--font-sans); color: var(--muted); margin-top: var(--space-3); }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.5; }
+th, td { text-align: left; vertical-align: top; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); }
+thead th { font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--bg); position: sticky; top: 0; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+tbody th { font-weight: 700; white-space: nowrap; }
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+  .grid-3 { grid-template-columns: minmax(0, 1fr); }
+  .display-1 { font-size: 56px; }
+}
+@media (max-width: 600px) {
+  :root { --gutter: var(--space-4); --section: var(--space-12); }
+  :not(pre) > code { white-space: normal; }
+  body { font-size: 16.5px; }
+  .display-1 { font-size: 44px; line-height: .98; }
+  .display-2 { font-size: 38px; }
+  .lede { font-size: 18px; }
+  .section__head { margin-bottom: var(--space-8); }
+}

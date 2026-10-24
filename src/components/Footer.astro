@@ -1,0 +1,57 @@
+---
+import Logo from './Logo.astro';
+import Link from './Link.astro';
+import ThemeSwitch from './ThemeSwitch.astro';
+import { links } from '../lib/links.mjs';
+import { BLOG } from '../lib/blog.mjs';
+---
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr__top">
+      <div class="ftr__id">
+        <Logo height={30} />
+        <p>Pauses idle Kubernetes workloads in staging, preview and dev, and wakes them on the first request.</p>
+      </div>
+      <nav class="ftr__cols" aria-label="Footer">
+        <div>
+          <p class="ftr__h">Napwake</p>
+          <ul>
+            <li><a href="/how-it-works/">How it works</a></li>
+            <li><a href="/compare/">How it compares</a></li>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><Link to={links.install}>Install</Link></li>
+            <li><Link to={links.docs}>Docs</Link></li>
+          </ul>
+        </div>
+        <div>
+          <p class="ftr__h">Project</p>
+          <ul>
+            <li><Link to={links.repo}>GitHub</Link></li>
+            <li><a href="/changelog/">Changelog</a></li>
+            {BLOG && <li><a href="/blog/">Blog</a></li>}
+            <li><a href="/brand/">Brand and trademarks</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="ftr__base">
+      <p>Open source under <a href={links.apache.href}>Apache 2.0</a>. Doorman illustrations by Napwake, <a href={links.ccby.href}>CC BY 4.0</a>. “Napwake” and its logo are <a href="/brand/#trademarks">trademarks</a>.</p>
+      <ThemeSwitch />
+    </div>
+  </div>
+</footer>
+<style>
+  .ftr { border-top: 1px solid var(--line); padding: var(--space-12) 0 var(--space-8); margin-top: 0; font-size: 15px; }
+  .ftr__top { display: flex; justify-content: space-between; gap: var(--space-12); flex-wrap: wrap; }
+  .ftr__id { max-width: 330px; }
+  .ftr__id p { color: var(--muted); margin: var(--space-4) 0 0; }
+  .ftr__cols { display: flex; gap: var(--space-18); }
+  .ftr__h { font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 var(--space-3); }
+  .ftr ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+  .ftr ul a { color: var(--text); text-decoration: none; }
+  .ftr ul a:hover { color: var(--link); text-decoration: underline; }
+  .ftr__base { display: flex; justify-content: space-between; align-items: center; gap: var(--space-6); flex-wrap: wrap; margin-top: var(--space-12); padding-top: var(--space-6); border-top: 1px solid var(--line); }
+  .ftr__base p { margin: 0; color: var(--muted); font-size: 14px; max-width: 46em; }
+  .ftr__base a { color: inherit; }
+  @media (max-width: 600px) { .ftr__cols { gap: var(--space-12); } }
+</style>
