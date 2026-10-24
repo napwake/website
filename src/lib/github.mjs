@@ -1,6 +1,6 @@
-// The repository's star count, read from GitHub's API once, at build time: no client-side calls and no
-// third-party badge. Set GITHUB_TOKEN in CI to avoid the unauthenticated rate limit. If the API fails,
-// the count is null and the button says "GitHub" alone.
+// The repository's star count, read from GitHub's API at build time, so the page has a number with no
+// script: GitHubButton.astro then refreshes it in the browser. No third-party badge. Set GITHUB_TOKEN in CI
+// to avoid the unauthenticated rate limit. If the API fails, the count is null and the button says "GitHub".
 import { GITHUB } from './links.mjs';
 
 async function read(repo) {
