@@ -23,6 +23,8 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+    outputs:
+      urls: ${{ steps.urls.outputs.urls }}
     steps:
       - name: Clone the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,6 +48,10 @@ jobs:
           # for the star count, read once from GitHub's API; if it can't be read, the button says GitHub
           # and the build goes on
           GITHUB_TOKEN: ${{ github.token }}
+      - name: List the sitemap's pages, for IndexNow
+        id: urls
+        continue-on-error: true
+        run: echo "urls=$(grep -ho '<loc>[^<]*</loc>' dist/sitemap-[0-9]*.xml | sed -e 's#<loc>##' -e 's#</loc>##' | jq -Rsc 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
       - name: Upload the site for Pages
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
@@ -68,3 +74,25 @@ jobs:
       - name: Publish to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # Tells search engines that use IndexNow (Bing, Yandex and others) about the sitemap's pages, once the site
+  # is live. The key is public/<key>.txt's. Whatever happens here, the deploy has already succeeded.
+  indexnow:
+    name: IndexNow
+    needs: [build, deploy]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions: {}
+    steps:
+      - name: Submit the sitemap's pages
+        env:
+          KEY: c8571cdccfa14e451300d4962baed58c
+          URLS: ${{ needs.build.outputs.urls }}
+        run: |
+          body=$(jq -nc --arg key "$KEY" --argjson urls "$URLS" '{host: "napwake.dev", key: $key, keyLocation: "https://napwake.dev/\($key).txt", urlList: $urls}') || exit 0
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json; charset=utf-8' --data "$body") || status='no answer'
+          case "$status" in
+            200|202) echo "IndexNow: $status, $(jq length <<< "$URLS") pages" ;;
+            *) echo "::warning::IndexNow answered $status" ;;
+          esac
