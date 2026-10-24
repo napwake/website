@@ -1,0 +1,101 @@
+---
+// Privacy: what a visit sends, and where. Every line checked on 2026-10-24: no cookies (ThemeSwitch,
+// Announcement and GitHubButton keep their values in browser storage), the star count's request
+// (GitHubButton.astro), GitHub's words on what Pages logs, the fonts (public/fonts, global.css), and
+// Cloudflare's own pages on Web Analytics. The analytics lines follow PUBLIC_CF_BEACON_TOKEN (site.mjs),
+// so the page is true with the beacon on or off.
+import Base from '../layouts/Base.astro';
+import { CF_BEACON } from '../lib/site.mjs';
+
+const GITHUB_PAGES = 'https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#data-collection';
+const GITHUB_PRIVACY = 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement';
+const CLOUDFLARE = 'https://www.cloudflare.com/web-analytics/';
+const CLOUDFLARE_DATA = 'https://developers.cloudflare.com/web-analytics/data-metrics/data-origin-and-collection/';
+---
+<Base title="Privacy">
+  <section class="intro">
+    <div class="wrap">
+      <p class="eyebrow">Privacy</p>
+      <h1 class="display-1 intro__h1">What your visit sends, and where.</h1>
+      {CF_BEACON
+        ? <p class="lede">No cookies. Your browser talks to GitHub, which hosts the site, and to Cloudflare, which counts visits.</p>
+        : <p class="lede">No cookies and no analytics. Your browser talks only to GitHub, which hosts the site.</p>}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="page">
+        <div class="notes">
+          <article class="note" id="cookies" aria-labelledby="cookies-h">
+            <h2 class="h3" id="cookies-h">No cookies</h2>
+            <div class="note__text">
+              <p>The site sets none. If you pick a theme or close the announcement, your browser remembers that in its own storage. It also keeps the star count until you close the tab. None of it is sent anywhere.</p>
+            </div>
+          </article>
+
+          {/* The analytics lines. Change them when the analytics change, and check them against the provider's own pages. */}
+          {CF_BEACON ? (
+            <article class="note" id="analytics" aria-labelledby="analytics-h">
+              <h2 class="h3" id="analytics-h">Analytics, without cookies</h2>
+              <div class="note__text">
+                <p>This site uses Cloudflare Web Analytics. Each page you open sends Cloudflare a short report. From these, Cloudflare counts page views and visits. It also records the site that sent you, and your country. It records your browser, system and device type, and how fast the page loaded.</p>
+                <p>Cloudflare says it uses no cookies and doesn’t track individual visitors. Its <a href={CLOUDFLARE}>Web Analytics page</a> and <a href={CLOUDFLARE_DATA}>docs</a> say what it collects.</p>
+              </div>
+            </article>
+          ) : (
+            <article class="note" id="analytics" aria-labelledby="analytics-h">
+              <h2 class="h3" id="analytics-h">No analytics</h2>
+              <div class="note__text">
+                <p>There are no analytics today. No script on the site counts visits or follows you between pages.</p>
+              </div>
+            </article>
+          )}
+
+          <article class="note" id="star-count" aria-labelledby="star-count-h">
+            <h2 class="h3" id="star-count-h">The star count</h2>
+            <div class="note__text">
+              <p>The GitHub button in the header shows Napwake’s stars. To keep the number current, your browser asks GitHub’s API, at <code>api.github.com</code>. Each tab reuses the answer for ten minutes. GitHub sees that request and your IP address, as with any other.</p>
+            </div>
+          </article>
+
+          <article class="note" id="hosting" aria-labelledby="hosting-h">
+            <h2 class="h3" id="hosting-h">Hosting</h2>
+            <div class="note__text">
+              <p>GitHub Pages hosts the site. GitHub logs each visitor’s IP address for security, as <a href={GITHUB_PAGES}>its Pages docs</a> say. The <a href={GITHUB_PRIVACY}>GitHub Privacy Statement</a> covers what GitHub does with it.</p>
+            </div>
+          </article>
+
+          <article class="note" id="fonts" aria-labelledby="fonts-h">
+            <h2 class="h3" id="fonts-h">Fonts</h2>
+            <div class="note__text">
+              <p>The fonts come from napwake.dev itself. No font service sees your visit.</p>
+            </div>
+          </article>
+        </div>
+        <p class="small muted updated">Last changed 24 October 2026.</p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro { padding: var(--space-18) 0 var(--space-12); }
+  .intro__h1 { max-width: 11em; margin-bottom: var(--space-6); }
+  .intro .lede { margin: 0; max-width: 34em; }
+
+  .page { max-width: 64em; }
+  .notes { display: grid; }
+  .note { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-8); padding: var(--space-8) 0; border-top: 1px solid var(--line); scroll-margin-top: var(--space-4); }
+  .note:first-child { border-top: 0; padding-top: 0; }
+  .note__text { max-width: 40em; }
+  .note__text p:last-child { margin-bottom: 0; }
+  .updated { margin: var(--space-8) 0 0; padding-top: var(--space-6); border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .note { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding: var(--space-6) 0; }
+  }
+  @media (max-width: 600px) {
+    .intro { padding: var(--space-12) 0 var(--space-8); }
+  }
+</style>

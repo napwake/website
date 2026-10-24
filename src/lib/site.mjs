@@ -7,6 +7,11 @@ import { SITE, DOCS, doc, hasDoc } from './links.mjs';
 // It must stay true: 0.2.0 is in release candidates until it ships.
 export const ANNOUNCEMENT = { id: 'v0.2.0-rc', text: 'Napwake 0.2.0 is in release candidates', link: { href: '/changelog/', label: 'Read the changelog' } };
 
+// Cloudflare Web Analytics' beacon, on every page when PUBLIC_CF_BEACON_TOKEN is set at build time (the deploy
+// workflow sets it), and off otherwise (Base.astro). The token is public by design. /privacy/ says what it
+// collects only when it's on.
+export const CF_BEACON = (globalThis.process?.env?.PUBLIC_CF_BEACON_TOKEN || '').trim() || null;
+
 export const NAME = 'Napwake';
 export const HEADLINE = 'Non-prod environments that sleep when nobody’s using them, and wake when someone does.';
 export const PLAIN = 'Pauses idle Kubernetes workloads in staging, preview and dev, and wakes them on the first request.';
@@ -33,6 +38,9 @@ export const PAGES = [
   { path: '/changelog/', title: 'Changelog', card: 'changelog', description: 'What’s new in each Napwake release, newest first: a summary in plain words, then everything added, changed and fixed. 0.2.0 is in release candidates.', line: 'What’s new in each release from 0.2.0, newest first; 0.2.0 is in release candidates.' },
   { path: '/blog/', title: 'Blog', card: 'blog', description: 'Release announcements from Napwake, and how it’s built.', line: 'Release announcements, and how Napwake is built.' },
   { path: '/brand/', title: 'Brand and trademarks', card: 'brand', description: 'The Napwake logo, the doorman and the doors: where to get them, how to credit the illustrations, and how you may use the name and logo.', line: 'The logo, the doorman illustrations (CC BY 4.0), and the trademark rules.' },
+  CF_BEACON
+    ? { path: '/privacy/', title: 'Privacy', card: 'home', description: 'What a visit to napwake.dev sends, and where. No cookies. GitHub hosts the site, and Cloudflare Web Analytics counts visits.', line: 'No cookies, what Cloudflare Web Analytics counts, and what GitHub sees when you visit.' }
+    : { path: '/privacy/', title: 'Privacy', card: 'home', description: 'What a visit to napwake.dev sends, and where. No cookies and no analytics. GitHub hosts the site.', line: 'No cookies, no analytics, and what GitHub sees when you visit.' },
 ];
 export const page = (path) => PAGES.find((p) => p.path === path);
 
