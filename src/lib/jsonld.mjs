@@ -1,13 +1,22 @@
 // Structured data (schema.org JSON-LD), from the same facts as the pages: src/lib/site.mjs and faq.mjs.
 import { NAME, PLAIN, SITE, abs, cardUrl } from './site.mjs';
-import { REPO } from './links.mjs';
+import { REPO, GITHUB } from './links.mjs';
 import { FAQ, answerText } from './faq.mjs';
 
 const LICENSE = 'https://spdx.org/licenses/Apache-2.0.html';
 
+// The home's graph: the organization, its logo the 512-pixel icon (scripts/icons.mjs), and the software.
 export const software = () => ({
   '@context': 'https://schema.org',
   '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE}/#organization`,
+      name: NAME,
+      url: `${SITE}/`,
+      logo: abs('/icon-512.png'),
+      sameAs: [`https://github.com/${GITHUB.owner}`, REPO],
+    },
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE}/#software`,
