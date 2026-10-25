@@ -1,7 +1,7 @@
 // How it compares, by approach (CMO decision 0006, 2026-10-23): Napwake, a timetable, and a scale-to-zero proxy.
 // Tools appear only as small-print examples of an approach, so a search still finds the page. No stars, versions,
-// licences, praise or links. Every line about the other two approaches is from Kede's positioning research (HQ:
-// hybernate/cmo/work/2026-10-22-brand-foundation/positioning.md, each tool's own docs, checked 2026-10-22), said as
+// licences, praise or links. Every line about the other two approaches is from Kede's positioning research (from each
+// tool's own docs, checked 2026-10-22), said as
 // "most" or "typically" where the tools differ. Napwake's lines are from its docs.
 // The scene's data lives here too: the page draws every state at build time, and the browser only switches them.
 
