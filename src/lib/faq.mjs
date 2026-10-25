@@ -62,9 +62,10 @@ export const FAQ = [
   {
     id: 'gke-and-eks',
     q: 'Does Napwake work on GKE or EKS?',
-    short: 'Yes, on Kubernetes 1.30 and later. On EKS, install metrics-server. On GKE, a Service in container-native load balancing (NEGs) needs the optional forwarder to wake on a request.',
+    short: 'Tested by hand on GKE Standard, and on kind in CI, on Kubernetes 1.30 and later. Not tested yet on EKS, AKS or GKE Autopilot. On GKE, a Service in container-native load balancing (NEGs) needs the optional forwarder to wake on a request.',
     a: [
-      'Yes, on Kubernetes 1.30 and later. Napwake reads CPU from metrics-server, which GKE and AKS run by default and EKS doesn’t. On EKS, add the metrics-server add-on. Behind the AWS Load Balancer Controller, both target types, instance and ip, reach the doorman (checked against its source).',
+      'Napwake runs on Kubernetes 1.30 and later. It’s tested by hand on GKE Standard, and on kind in CI. It isn’t tested yet on EKS, AKS or GKE Autopilot.',
+      'It reads CPU from metrics-server, which GKE and AKS run by default and EKS doesn’t. On EKS, add the metrics-server add-on. Behind the AWS Load Balancer Controller, both target types, instance and ip, reach the doorman (checked against its source). With ip, the controller must watch Napwake’s namespace, as it does by default.',
       'On GKE, Services no GKE Ingress uses are routed like any other. A Service a GKE Ingress or Gateway uses through container-native load balancing (NEGs) isn’t, by default. Turn on the optional forwarder (`doorman.negForwarder.enabled`), or reach the workload through an ingress controller that reads EndpointSlices, such as ingress-nginx.',
     ],
     sources: [['Installation', doc('getting-started/installation')], ['Quickstart', doc('getting-started/quickstart')], ['Compatibility', doc('reference/compatibility')], ['Wake on request, on GKE', doc('concepts/wake-on-request')]],
