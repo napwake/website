@@ -68,7 +68,7 @@ export const DOC_PAGES = [
   ['reference/conditions-and-events', 'Conditions and events', 'Every status condition, with its reasons, and every event.'],
   ['reference/helm-values', 'Helm values', 'Every value of the chart, with its default and what it does.'],
   ['reference/labels-annotations', 'Labels and annotations', 'Every label, annotation and finalizer Napwake reads or writes.'],
-  ['reference/security', 'Security', 'What Napwake can do in a cluster, what it talks to, and how to check that what you install is what was released.'],
+  ['reference/security', 'Security', 'What Napwake can do in a cluster, what it talks to, and how to verify a release.'],
   ['operations/upgrading', 'Upgrading', 'Upgrade Napwake, keep your Helm settings, and roll back if you need to.'],
   ['operations/troubleshooting', 'Troubleshooting', 'When an idle workload isn’t paused, requests fail instead of waking it, or it keeps cycling.'],
 ].map(([path, title, line]) => ({ path, title, line, link: doc(path) }));
