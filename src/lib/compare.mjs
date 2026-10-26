@@ -148,7 +148,7 @@ export const ONLY = [
     alt: 'Napwake counts how long a workload has been idle. The doorman checks his watch beside its open door.' },
   { pose: 'door', state: 'waking', title: 'It wakes on the first request.', text: 'At the Service, for any TCP: HTTP, gRPC, Postgres, Redis. The doorman holds the request while the workload wakes. Your Ingress doesn’t change.',
     alt: 'The doorman holds a door ajar while its workload wakes up.' },
-  { pose: 'list', state: 'awake', listTime: '08:45', title: 'It wakes workloads before the team arrives.', text: 'Napwake learns each workload’s week. With `autoResume`, it wakes a workload 15 minutes before an hour it expects busy.',
+  { pose: 'list', state: 'awake', listTime: '08:45', title: 'It wakes ahead of the team.', text: 'Napwake learns each workload’s week. With `autoResume`, it wakes a workload 15 minutes before an hour it expects busy.',
     alt: 'Napwake wakes workloads before the team arrives. The doorman reads the morning list beside an open door.' },
   { pose: 'ask', state: 'asleep', title: 'On a public URL, it can ask first.', text: 'Set `napwake.dev/wake: ask`, and the doorman asks before he wakes a workload. A browser gets a Wake it button, and crawlers, scanners and API calls wake nothing.',
     alt: 'The doorman asks at a shut door, his hand flat on it.' },
