@@ -13,7 +13,7 @@ import { APPROACHES, ONLY, TABLE, CHECKED } from '../lib/compare.mjs';
 import { code } from '../lib/text.mjs';
 import { links } from '../lib/links.mjs';
 
-// What only Napwake does: one corridor, the doorman five times, each beside the door his job is about.
+// What only Napwake does: one corridor, the doorman five times, each beside the door the job is about.
 // Each vignette is one door and one pose, drawn by the rig like How it works' room panels. The floor is the band's.
 const VW = 250, VH = 262, VFY = 222, VDOOR = 136, PGAP = 112, GAP = 30;
 const only = ONLY.map((o, i) => ({
@@ -33,10 +33,10 @@ const cols = APPROACHES.map((a) => a.key);
     <div class="wrap intro__in">
       <p class="eyebrow">How it compares</p>
       <h1 id="intro-title" class="display-1 intro__h1">Three ways to stop paying for idle staging.</h1>
-      <p class="lede intro__lede">Napwake, a timetable or a scale-to-zero proxy. Here are the same four rooms through one evening and the next morning, run each way. Step through it, or drag the time.</p>
+      <p class="lede intro__lede">Napwake, a timetable or a scale-to-zero proxy. Here are the same four workloads through one evening and the next morning, run each way. Each door is one workload. Step through it, or drag the time.</p>
     </div>
     <ThreeWays />
-    <p class="wrap small muted tw-note">Napwake pauses a room after <code>idleAfter</code> with no sign of use. This evening uses the default, an hour. Set it per workload, per namespace or for the whole cluster. The morning has <code>autoResume</code> on, with a forecast that has learned the team’s week.</p>
+    <p class="wrap small muted tw-note">Napwake pauses a workload after <code>idleAfter</code> with no sign of use. This evening uses the default, an hour. Set it per workload, per namespace or for the whole cluster. The morning has <code>autoResume</code> on, with a forecast that has learned the team’s week.</p>
   </section>
 
   <section class="section only" aria-labelledby="only-title">
@@ -72,7 +72,7 @@ const cols = APPROACHES.map((a) => a.key);
       </div>
       <div class="table-wrap side">
         <table>
-          <caption class="visually-hidden">Napwake, a timetable and a scale-to-zero proxy: what decides, what wakes it, what the first person sees, what you change, and what happens to work with no traffic</caption>
+          <caption class="visually-hidden">Napwake, a timetable and a scale-to-zero proxy, compared on five questions</caption>
           <colgroup><col class="side__q" /><col class="side__us" /><col /><col /></colgroup>
           <thead>
             <tr><td></td>{APPROACHES.map((a) => <th scope="col" class:list={[a.key === 'napwake' && 'is-us']}>{a.name}</th>)}</tr>
@@ -87,7 +87,7 @@ const cols = APPROACHES.map((a) => a.key);
           </tbody>
         </table>
       </div>
-      <p class="small muted side__note">What the table says of a timetable or a proxy is true of most tools of that kind, by their own docs, checked {CHECKED}. Napwake’s column is from its docs.</p>
+      <p class="small muted side__note">The timetable and proxy columns hold for most tools of each kind, by their own docs, checked {CHECKED}. Napwake’s column is from its docs.</p>
     </div>
   </section>
 

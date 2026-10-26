@@ -35,7 +35,7 @@ const rows = APPROACHES.map((a, i) => {
 const ticks = ['17:00', '20:00', '00:00', '04:00', '08:00'].map((c) => ({ c: c === '00:00' ? 'midnight' : c, p: toMin(c) / END }));
 ---
 <figure class="tw" data-tw data-t={t0} aria-labelledby="tw-title">
-  <figcaption id="tw-title" class="visually-hidden">The same four rooms, dev, staging, pr-42 and qa, from Monday 17:00 to Tuesday 09:30, run three ways: by a timetable, by a scale-to-zero proxy, and by Napwake.</figcaption>
+  <figcaption id="tw-title" class="visually-hidden">Four workloads, dev, staging, pr-42 and qa, from Monday 17:00 to Tuesday 09:30. Each runs three ways, by Napwake, a timetable and a scale-to-zero proxy.</figcaption>
 
   <div class="tw__bar" data-bar hidden>
     <div class="wrap tw__bar-in">

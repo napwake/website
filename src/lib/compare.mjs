@@ -25,8 +25,8 @@ export const day = (t) => (START + t >= 1440 ? 'Tue' : 'Mon');
 export const dayLong = (t) => (START + t >= 1440 ? 'Tuesday' : 'Monday');
 
 // ---------- what each room is doing, approach by approach ----------
-// active: in use, a guest in the light · idle: lit for nobody · asleep · waking: waking up, ajar and amber
-// out: asleep, with someone outside the dark door (the guest, shut out of a room still in use)
+// active: in use, someone at work behind the door · idle: awake, with no sign of use · asleep · waking: waking up,
+// ajar and amber · out: asleep, with someone outside the shut door (shut out of a workload still in use)
 // The story is the same in every row. The team leaves dev at 17:30 and staging at 17:50. qa's queue worker is busy,
 // with no requests, until 19:20. Someone works late in pr-42 until 21:30. Someone opens staging at 22:15 and
 // leaves at 22:45. The team is back in dev and staging at 09:00. Nobody uses pr-42 or qa on Tuesday.
@@ -78,15 +78,15 @@ export const switchAt = (t) => (t >= toMin('20:00') && t < toMin('08:00') ? 'off
 
 // ---------- the words ----------
 // Under each door, in the brand's plain words. "out" is an asleep door; the line for screen readers says who's there.
-export const WORD = { active: 'in use', idle: 'lit, no one seen', asleep: 'asleep', waking: 'waking up', out: 'asleep' };
+export const WORD = { active: 'in use', idle: 'idle', asleep: 'asleep', waking: 'waking up', out: 'asleep' };
 export const TONE = { active: 'awake', idle: 'awake', asleep: 'asleep', waking: 'waking', out: 'asleep' };
-export const SAY = { active: 'in use', idle: 'lit, no one seen', asleep: 'asleep', waking: 'waking up', out: 'asleep, with someone at its door' };
+export const SAY = { active: 'in use', idle: 'idle', asleep: 'asleep', waking: 'waking up', out: 'asleep, with someone at its door' };
 export const POSE_SAY = {
   duty: 'The doorman is on duty beside staging.',
-  watch: 'The doorman checks his watch. Napwake counts how long a room has been idle.',
+  watch: 'Napwake counts how long a workload has been idle. The doorman checks his watch.',
   door: 'The doorman holds staging’s door while it wakes.',
-  list: 'The doorman reads the morning list. Napwake wakes the rooms it expects busy.',
-  rest: 'Every room is asleep, and the doorman rests his eyes.',
+  list: 'Napwake wakes the workloads it expects busy. The doorman reads the morning list.',
+  rest: 'Every workload is asleep, and the doorman rests his eyes.',
 };
 export const describe = (approach, t) => {
   const rooms = ROOMS.map((r) => `${r} ${SAY[stateAt(approach, r, t)]}`).join(', ') + '.';
@@ -94,44 +94,44 @@ export const describe = (approach, t) => {
   return approach === 'napwake' ? `${rooms} ${POSE_SAY[poseAt(t)]}` : rooms;
 };
 
-// One line per row, by the time, in plain words. By the doorman's rule, he only holds the door, wakes a room on the
+// One line per row, by the time, in plain words. By the doorman's rule, he only holds the door, wakes a workload on the
 // first request, or asks first. Everything else is "Napwake …".
 const C = (...lines) => lines.map(([at, text]) => [toMin(at), text]);
 export const CAPTIONS = {
   timetable: C(
-    ['17:00', 'Every room stays on until the off time, 20:00.'],
-    ['17:30', 'dev and staging are lit, with no one seen. The timetable keeps them on until 20:00.'],
-    ['20:00', 'At 20:00 every light goes out, pr-42’s too. Someone was still working there.'],
-    ['21:30', 'Every room is dark until 08:00.'],
+    ['17:00', 'Everything stays on until the off time, 20:00.'],
+    ['17:30', 'Nobody is using dev or staging. The timetable keeps them on until 20:00.'],
+    ['20:00', 'At 20:00 everything is turned off, pr-42 too. Someone was still working there.'],
+    ['21:30', 'Everything stays off until 08:00.'],
     ['22:15', 'Someone opens staging at 22:15. Nothing answers until 08:00.'],
-    ['22:35', 'Every room is dark until 08:00.'],
-    ['08:00', 'At 08:00 every room comes back on, pr-42 and qa too. Nobody will use them today.'],
-    ['09:00', 'The team is in. pr-42 and qa stay lit, with no one seen, until 20:00.'],
+    ['22:35', 'Everything stays off until 08:00.'],
+    ['08:00', 'At 08:00 everything comes back on, pr-42 and qa too. Nobody will use them today.'],
+    ['09:00', 'The team is in. pr-42 and qa stay on, unused, until 20:00.'],
   ),
   proxy: C(
-    ['17:00', 'Requests reach these rooms through the proxy. Your Ingress or routes point at it.'],
+    ['17:00', 'Requests reach these workloads through the proxy. Your Ingress or routes point at it.'],
     ['17:15', 'qa’s queue worker is busy, with no requests. Most proxies count only requests, so it’s paused mid-job.'],
-    ['17:45', 'dev and staging go dark soon after their last request. qa’s worker is still shut out.'],
-    ['19:20', 'pr-42 stays lit while someone’s requests keep coming.'],
-    ['21:45', 'Every room is dark until a request comes.'],
+    ['17:45', 'dev and staging are turned off soon after their last request. qa’s worker is still stopped.'],
+    ['19:20', 'pr-42 stays on while someone’s requests keep coming.'],
+    ['21:45', 'Everything is off until a request comes.'],
     ['22:15', 'An HTTP request wakes staging at 22:15. The proxy typically holds it while staging starts.'],
     ['22:17', 'staging is up. Most proxies wake only on HTTP, so a database client couldn’t have woken it.'],
-    ['23:00', 'Every room is dark until a request comes.'],
+    ['23:00', 'Everything is off until a request comes.'],
     ['09:00', 'The team’s first requests wake dev and staging. The first person at each waits while it starts.'],
-    ['09:02', 'dev and staging are up. pr-42 and qa stay dark, since nobody asks for them.'],
+    ['09:02', 'dev and staging are up. pr-42 and qa stay off, since nobody asks for them.'],
   ),
   napwake: C(
-    ['17:00', 'Napwake keeps an activity clock for every room. CPU, deploys, your tools’ annotations and Prometheus queries, such as request rate, all count.'],
+    ['17:00', 'Napwake keeps an activity clock for every workload. CPU, deploys, your tools’ annotations and Prometheus queries, such as request rate, all count.'],
     ['17:30', 'No sign of use on dev after 17:30. Napwake pauses it once `idleAfter` passes.'],
     ['18:30', 'qa’s queue worker has no requests, but its CPU counts as use. qa stays on.'],
     ['19:20', 'qa’s job is done at 19:20. Napwake pauses it once `idleAfter` passes.'],
-    ['20:20', 'Someone is working late in pr-42. Their deploys count as use, so Napwake leaves it lit.'],
+    ['20:20', 'Someone is working late in pr-42. Their deploys count as use, so Napwake leaves it running.'],
     ['21:30', 'The last deploy to pr-42 was at 21:30. Napwake pauses it at 22:30.'],
     ['22:15', 'A request for staging at 22:15. The doorman holds it while staging wakes.'],
     ['22:17', 'staging is up for the late visitor. The request that woke it is the last use Napwake sees, so staging pauses at 23:15.'],
-    ['23:15', 'Every room is asleep. A request at any hour wakes the room it’s for.'],
+    ['23:15', 'Every workload is asleep. A request at any hour wakes the one it’s for.'],
     ['08:45', 'The forecast expects the team at 09:00. With `autoResume`, Napwake wakes dev and staging at 08:45.'],
-    ['09:00', 'The team walks into rooms that are already up. pr-42 and qa sleep on.'],
+    ['09:00', 'dev and staging are already up when the team arrives. pr-42 and qa sleep on.'],
   ),
 };
 export const captionAt = (approach, t) => lastAt(CAPTIONS[approach], t);
@@ -142,31 +142,31 @@ export const MOMENTS = ['17:00', '17:20', '18:35', '20:05', '20:25', '22:16', '2
 export const DEFAULT = MOMENTS[0];
 
 // ---------- what only Napwake does, each with the pose that earns it ----------
-// state is the rig's: awake with nobody in it is lit for nobody
+// state is the rig's: an awake door with nobody in it is idle
 export const ONLY = [
-  { pose: 'watch', state: 'awake', title: 'It pauses on use.', text: 'Napwake counts how long a room has been idle. CPU, deploys, your own tools and Prometheus queries, such as request rate, all count as use.',
-    alt: 'The doorman checks his watch beside a lit room with no one seen. Napwake counts how long a room has been idle.' },
-  { pose: 'door', state: 'waking', title: 'It wakes on the first request.', text: 'At the Service, for any TCP: HTTP, gRPC, Postgres, Redis. The doorman holds the request while the room wakes. Your Ingress doesn’t change.',
-    alt: 'The doorman holds the door of a room that is waking up, its amber light on the floor.' },
-  { pose: 'list', state: 'awake', listTime: '08:45', title: 'The room is ready before the team.', text: 'Napwake learns each room’s week. With `autoResume`, it wakes a room 15 minutes before an hour it expects busy.',
-    alt: 'The doorman reads the morning list beside a lit room. Napwake wakes rooms before the team arrives.' },
-  { pose: 'ask', state: 'asleep', title: 'On a public URL, it can ask first.', text: 'Set `napwake.dev/wake: ask`, and the doorman asks before he wakes a room. A browser gets a Wake it button, and crawlers, scanners and API calls wake nothing.',
+  { pose: 'watch', state: 'awake', title: 'It pauses on use.', text: 'Napwake counts how long a workload has been idle. CPU, deploys, your own tools and Prometheus queries, such as request rate, all count as use.',
+    alt: 'Napwake counts how long a workload has been idle. The doorman checks his watch beside its open door.' },
+  { pose: 'door', state: 'waking', title: 'It wakes on the first request.', text: 'At the Service, for any TCP: HTTP, gRPC, Postgres, Redis. The doorman holds the request while the workload wakes. Your Ingress doesn’t change.',
+    alt: 'The doorman holds a door ajar while its workload wakes up.' },
+  { pose: 'list', state: 'awake', listTime: '08:45', title: 'It wakes workloads before the team arrives.', text: 'Napwake learns each workload’s week. With `autoResume`, it wakes a workload 15 minutes before an hour it expects busy.',
+    alt: 'Napwake wakes workloads before the team arrives. The doorman reads the morning list beside an open door.' },
+  { pose: 'ask', state: 'asleep', title: 'On a public URL, it can ask first.', text: 'Set `napwake.dev/wake: ask`, and the doorman asks before he wakes a workload. A browser gets a Wake it button, and crawlers, scanners and API calls wake nothing.',
     alt: 'The doorman asks at a shut door, his hand flat on it.' },
   { pose: 'rest', state: 'asleep', title: 'It never deletes anything.', text: 'A pause scales a workload to zero. Only the pods go. The workload, its Services and its data stay.',
-    alt: 'The doorman rests his eyes beside an asleep room, with everything still in it.' },
+    alt: 'A paused workload keeps everything but its pods. The doorman rests his eyes beside its shut door.' },
 ];
 
 // ---------- the table: three approaches, five questions ----------
 export const TABLE = [
-  { q: 'What decides', timetable: 'The clock. A schedule turns rooms off and on at set times.',
-    proxy: 'Requests through the proxy. A room with none for a while is turned off.',
+  { q: 'What decides', timetable: 'The clock. A schedule turns workloads off and on at set times.',
+    proxy: 'Requests through the proxy. A workload with none for a while is turned off.',
     napwake: 'Use. CPU, deploys, your tools’ annotations and Prometheus queries, such as request rate. Paused after `idleAfter` with none.' },
   { q: 'What wakes it', timetable: 'The clock, at the on time.',
     proxy: 'An HTTP request through the proxy.',
     napwake: 'The first request at the Service, for any TCP. On a public URL set to ask, a person’s click. Or, with `autoResume`, the forecast, 15 minutes early.' },
-  { q: 'What the first person sees', timetable: 'Out of hours, nothing answers. In hours, the room is on, used or not.',
-    proxy: 'A slow first response while the room starts. Some show a waiting page.',
-    napwake: 'Usually one slow response while it starts. A browser gets a waking page. A room the forecast woke is already up.' },
+  { q: 'What the first person sees', timetable: 'Out of hours, nothing answers. In hours, the workload is on, used or not.',
+    proxy: 'A slow first response while the workload starts. Some show a waiting page.',
+    napwake: 'Usually one slow response while it starts. A browser gets a waking page. A workload the forecast woke is already up.' },
   { q: 'What you change in your setup', timetable: 'An operator or a CronJob, and a schedule for each namespace or workload. Nothing sits in the request path.',
     proxy: 'The proxy, with your Ingress or routes sent through it and a route or an object per app. Some need apps redeployed in their own format.',
     napwake: 'A Helm install, metrics-server, and a label on a workload or namespace. Apps need readiness probes. Your Ingress, Services and DNS stay as they are.' },
