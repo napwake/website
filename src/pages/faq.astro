@@ -18,7 +18,7 @@ const isDoc = (l) => l.doc === true;
     <div class="wrap">
       <p class="eyebrow">FAQ</p>
       <h1 class="display-1 intro__h1">Questions people ask about Napwake.</h1>
-      <p class="lede">Short answers, each one complete on its own, with the page it comes from. They’re the same words the docs use, so whatever you read them in, a person or an assistant, gets the same facts.</p>
+      <p class="lede">Short answers, each complete on its own. Each links the docs page it comes from.</p>
     </div>
   </section>
 
@@ -41,7 +41,7 @@ const isDoc = (l) => l.doc === true;
           <div class="qa__head">
             <p class="qa__n"><span class="plate">{num(i)}</span><a class="qa__link" href={`#${f.id}`} aria-label={`Link to: ${f.q}`}>Link</a></p>
             <h2 class="h2 qa__q" id={`${f.id}-q`}>{f.q}</h2>
-            {f.commands && <div class="qa__art"><Pose name="rounds" alt="Doing the rounds with a clipboard: Napwake checks which rooms are empty." width={170} /><p class="small muted">Doing the rounds: <code>scan</code> checks which rooms are empty before anything changes.</p></div>}
+            {f.commands && <div class="qa__art"><Pose name="rounds" alt="Napwake checks what’s idle, drawn as the doorman with a clipboard." width={170} /><p class="small muted"><code>kubectl napwake scan</code> shows what’s idle before anything changes.</p></div>}
           </div>
           <div class="qa__main">
             <div class="qa__a">
@@ -61,8 +61,8 @@ const isDoc = (l) => l.doc === true;
   <section class="section more">
     <div class="wrap more__in">
       <div>
-        <h2 class="display-2">Something else?</h2>
-        <p class="muted">The docs have the details behind every answer here. Using an assistant? Point it at <a href="/llms.txt">napwake.dev/llms.txt</a>, a plain-text summary of Napwake with every page and these answers.</p>
+        <h2 class="display-2">The details are in the docs.</h2>
+        <p class="muted">Every answer here links its docs page. For an assistant, <a href="/llms.txt">napwake.dev/llms.txt</a> sums up Napwake and these answers, and links the docs’ own index.</p>
       </div>
       <div class="actions">
         <Button to={links.docs} variant="primary">Read the docs</Button>
