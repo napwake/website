@@ -1,10 +1,10 @@
 ---
-// Page not found: the doorman shrugs in a corridor of the rooms that do exist, each a link.
+// Page not found: the doorman shrugs beside a door for each page that does exist, each a link.
 import Base from '../layouts/Base.astro';
 import Scene from '../components/Scene.astro';
 import StateDoor from '../components/StateDoor.astro';
 import Link from '../components/Link.astro';
-import { links, DOCS_MODE } from '../lib/links.mjs';
+import { links } from '../lib/links.mjs';
 
 const rooms = [
   { state: 'awake', label: 'home', href: '/', name: 'Home', text: 'What Napwake is, in a minute' },
@@ -13,21 +13,21 @@ const rooms = [
   { state: 'awake', label: 'brand', href: '/brand/', name: 'Brand', text: 'The doorman, the logo, the rules' },
 ];
 ---
-<Base title="No room by that name" noindex>
+<Base title="Page not found" noindex>
   <section class="nf">
     <div class="wrap nf__in">
       <p class="eyebrow">404</p>
-      <h1 class="display-1 nf__h1">No room by that name.</h1>
-      <p class="lede nf__lede">There’s nothing at <code class="nf__path" data-path>this address</code>. These are the rooms on this floor.</p>
+      <h1 class="display-1 nf__h1">No page at this address.</h1>
+      <p class="lede nf__lede">There’s nothing at <code class="nf__path" data-path>this address</code>. Each door below is a page that does exist.</p>
     </div>
     <div class="nf__band">
-      <Scene w={1600} h={300} x0={558} rooms={rooms} doormanAt={2} pose="shrug" label="The doorman shrugs in a corridor of four open rooms: home, how-it-works, compare and brand. None of them is the one you asked for." />
+      <Scene w={1600} h={300} x0={558} rooms={rooms} doormanAt={2} pose="shrug" label="Four open doors, one for each of four pages: home, how-it-works, compare and brand. The doorman shrugs beside them. None is the page you asked for." />
     </div>
     <div class="wrap">
       <ul class="nf__rooms">
         {rooms.map((r) => <li><a href={r.href}><StateDoor state={r.state} size={22} /><span><b>{r.name}</b><span>{r.text}</span></span></a></li>)}
       </ul>
-      <p class="small muted nf__docs">Looking for the docs? {DOCS_MODE === 'github' ? <>They’re <Link to={links.docs}>on GitHub</Link>.</> : <>They’re at <Link to={links.docs}>docs.napwake.dev</Link>.</>}</p>
+      <p class="small muted nf__docs">The docs are at <Link to={links.docs}>docs.napwake.dev</Link>.</p>
     </div>
   </section>
 </Base>

@@ -1,7 +1,7 @@
 // The facts every surface says in the same words: the brand guidelines' headline and plain line, and
 // the product docs (origin/main 4f35500, 2026-10-22). Pages, llms.txt, the JSON-LD and the social
 // cards all read them from here, so the website, the README and the docs agree.
-import { SITE, DOCS, doc, hasDoc } from './links.mjs';
+import { SITE, DOCS, doc } from './links.mjs';
 
 // The announcement bar: its id is what a visitor's dismissal remembers, so a new announcement shows again.
 // It must stay true: 0.2.0 is in release candidates until it ships.
@@ -66,7 +66,7 @@ export const DOC_PAGES = [
   ['reference/cli', 'kubectl plugin reference', 'Every flag, JSON field, exit status and permission of the plugin’s commands.'],
   ['reference/conditions-and-events', 'Conditions and events', 'Every status condition, with its reasons, and every event.'],
   ['operations/troubleshooting', 'Troubleshooting', 'When an idle workload isn’t paused, requests fail instead of waking it, or it keeps cycling.'],
-].filter(([path]) => hasDoc(path)).map(([path, title, line]) => ({ path, title, line, link: doc(path) }));
+].map(([path, title, line]) => ({ path, title, line, link: doc(path) }));
 
 export const abs = (path) => new URL(path, SITE).href;
 export const cardUrl = (card) => abs(`/og/${card}.png`);

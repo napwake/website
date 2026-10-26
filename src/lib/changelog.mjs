@@ -5,7 +5,7 @@
 // GitHub published it on, where it did.
 import raw from '../content/CHANGELOG.md?raw';
 import published from '../content/releases.json';
-import { REPO_NOW, DOCS_MODE, docsHref, isDocsUrl } from './links.mjs';
+import { REPO_NOW } from './links.mjs';
 import { NOTES } from './release-notes.mjs';
 
 export const FIRST = '0.2.0';
@@ -23,9 +23,7 @@ const ABOUT = {
 const num = (v) => v.split(/[.-]/).map((x) => (/^\d+$/.test(x) ? Number(x) : x));
 const cmp = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-// A docs link goes where every docs link goes (links.mjs). One that names the docs site, such as
-// [docs.napwake.dev](https://docs.napwake.dev), stays words while the docs are on GitHub.
-const link = (_, text, href) => (DOCS_MODE === 'github' && isDocsUrl(href) && text.includes('docs.napwake.dev') ? text : `<a href="${docsHref(href)}">${text}</a>`);
+const link = (_, text, href) => `<a href="${href}">${text}</a>`;
 export const inline = (s) => esc(s)
   .replace(/`([^`]+)`/g, '<code>$1</code>')
   .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
