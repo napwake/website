@@ -23,6 +23,8 @@ const image = cardUrl(card);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* The content security policy, filled in once the build is done (astro.config.mjs). Before any script. */}
+    {import.meta.env.PROD && <meta http-equiv="Content-Security-Policy" content="__NAPWAKE_CSP__" />}
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     {!noindex && <link rel="canonical" href={canonical} />}
