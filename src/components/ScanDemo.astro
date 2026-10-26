@@ -1,8 +1,9 @@
 ---
-// "One command, and you get a report you can send your team." A terminal types `kubectl napwake scan` and
-// prints the product's own lines for an example cluster; then a browser window opens on the real report
-// for the same cluster, live: hover the doors, sort the tables. Both come from the product's code on the
-// same made-up data (scripts/render-scan-example.sh), so every number agrees.
+// "One command, and you get a report you can send your team." A terminal shows `kubectl napwake scan` from
+// the start, and once it's in view prints the product's own lines for an example cluster. Then a browser
+// window opens on the real report for the same cluster, live: hover the doors, sort the tables. Both come
+// from the product's code on the same made-up data (scripts/render-scan-example.sh), so every number agrees.
+// The report takes the mouse wheel only once clicked or focused, so the page never scrolls into it by accident.
 // Reduced motion or no script: the final state, still. Phones: the command, then a tap-to-open preview.
 import Terminal from './Terminal.astro';
 import raw from '../content/examples/scan-first.txt?raw';
@@ -27,15 +28,16 @@ const report = `Report: ${file} (opened in your browser; --open=false to skip)`;
 const cluster = out[0].split(':')[0];
 ---
 <div class="demo" data-demo data-state="done">
-  <div class="demo__stage" aria-label={`An example: kubectl napwake scan runs in a terminal on an example cluster, ${cluster}, and opens its report in a browser.`} role="group">
+  <div class="demo__stage" aria-label={`An example of kubectl napwake scan on an example cluster, ${cluster}. It runs in a terminal, and opens its report in a browser.`} role="group">
     <div class="win win--term">
       <div class="win__bar"><span class="win__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="win__title" aria-hidden="true">kubectl napwake scan</span><button type="button" class="demo__replay" data-replay hidden>Replay</button></div>
-      <pre class="term"><code><span class="term__p" aria-hidden="true">$ </span><span class="term__cmd" data-cmd>kubectl napwake scan</span><span class="term__caret" aria-hidden="true"></span>{'\n'}{lines.map((l) => <span class="term__l" data-line>{l || ' '}{'\n'}</span>)}<span class="term__l term__l--report" data-line>{report}</span></code></pre>
+      <pre class="term"><code><span class="term__p" aria-hidden="true">$ </span><span class="term__cmd">kubectl napwake scan</span><span class="term__caret" aria-hidden="true"></span>{'\n'}{lines.map((l) => <span class="term__l" data-line>{l || ' '}{'\n'}</span>)}<span class="term__l term__l--report" data-line>{report}</span></code></pre>
     </div>
     <div class="win win--web" data-web>
       <div class="win__bar"><span class="win__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="win__url">file://{file}</span><span class="win__tag">Example cluster</span></div>
       <div class="web" data-view>
         <iframe data-src="/examples/scan-report/" title={`The scan report for an example cluster, ${cluster}: live, scrollable, sortable`} loading="lazy"></iframe>
+        <div class="web__shield" data-shield aria-hidden="true" hidden><span class="web__hint">Click to scroll and sort</span></div>
         <noscript><a class="web__open" href="/examples/scan-report/">Open the example report</a></noscript>
       </div>
     </div>
@@ -75,11 +77,16 @@ const cluster = out[0].split(':')[0];
   .web { position: relative; height: calc(100% - 36px); overflow: hidden; background: var(--bg); --s: 1; }
   .web iframe { display: block; border: 0; width: calc(100% / var(--s)); height: calc(100% / var(--s)); transform: scale(var(--s)); transform-origin: 0 0; background: var(--bg); color-scheme: inherit; }
   .web__open { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; }
+  /* over the report until it's clicked or focused: the wheel scrolls the page, a click hands the report the wheel */
+  .web__shield { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--space-6); cursor: pointer; }
+  .web__shield[hidden], .web.is-live .web__shield { display: none; }
+  .web__hint { font: 700 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; box-shadow: var(--shadow-window); opacity: 0; transform: translateY(4px); transition: opacity var(--duration-ui-short) var(--ease-calm), transform var(--duration-ui-short) var(--ease-calm); }
+  .web__shield:hover .web__hint { opacity: 1; transform: none; }
+  @media (hover: none) { .web__hint { opacity: 1; transform: none; } }
 
-  /* the run: lines and the browser appear as the script reaches them */
+  /* the run: the command is there from the start, and the lines and the browser appear as the script reaches them */
   .demo[data-state="run"] [data-line]:not(.on), .demo[data-state="idle"] [data-line] { visibility: hidden; }
-  .demo[data-state="idle"] .term__cmd, .demo[data-state="run"] .term__cmd:not(.on) { display: none; }
-  .demo[data-state="run"] .term__caret, .demo[data-state="idle"] .term__caret { display: inline-block; animation: caret 1s steps(1) infinite; }
+  .demo[data-state="idle"] .term__caret { display: inline-block; animation: caret 1s steps(1) infinite; }
   .demo[data-state="idle"] .win--web, .demo[data-state="run"]:not(.is-open) .win--web { opacity: 0; transform: translateY(16px) scale(.985); pointer-events: none; }
   @keyframes caret { 50% { opacity: 0; } }
 
@@ -103,18 +110,17 @@ const cluster = out[0].split(':')[0];
 </style>
 
 <script>
-  const TYPE_MS = 48, LINE_MS = 70;
+  const LINE_MS = 70;
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   const wide = matchMedia('(min-width: 761px)');
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   for (const demo of document.querySelectorAll<HTMLElement>('[data-demo]')) {
-    const cmd = demo.querySelector<HTMLElement>('[data-cmd]')!;
-    const text = cmd.textContent || '';
     const lines = [...demo.querySelectorAll<HTMLElement>('[data-line]')];
     const replay = demo.querySelector<HTMLButtonElement>('[data-replay]')!;
     const view = demo.querySelector<HTMLElement>('[data-view]')!;
     const frame = view.querySelector('iframe')!;
+    const shield = view.querySelector<HTMLElement>('[data-shield]')!;
     let run = 0;
 
     // the report is laid out as on a laptop, 1000 px wide, and scaled to fit the window
@@ -122,15 +128,24 @@ const cluster = out[0].split(':')[0];
     new ResizeObserver(fit).observe(view);
     const load = () => { if (!frame.src) frame.src = frame.dataset.src || ''; };
 
-    const finish = () => { demo.dataset.state = 'done'; demo.classList.add('is-open'); cmd.textContent = text; cmd.classList.add('on'); lines.forEach((l) => l.classList.add('on')); };
+    // The report takes the wheel only once clicked, or focused from the keyboard. The pointer leaving it,
+    // or a click or focus elsewhere on the page, gives the wheel back to the page.
+    const live = (on: boolean) => view.classList.toggle('is-live', on);
+    shield.hidden = false;
+    shield.addEventListener('click', () => { live(true); frame.contentWindow?.focus(); });
+    view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') live(false); });
+    frame.addEventListener('focus', () => live(true));
+    window.addEventListener('blur', () => setTimeout(() => { if (document.activeElement === frame) live(true); }));
+    document.addEventListener('pointerdown', (e) => { if (!view.contains(e.target as Node)) live(false); });
+    document.addEventListener('focusin', (e) => { if (e.target !== frame) live(false); });
+
+    const finish = () => { demo.dataset.state = 'done'; demo.classList.add('is-open'); lines.forEach((l) => l.classList.add('on')); };
     const play = async () => {
       const me = ++run;
       replay.hidden = true;
       demo.classList.remove('is-open'); lines.forEach((l) => l.classList.remove('on'));
-      demo.dataset.state = 'run'; cmd.textContent = ''; cmd.classList.add('on');
-      await sleep(500);
-      for (const ch of text) { if (me !== run) return; cmd.textContent += ch; await sleep(TYPE_MS); }
-      await sleep(380);
+      demo.dataset.state = 'run';
+      await sleep(250);
       for (const l of lines) { if (me !== run) return; l.classList.add('on'); await sleep(l.classList.contains('term__l--report') ? 0 : LINE_MS); }
       await sleep(650);
       if (me !== run) return;
@@ -149,7 +164,7 @@ const cluster = out[0].split(':')[0];
         if (!still.matches && demo.dataset.state === 'idle') play();
         seen.disconnect();
       }
-    }, { threshold: 0.3 });
+    }, { threshold: 0.2 });
     seen.observe(demo);
     // start loading the report a little before it's reached
     const near = new IntersectionObserver((e) => { if (e.some((x) => x.isIntersecting)) { load(); near.disconnect(); } }, { rootMargin: '600px 0px' });

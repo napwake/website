@@ -42,7 +42,7 @@ const start = steps.length - 1;
   <h2 id="live-title" class="visually-hidden">What Napwake does with one environment</h2>
   <div class="live__band">
     <svg class="live__art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" role="img"
-      aria-label="A corridor of twelve rooms at night, one per environment: most are asleep, a few are awake. Staging's door, with the doorman beside it, changes through the four steps listed below."
+      aria-label="A corridor of twelve doors at night, one per environment. Most are asleep, and a few are awake. Staging's door, with the doorman beside it, changes through the four steps listed below."
       focusable="false">
       <g set:html={base} />
       {layers.map((l, i) => <g class="live__beat" data-beat={i} aria-hidden="true" data-on={i === start ? '' : undefined} set:html={l} />)}
@@ -62,7 +62,7 @@ const start = steps.length - 1;
     </ol>
     <div class="live__ctl">
       <button type="button" class="live__play" data-play hidden aria-label="Pause the scene">Pause</button>
-      <span class="live__note">The rooms are examples: <code>kubectl napwake status</code> shows yours.</span>
+      <span class="live__note">The environments are examples. <code>kubectl napwake status</code> shows yours.</span>
     </div>
   </div>
 </section>

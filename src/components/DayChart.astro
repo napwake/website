@@ -1,6 +1,7 @@
 ---
 // One weekday of one workload with autoResume on: when people use it, and what Napwake does.
 // An illustration of the pattern the docs' forecast simulator tests (busy 09:10 to 17:30), not a measurement.
+import { code } from '../lib/text.mjs';
 const pct = (h, m = 0) => `${((h + m / 60) / 24) * 100}%`;
 const use = { from: [9, 10], to: [17, 30] };
 const segs = [
@@ -10,15 +11,15 @@ const segs = [
   { state: 'asleep', from: [18, 30], to: [24, 0], word: 'asleep' },
 ];
 const marks = [
-  { at: [8, 45], n: '1', time: '08:45', text: 'autoResume wakes it, 15 minutes before an hour the forecast expects to be busy. Nobody waits.' },
+  { at: [8, 45], n: '1', time: '08:45', text: '`autoResume` wakes it, 15 minutes before an hour the forecast expects to be busy. Nobody waits.' },
   { at: [9, 10], n: '2', time: '09:10', text: 'The first person opens it, and finds it awake.' },
-  { at: [18, 30], n: '3', time: '18:30', text: 'An hour after the last use at 17:30, idleAfter runs out and it’s paused.' },
+  { at: [18, 30], n: '3', time: '18:30', text: '`idleAfter` runs out an hour after the last use at 17:30, and Napwake pauses it.' },
 ];
 const ticks = [0, 3, 6, 9, 12, 15, 18, 21, 24];
 const w = (a, b) => `calc(${pct(...b)} - ${pct(...a)})`;
 ---
 <figure class="day">
-  <div class="day__plot" role="img" aria-label="One weekday: asleep until 08:45, when autoResume wakes it; people use it from 09:10 to 17:30; awake until 18:30, when it's paused an hour after the last use; asleep overnight.">
+  <div class="day__plot" role="img" aria-label="One weekday of one workload. It's asleep until 08:45, when autoResume wakes it. People use it from 09:10 to 17:30. It's awake until 18:30, when it's paused an hour after the last use, and asleep overnight.">
     <div class="day__row">
       <span class="day__lab">People</span>
       <div class="day__track">
@@ -42,9 +43,9 @@ const w = (a, b) => `calc(${pct(...b)} - ${pct(...a)})`;
     </div>
   </div>
   <ol class="day__notes">
-    {marks.map((m) => <li><b class="day__pin day__pin--inline" aria-hidden="true">{m.n}</b><span><b class="mono">{m.time}</b> {m.text}</span></li>)}
+    {marks.map((m) => <li><b class="day__pin day__pin--inline" aria-hidden="true">{m.n}</b><span><b class="mono">{m.time}</b> <Fragment set:html={code(m.text)} /></span></li>)}
   </ol>
-  <figcaption>An illustration, with no measured data. A weekday of a workload people use from 09:10 to 17:30, the pattern the forecast’s simulator tests, with <code>autoResume</code> on and the default <code>idleAfter</code> of one hour.</figcaption>
+  <figcaption>An illustration, with no measured data. People use this workload from 09:10 to 17:30 on weekdays, the pattern the forecast’s simulator tests. <code>autoResume</code> is on, and <code>idleAfter</code> is the default hour.</figcaption>
 </figure>
 <style>
   .day { margin: 0; }

@@ -18,9 +18,9 @@ import { software } from '../lib/jsonld.mjs';
 
 const states = [
   { state: 'asleep', text: 'Scaled to zero. The Deployment or StatefulSet stays, and so do its Services, its PVCs and their data. Only the pods are removed. Its Services now point at the doorman.' },
-  { state: 'waking', text: 'A request, an activity annotation or the forecast woke it. Its replicas are being restored, and requests wait at the door until a pod is Ready.' },
+  { state: 'waking', text: 'A request, an activity annotation or the forecast woke it. Its replicas are being restored, and the doorman holds requests until a pod is Ready.' },
   { state: 'awake', text: 'Running as usual, with nothing in front of it. Its activity clock runs. After <code>idleAfter</code> with no sign of use, an hour by default, it’s paused again.' },
-  { state: 'error', text: 'A note pinned on the door. Something stops Napwake doing its job, and <code>kubectl napwake status</code> says what to fix.' },
+  { state: 'error', text: 'Something stops Napwake doing its job, and the door gets a note. <code>kubectl napwake status</code> says what to fix.' },
 ];
 
 // How a wake works: two doors, side by side. Facts from the docs' click-to-wake branch
@@ -45,14 +45,14 @@ const doors = [
 ];
 const WORD = { asleep: 'Asleep', waking: 'Waking up', awake: 'Awake' };
 
-// everyone else, per door; one `both` cell when the two doors agree
+// everyone else, per door, with one `both` cell when the two doors agree
 const others = [
   { who: 'Scripts, API clients and database drivers',
     private: { state: 'waking', html: 'Held until a pod is Ready, for up to <code>wake.maxWait</code>, 2 minutes by default. After that, the connection is closed and the wake goes on.' },
     public: { state: 'asleep', html: 'Turned away. Over HTTP, a <code>503</code> that says how to wake it. Nothing wakes.' } },
-  { who: 'Known probes, scrapers and uptime monitors', both: { state: 'asleep', html: 'A <code>503</code> at both doors, or a <code>200</code> for Google’s load balancer. Nothing wakes.' } },
-  { who: 'Tooling, by an annotation or <code>kubectl napwake wake</code>', both: { state: 'waking', html: 'Wakes it, at both doors.' } },
-  { who: 'The forecast, if you turn it on', both: { state: 'waking', html: 'Wakes it 15 minutes before people usually come, at both doors.' } },
+  { who: 'Known probes, scrapers and uptime monitors', both: { state: 'asleep', html: 'A <code>503</code> either way, or a <code>200</code> for Google’s load balancer. Nothing wakes.' } },
+  { who: 'Tooling, by an annotation or <code>kubectl napwake wake</code>', both: { state: 'waking', html: 'Wakes it, either way.' } },
+  { who: 'The forecast, if you turn it on', both: { state: 'waking', html: 'Wakes it 15 minutes before an hour it expects busy, either way.' } },
 ];
 ---
 <Base jsonld={[software()]}>
@@ -83,20 +83,20 @@ const others = [
       </div>
       <ScanDemo />
       <ol class="scan__notes">
-        <li><b>Read-only.</b> It runs with your kubeconfig, and installs nothing in the cluster.</li>
-        <li><b>Lit, no one seen:</b> your cluster as a hotel at night, with what’s idle right now lit up, and what it costs while it runs, at your nodes’ list prices.</li>
-        <li><b>With Napwake:</b> the lights go off in the rooms with no one seen, and the last week, replayed from Prometheus, says what pausing would have freed.</li>
+        <li>It’s read-only. It runs with your kubeconfig, and installs nothing in the cluster.</li>
+        <li>It shows what’s idle right now, and what that costs while it runs, at your nodes’ list prices.</li>
+        <li>Switch it to <b>With Napwake</b> to see the idle ones paused. The last week, replayed from Prometheus, says what that would have freed.</li>
       </ol>
-      <p class="scan__send"><b>Send it to your team:</b> it’s one self-contained file, with nothing loaded from elsewhere, and it prints cleanly to PDF. <a href="/examples/scan-report/" target="_blank" rel="noopener">Open the example report in a new tab <span aria-hidden="true">↗</span></a></p>
+      <p class="scan__send"><b>Send it to your team.</b> It’s one self-contained file, with nothing loaded from elsewhere, and it prints cleanly to PDF. <a href="/examples/scan-report/" target="_blank" rel="noopener">Open the example report in a new tab <span aria-hidden="true">↗</span></a></p>
     </div>
   </section>
 
   <section class="section" aria-labelledby="states-title">
     <div class="wrap">
       <div class="section__head">
-        <p class="eyebrow"><span class="plate">02</span> Four doors</p>
-        <h2 id="states-title" class="display-2">Every workload is a door.</h2>
-        <p>Shut is asleep, ajar is waking up, open is awake. A note on the door means it needs you. The plain word first, then the one <code>kubectl napwake status</code> prints.</p>
+        <p class="eyebrow"><span class="plate">02</span> Four states</p>
+        <h2 id="states-title" class="display-2">A workload is paused, resuming or running, or it needs you.</h2>
+        <p>Each state is drawn as a door. Shut is asleep, ajar is waking up, open is awake, and a note means it needs you. Each card gives the plain word, then the one <code>kubectl napwake status</code> prints.</p>
       </div>
       <ul class="states">
         {states.map((s) => (
@@ -114,8 +114,8 @@ const others = [
     <div class="wrap">
       <div class="section__head">
         <p class="eyebrow"><span class="plate">03</span> How a wake works</p>
-        <h2 id="wake-title" class="display-2">Private doors open on a request.<br /> Public ones can ask first.</h2>
-        <p>Behind a VPN, single sign-on or an allowlist, the first request wakes a paused workload. On a public URL, most requests are robots. Set <code>napwake.dev/wake: ask</code> there, and the doorman asks first. Either way, the app and its Ingress don’t change.</p>
+        <h2 id="wake-title" class="display-2">Behind your VPN, the first request wakes it.<br /> On a public URL, it can ask first.</h2>
+        <p>A paused workload’s Services point at the doorman, Napwake’s small proxy. Behind a VPN, single sign-on or an allowlist, he wakes it on the first request. On a public URL, most requests are robots. Set <code>napwake.dev/wake: ask</code> there, and the doorman asks a person first. Either way, the app and its Ingress don’t change.</p>
       </div>
       <div class="doors">
         {doors.map((d) => (
@@ -138,14 +138,14 @@ const others = [
       </div>
       <div class="table-wrap others">
         <table>
-          <caption class="visually-hidden">What everyone else gets while a workload is asleep, behind your VPN or SSO and on a public URL set to ask</caption>
+          <caption class="visually-hidden">What everyone else gets while a workload is asleep, behind a VPN and on a public URL set to ask</caption>
           <thead><tr><th scope="col">Everyone else</th><th scope="col">Behind your VPN or SSO</th><th scope="col">On a public URL, set to ask</th></tr></thead>
           <tbody>
             {others.map((o) => (
               <tr>
                 <th scope="row" set:html={o.who} />
                 {o.both
-                  ? <td colspan="2" class="others__both" data-label="Both doors"><span class="others__out"><StateDoor state={o.both.state} size={18} /><span set:html={o.both.html} /></span></td>
+                  ? <td colspan="2" class="others__both" data-label="Either way"><span class="others__out"><StateDoor state={o.both.state} size={18} /><span set:html={o.both.html} /></span></td>
                   : [
                       <td data-label="Behind your VPN or SSO"><span class="others__out"><StateDoor state={o.private.state} size={18} /><span set:html={o.private.html} /></span></td>,
                       <td data-label="On a public URL, set to ask"><span class="others__out"><StateDoor state={o.public.state} size={18} /><span set:html={o.public.html} /></span></td>,
@@ -155,7 +155,7 @@ const others = [
           </tbody>
         </table>
       </div>
-      <p class="small muted wake__foot">It needs a readiness probe that passes only once the app can serve, so the held request reaches an app that’s ready. Behind your VPN or SSO, an HTTPS health check can’t be read, and wakes it every time. <Link to={links.concept('wake-on-request')}>Wake on request</Link>, in the docs, has the cases where a caller sees something else.</p>
+      <p class="small muted wake__foot">It needs a readiness probe that passes only once the app can serve. Then the held request reaches an app that’s ready. Behind your VPN or SSO, the doorman can’t read an HTTPS health check, so each one wakes it. <Link to={links.concept('wake-on-request')}>Wake on request</Link>, in the docs, has the cases where a caller sees something else.</p>
     </div>
   </section>
 
@@ -169,10 +169,10 @@ const others = [
       <div class="fit__list">
         <h3 class="h3">What it won’t do</h3>
         <ul>
-          <li><b>Delete anything.</b> Its one action is to pause, which scales a workload to zero. A StatefulSet whose PVCs would be deleted on scale-down is never paused.</li>
-          <li><b>Guess who’s a person.</b> Napwake can’t tell. On an environment anyone can reach, set it to ask. Then requests wake nothing, and a browser gets a Wake it button.</li>
-          <li><b>Run to a timetable.</b> It pauses on idleness, not at 8pm. A workload idle all afternoon is paused, and a request at midnight wakes it.</li>
-          <li><b>Replace your autoscaler.</b> While a workload runs, its HPA or KEDA decides how many replicas it needs. Napwake only decides whether it should run at all.</li>
+          <li>Delete anything. Its one action is to pause, which scales a workload to zero. A StatefulSet whose PVCs would be deleted on scale-down is never paused.</li>
+          <li>Guess who’s a person. Napwake can’t tell. On an environment anyone can reach, set it to ask. Then requests wake nothing, and a browser gets a <b>Wake it</b> button.</li>
+          <li>Run to a timetable. It pauses on idleness, not at 8pm. A workload idle all afternoon is paused, and a request at midnight wakes it.</li>
+          <li>Replace your autoscaler. While a workload runs, its HPA or KEDA decides how many replicas it needs. Napwake only decides whether it should run at all.</li>
         </ul>
         <p><a href="/compare/">How it compares</a></p>
       </div>
@@ -185,7 +185,7 @@ const others = [
       <div class="start__body">
         <p class="eyebrow"><span class="plate">05</span> Start</p>
         <h2 id="start-title" class="display-2">Scan, then try one workload.</h2>
-        <p class="muted">The Quickstart takes one workload from idle and costing money to paused while idle, measuring it in dry-run first so nothing pauses until you say so.</p>
+        <p class="muted">The Quickstart takes one workload from idle to paused. It measures in dry-run first, so nothing pauses until you say so.</p>
         <Terminal class="start__term" command={['brew install napwake/tap/kubectl-napwake', 'kubectl napwake scan']} label="Install the kubectl plugin and scan a cluster" />
         <div class="actions">
           <Button to={links.install} variant="primary">Install</Button>
@@ -275,6 +275,8 @@ const others = [
     .hero { padding: var(--space-12) 0 var(--space-8); }
     .scan__notes { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
     .scan__notes li { padding: 0 0 0 var(--space-8); }
+    /* the install line wraps after `install` rather than scroll sideways */
+    .start__body :global(.start__term .nw-term) { white-space: pre-wrap; font-size: 13px; }
     .door__steps li { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
     .others { background: none; border: 0; overflow: visible; }
     .others table, .others tbody, .others tr, .others th, .others td { display: block; }

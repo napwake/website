@@ -33,7 +33,7 @@ const panels = doors.map((d) => {
   return { ...d, svg: art + `<g class="rday__glow">${glow(d.state, x)}</g>` };
 });
 ---
-<nav class="rday" aria-label="The chapters, as one room’s day">
+<nav class="rday" aria-label="The chapters, as one workload’s day">
   <ol class="rday__list">
     {panels.map((d) => (
       <li>

@@ -17,16 +17,16 @@ import DayChart from '../components/DayChart.astro';
 import RoomDay from '../components/RoomDay.astro';
 import { links } from '../lib/links.mjs';
 
-// The chapters, as one room's day: staging from Monday evening to Tuesday evening. The times follow the
+// The chapters, as one workload's day: staging from Monday evening to Tuesday evening. The times follow the
 // chapters' own facts: an hour with no activity before a pause (idleAfter's default), and the forecast
-// waking it at 08:45 for a team it expects at 09:00 (chapter 3's example).
+// waking it at 08:45 before an hour it expects busy, 09:00 (chapter 3's example).
 const chapters = [
-  { id: 'pause', n: '1', state: 'awake', word: 'Lit, no one seen', when: 'Mon 18:40', title: 'It pauses what’s idle',
+  { id: 'pause', n: '1', state: 'awake', word: 'Idle', when: 'Mon 18:40', title: 'It pauses what’s idle',
     line: 'The team has gone home. After `idleAfter` with no sign of use, an hour by default, Napwake pauses it.' },
   { id: 'doorman', n: '2', state: 'waking', when: 'Mon 21:15', title: 'A request or a click wakes it',
     line: 'Someone opens it late, and the doorman holds the first request. On a public URL, he can ask first.' },
   { id: 'forecast', n: '3', state: 'awake', pose: 'list', listTime: '08:45', when: 'Tue 08:45', title: 'The forecast wakes it early',
-    line: 'The team usually comes at 09:00. With `autoResume` on, the forecast wakes it 15 minutes before.' },
+    line: 'The forecast expects 09:00 to be busy. With `autoResume` on, Napwake wakes it 15 minutes before.' },
   { id: 'never', n: '4', state: 'asleep', when: 'Tue 18:10', title: 'It never deletes anything',
     line: 'Paused again, with everything still behind the door. Only the pods go.' },
 ];
@@ -46,10 +46,10 @@ const paths = [
     id: 'door-private', where: 'Behind your VPN or SSO', what: 'The first request wakes it.', mock: 'waking',
     facts: [
       'Once a caller sends something, the doorman holds the connection and wakes the workload. It works on TCP, so it holds HTTP, gRPC, Postgres and Redis alike.',
-      'A caller that connects and sends nothing for 3 seconds wakes it too, as for MySQL, where the server speaks first.',
+      'A caller that connects and sends nothing for 3 seconds wakes it too. That covers MySQL, where the server speaks first.',
       'It holds a connection until a pod is Ready, for up to <code>wake.maxWait</code>. That’s 2 minutes by default, and at most an hour. After that, it closes the connection, and the wake goes on.',
       'A browser gets the waking page at once. It reloads every 3 seconds, and the first reload after a pod is Ready reaches the app. It names no namespace, workload or Service.',
-      'Known probes, scrapers and uptime monitors, such as kube-probe, Prometheus, Datadog and Pingdom, get a <code>503</code>. A TCP health check that connects and closes is closed. A request for a hidden file, such as <code>/.env</code>, gets a <code>404</code>. None of them wake it.',
+      'Known probes, scrapers and uptime monitors, such as kube-probe, Prometheus, Datadog and Pingdom, get a <code>503</code>. Google’s load balancer health check gets a <code>200</code>, so the load balancer keeps sending requests on. A TCP health check that connects and closes is closed. A request for a hidden file, such as <code>/.env</code>, gets a <code>404</code>. None of them wake it.',
     ],
   },
   {
@@ -64,7 +64,7 @@ const paths = [
   },
 ];
 
-// Who wakes it, at each door. `both` when the two doors agree.
+// Who wakes it, behind a VPN and on a public URL. `both` when the two agree.
 const callers = [
   { who: 'A person, in a browser',
     private: ['waking', 'Wakes it by opening a page, and gets the waking page.'],
@@ -75,12 +75,12 @@ const callers = [
   { who: 'Crawlers and scanners',
     private: ['waking', 'Wake it, unless they ask for a hidden file.'],
     public: ['asleep', 'A <code>503</code>. Nothing wakes.'] },
-  { who: 'Known probes, scrapers and uptime monitors', both: ['asleep', 'A <code>503</code> at both doors. Nothing wakes.'] },
-  { who: 'Tooling, such as a pull request bot, a portal or a chat command, by an annotation or <code>kubectl napwake wake</code>',
-    both: ['waking', 'Wakes it, at both doors. A condition on the workload tells the tool the wake was taken up.'] },
-  { who: 'CI, through an activity annotation, or a dependent waking', both: ['waking', 'Wakes it, at both doors.'] },
+  { who: 'Known probes, scrapers and uptime monitors', both: ['asleep', 'A <code>503</code> either way, or a <code>200</code> for Google’s load balancer. Nothing wakes.'] },
+  { who: 'Tooling, such as a pull request bot, portal or chat command, by an annotation or <code>kubectl napwake wake</code>',
+    both: ['waking', 'Wakes it, either way. A condition on the workload tells the tool the wake was taken up.'] },
+  { who: 'CI, through an activity annotation, or a dependent waking', both: ['waking', 'Wakes it, either way.'] },
   { who: 'The forecast, if you turn it on',
-    both: ['waking', 'Wakes it 15 minutes before an hour it expects busy, at both doors. Where it asks first, the forecast learns those hours from people’s clicks and tooling’s wakes.'] },
+    both: ['waking', 'Wakes it 15 minutes before an hour it expects busy, either way. Where it asks first, the forecast learns those hours from people’s clicks and tooling’s wakes.'] },
 ];
 
 // kubectl-plugin.md, "Replay the Forecast": the docs' example, columns trimmed
@@ -98,8 +98,8 @@ const forecast = [
     <div class="wrap">
       <div class="intro__in">
         <p class="eyebrow">How it works</p>
-        <h1 class="display-1 intro__h1">One room, through a day.</h1>
-        <p class="lede intro__lede">Napwake pauses a workload once it’s idle, and wakes it when it’s wanted again. Each door below is a moment in one room’s day, and opens its chapter.</p>
+        <h1 class="display-1 intro__h1">One workload, through a day.</h1>
+        <p class="lede intro__lede">Napwake pauses a workload once it’s idle, and wakes it when someone uses it again. Each door below is a moment in its day, and opens a chapter.</p>
       </div>
       <RoomDay doors={chapters} />
     </div>
@@ -109,9 +109,9 @@ const forecast = [
   <section class="chapter" id="pause" aria-labelledby="pause-title">
     <div class="wrap chapter__in">
       <div class="chapter__head">
-        <p class="eyebrow"><span class="plate">1</span> Pause on use</p>
+        <p class="eyebrow"><span class="plate">1</span> Pause when idle</p>
         <h2 id="pause-title" class="display-2">It pauses what’s idle.</h2>
-        <p class="chapter__lede">No timetable decides it. Napwake keeps an <b>activity clock</b> for every workload it manages, the last time anything showed it was in use. When the clock is older than <code>idleAfter</code>, one hour by default, the workload is paused. Any single sign of activity resets it.</p>
+        <p class="chapter__lede">Napwake keeps an <b>activity clock</b> for every workload it manages, the last time anything showed it was in use. When the clock is older than <code>idleAfter</code>, one hour by default, Napwake pauses the workload. Any single sign of activity resets the clock. No timetable decides it.</p>
       </div>
       <div class="chapter__text chapter__body">
         <h3 class="h3">What counts as activity</h3>
@@ -124,11 +124,12 @@ const forecast = [
         <ul class="facts">
           <li>Every source is checked and the most recent wins, so a worker with real work and no traffic isn’t paused.</li>
           <li>Memory isn’t a source, since it stays allocated whether or not anyone uses the workload.</li>
-          <li>Requests to an awake workload aren’t a source unless a Prometheus query counts them, such as request rate. So a workload in light use, under its CPU threshold, can be paused while in use, and the next request wakes it. From 0.2.0-rc.9, that wrong pause makes the next wait longer, and <code>kubectl napwake status</code> suggests the setting to change.</li>
-          <li>It never pauses a workload it can’t measure, and there’s no learning period. A new workload can pause after its first idle hour.</li>
+          <li>Requests to an awake workload aren’t a source unless a Prometheus query counts them, such as request rate. So a workload in light use, under its CPU threshold, can be paused while in use. The next request wakes it. After that wrong pause, Napwake waits longer before the next one, and <code>kubectl napwake status</code> suggests the setting to change.</li>
+          <li>It never pauses a workload it can’t measure, and there’s no learning period. A new workload can pause after its first <code>idleAfter</code> without activity.</li>
         </ul>
         <h3 class="h3">Opting in</h3>
-        <p>A label on a workload or a whole namespace, with settings as annotations, in the manifests or Helm values you already keep in Git. Start in dry-run. It measures what it would pause and free, and never pauses anything. It can’t see requests, so a workload used with little CPU looks idler than it is. A Prometheus query on its request rate at the ingress fixes that.</p>
+        <p>You opt in with a label on a workload or a whole namespace. Settings are annotations, in the manifests or Helm values you already keep in Git.</p>
+        <p>Start in dry-run. It measures what it would pause and free, and never pauses anything. It can’t see requests, so a workload used with little CPU looks idler than it is. A Prometheus query on its request rate at the ingress fixes that.</p>
         <Terminal command={[]} copy={false} label="deployment.yaml, opted in, in dry-run" output={[
           [{ text: '# deployment.yaml', tone: 'dim' }],
           'metadata:', '  name: my-api', '  namespace: dev', '  labels:',
@@ -137,8 +138,8 @@ const forecast = [
         <p class="small muted chapter__after">Then <code>kubectl napwake enable my-api -n dev</code> ends dry-run, and it pauses after <code>idleAfter</code> with no sign of use. <Link to={links.concept('idle-detection')}>Idle detection</Link> in the docs has every rule.</p>
       </div>
       <figure class="chapter__art">
-        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="lights" label="Napwake turns off the lights in staging, which has shown no sign of use for an hour. dev is asleep; pr-42 is in use and awake." /></div>
-        <figcaption>Staging has shown no sign of use for <code>idleAfter</code>, so its lights go out. pr-42 is in use, so it stays awake.</figcaption>
+        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="lights" label="Napwake pauses staging, which has shown no sign of use for an hour, and its door shuts. dev is asleep. pr-42 is in use and awake." /></div>
+        <figcaption>Staging has shown no sign of use for <code>idleAfter</code>, so Napwake pauses it. pr-42 is in use, so it stays awake.</figcaption>
       </figure>
     </div>
   </section>
@@ -149,20 +150,20 @@ const forecast = [
       <div class="chapter__in">
         <div class="chapter__head">
           <p class="eyebrow"><span class="plate">2</span> How it wakes</p>
-          <h2 id="doorman-title" class="display-2">The doorman wakes it on a request, or asks first.</h2>
-          <p class="chapter__lede">A paused workload has no pods, so nothing would answer its Service. Its Services point at the doorman instead. Behind a VPN, single sign-on or an allowlist, the first request wakes it. On a public URL, set it to ask, and only a person’s click wakes it.</p>
+          <h2 id="doorman-title" class="display-2">A request wakes it. On a public URL, a click can.</h2>
+          <p class="chapter__lede">A paused workload has no pods, so nothing would answer its Service. Its Services point at the doorman instead, Napwake’s small proxy. Behind a VPN, single sign-on or an allowlist, he wakes it on the first request. On a public URL, set it to ask, and only a person’s click wakes it.</p>
         </div>
         <div class="chapter__text chapter__body">
           <ol class="steps">
-            <li><b>The route.</b> When a workload pauses, the operator adds an EndpointSlice to each of its Services, pointing at the doorman. The doorman is a small proxy, its own Deployment of two replicas beside the operator. The Service, its ClusterIP and its DNS name don’t change.</li>
-            <li><b>The door.</b> A connection reaches the doorman. Behind a VPN, once the caller has sent something, he holds it and wakes the workload. On a public URL set to ask, he waits for a person’s click instead. A wake takes the workload’s dependencies with it, such as the database it uses.</li>
-            <li><b>The hand-over.</b> As soon as a pod is Ready, by its readiness probe, a held connection goes through, with the bytes the caller already sent.</li>
-            <li><b>Out of the way.</b> Once the workload is running, the doorman’s EndpointSlices go and traffic reaches the pods directly again.</li>
+            <li>When a workload pauses, the operator adds an EndpointSlice to each of its Services, pointing at the doorman. The doorman is a small proxy, its own Deployment of two replicas beside the operator. The Service, its ClusterIP and its DNS name don’t change.</li>
+            <li>A connection reaches the doorman. Behind a VPN, once the caller has sent something, he holds it and wakes the workload. On a public URL set to ask, he waits for a person’s click instead. A wake takes the workload’s dependencies with it, such as the database it uses.</li>
+            <li>As soon as a pod is Ready, by its readiness probe, a held connection goes through. It carries the bytes the caller already sent.</li>
+            <li>Once the workload is running, the doorman’s EndpointSlices go, and traffic reaches the pods directly again.</li>
           </ol>
           <p>Waking on a request is the default, with nothing to configure. Asking first is <code>napwake.dev/wake: ask</code> on a workload or its namespace, or <code>defaults.wake: ask</code> in Helm for the whole cluster. Napwake can’t tell a public URL from a private one, so the setting is yours.</p>
         </div>
         <figure class="chapter__art">
-          <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'waking', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="door" label="The doorman holds the door of staging, which is waking up, its amber light on the floor. dev is asleep, and pr-42 is awake." /></div>
+          <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'waking', label: 'staging' }, { state: 'awake', label: 'pr-42' }]} doormanAt={1} pose="door" label="The doorman holds the door of staging, which is waking up. dev is asleep, and pr-42 is awake." /></div>
           <figcaption>A request reached staging, behind the VPN. The doorman holds it while staging starts, and dev stays asleep.</figcaption>
         </figure>
       </div>
@@ -179,7 +180,7 @@ const forecast = [
             </div>
           ))}
         </div>
-        <h3 class="h3 callers__h">Who wakes it, at each door</h3>
+        <h3 class="h3 callers__h">Who wakes it, behind a VPN or on a public URL</h3>
         <div class="table-wrap stack callers">
           <table>
             <caption class="visually-hidden">Who wakes a paused workload, behind your VPN or SSO and on a public URL set to ask</caption>
@@ -189,7 +190,7 @@ const forecast = [
                 <tr>
                   <th scope="row" set:html={c.who} />
                   {c.both
-                    ? <td colspan="2" class="callers__both" data-label="Both doors"><span class="callers__out"><StateDoor state={c.both[0]} size={18} /><span set:html={c.both[1]} /></span></td>
+                    ? <td colspan="2" class="callers__both" data-label="Either way"><span class="callers__out"><StateDoor state={c.both[0]} size={18} /><span set:html={c.both[1]} /></span></td>
                     : [
                         <td data-label="Behind your VPN or SSO"><span class="callers__out"><StateDoor state={c.private[0]} size={18} /><span set:html={c.private[1]} /></span></td>,
                         <td data-label="On a public URL, set to ask"><span class="callers__out"><StateDoor state={c.public[0]} size={18} /><span set:html={c.public[1]} /></span></td>,
@@ -210,12 +211,12 @@ const forecast = [
       <div class="chapter__in">
         <div class="chapter__head">
           <p class="eyebrow"><span class="plate">3</span> The forecast</p>
-          <h2 id="forecast-title" class="display-2">It wakes the team’s rooms 15 minutes early.</h2>
-          <p class="chapter__lede">Napwake learns each workload’s daily and weekly pattern with a Holt-Winters double seasonal model, fed every hour from its CPU and from the requests that wake it. With <code>autoResume</code> on, it wakes a paused workload 15 minutes before an hour it expects to be busy, so the first person in doesn’t wait.</p>
+          <h2 id="forecast-title" class="display-2">The forecast can wake it 15 minutes before a busy hour.</h2>
+          <p class="chapter__lede">Napwake learns each workload’s daily and weekly pattern with a Holt-Winters double seasonal model. Every hour it feeds the model the workload’s CPU and the requests that woke it. With <code>autoResume</code> on, Napwake wakes a paused workload before an hour it expects busy. The first person in doesn’t wait.</p>
         </div>
         <figure class="chapter__art">
-          <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="list" props listTime="08:45" label="The morning list, beside staging: Napwake wakes it at 08:45, before the team arrives. Every room is still asleep." /></div>
-          <figcaption>The morning list, before the team arrives. Staging is expected busy at 09:00, so with <code>autoResume</code> on, Napwake wakes it at 08:45.</figcaption>
+          <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="list" props listTime="08:45" label="The morning list, beside staging. Napwake wakes it at 08:45, before the team arrives. Every door is still shut." /></div>
+          <figcaption>Staging is expected busy at 09:00. With <code>autoResume</code> on, Napwake wakes it at 08:45, before the team arrives.</figcaption>
         </figure>
       </div>
       <div class="chapter__more">
@@ -254,15 +255,15 @@ const forecast = [
           </div>
         </div>
         <ul class="facts">
-          <li>It writes down what a pause will change before it scales anything, in its status and on the workload’s <code>napwake.dev/paused-from</code> annotation. So a pause cut short by a restart is finished or undone, and a resume goes back to the replicas it had.</li>
+          <li>Before it scales anything, it writes down what the pause will change, in its status and the workload’s <code>napwake.dev/paused-from</code> annotation. So a pause cut short by a restart is finished or undone. A resume goes back to the replicas it had.</li>
           <li>Some things it won’t pause: a StatefulSet whose PVCs would be deleted on scale-down, Kubernetes’ own namespaces, and Napwake itself.</li>
           <li>It doesn’t fight you. Scaled up by anyone else, a paused workload counts as woken. Scaled to zero by hand, it’s left alone. If a GitOps tool undoes a pause, Napwake reports how to fix it.</li>
         </ul>
         <p class="small muted chapter__after"><Link to={links.guide('pause')}>Pause and resume</Link> in the docs has each step of a pause.</p>
       </div>
       <figure class="chapter__art">
-        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="rest" label="Every room is asleep, and the doorman rests his eyes at his post." /></div>
-        <figcaption>Every room asleep, and everything still in its room. Only the pods are gone.</figcaption>
+        <div class="scene-frame"><Scene w={560} h={280} x0={66} rooms={[{ state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'staging' }, { state: 'asleep', label: 'qa' }]} doormanAt={1} pose="rest" label="Every door is shut, and the doorman rests his eyes at his post." /></div>
+        <figcaption>Every workload paused, with everything still behind its door. Only the pods are gone.</figcaption>
       </figure>
     </div>
   </section>
