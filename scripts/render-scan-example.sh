@@ -2,7 +2,7 @@
 # The home page's scan example: the report and the terminal output for one example cluster, both from the
 # product's own code, so every number agrees. The data is the redesigned report's sample (`firstScan()` in
 # reports/render/zz_render_samples_test.go, made up); the rename is stood in by text, as reports/render/rename.py does.
-#   NAPWAKE_PRODUCT=<checkout> scripts/render-scan-example.sh   (needs Go; reads the product repo, never writes to it)
+#   NAPWAKE_PRODUCT=<checkout> scripts/render-scan-example.sh   (needs Go, and reads the product repo, never writes to it)
 set -e
 site="$(cd "$(dirname "$0")/.." && pwd)"
 reports="${NAPWAKE_REPORTS:-$site/../reports}"
