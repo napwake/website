@@ -275,6 +275,8 @@ const others = [
     .hero { padding: var(--space-12) 0 var(--space-8); }
     .scan__notes { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
     .scan__notes li { padding: 0 0 0 var(--space-8); }
+    /* the install line wraps after `install` rather than scroll sideways */
+    .start__body :global(.start__term .nw-term) { white-space: pre-wrap; font-size: 13px; }
     .door__steps li { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
     .others { background: none; border: 0; overflow: visible; }
     .others table, .others tbody, .others tr, .others th, .others td { display: block; }
