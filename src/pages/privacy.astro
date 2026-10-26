@@ -3,7 +3,9 @@
 // Announcement and GitHubButton keep their values in browser storage), the star count's request
 // (GitHubButton.astro), GitHub's words on what Pages logs, the fonts (public/fonts, global.css), and
 // Cloudflare's own pages on Web Analytics. The analytics lines follow PUBLIC_CF_BEACON_TOKEN (site.mjs),
-// so the page is true with the beacon on or off.
+// so the page is true with the beacon on or off. The docs' note: their beacon is set by the product repo's
+// docs publish (.github/workflows/docs.yml, napwake/napwake#105); checked on 2026-10-26 that they set no
+// cookies, keep the theme in browser storage, and fetch only their own files (search is Pagefind's, local).
 import Base from '../layouts/Base.astro';
 import { CF_BEACON } from '../lib/site.mjs';
 
@@ -66,6 +68,14 @@ const CLOUDFLARE_DATA = 'https://developers.cloudflare.com/web-analytics/data-me
             </div>
           </article>
 
+          <article class="note" id="docs" aria-labelledby="docs-h">
+            <h2 class="h3" id="docs-h">The docs</h2>
+            <div class="note__text">
+              <p>The docs at <a href="https://docs.napwake.dev/">docs.napwake.dev</a> work the same way. GitHub Pages hosts them, and they set no cookies. If you pick a theme, your browser remembers it in its own storage. Their fonts and search come from the docs themselves.</p>
+              <p>They use Cloudflare Web Analytics, which records page views and visits, the site that sent you, your country, your browser, system and device type, and how fast the page loaded.</p>
+            </div>
+          </article>
+
           <article class="note" id="fonts" aria-labelledby="fonts-h">
             <h2 class="h3" id="fonts-h">Fonts</h2>
             <div class="note__text">
@@ -73,7 +83,7 @@ const CLOUDFLARE_DATA = 'https://developers.cloudflare.com/web-analytics/data-me
             </div>
           </article>
         </div>
-        <p class="small muted updated">Last changed 24 October 2026.</p>
+        <p class="small muted updated">Last changed 26 October 2026.</p>
       </div>
     </div>
   </section>
