@@ -17,12 +17,12 @@ const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/M
 
 const CARDS = {
   home: { pose: 'door', title: HEADLINE, line: PLAIN, size: 64 },
-  'how-it-works': { pose: 'lights', title: 'It pauses workloads. Here’s when, and how they wake.', line: 'The activity clock, the doorman that holds the first request, and the forecast that wakes rooms 15 minutes early.' },
-  compare: { pose: 'watch', title: 'Three ways to stop paying for idle staging.', line: 'A timetable, a scale-to-zero proxy and Napwake, through one evening and the next morning.' },
+  'how-it-works': { pose: 'lights', title: 'It pauses workloads. Here’s when, and how they wake.', line: 'The activity clock, the doorman that holds the first request, and the forecast that can wake workloads 15 minutes early.' },
+  compare: { pose: 'watch', title: 'Three ways to stop paying for idle staging.', line: 'Napwake, a timetable and a scale-to-zero proxy, through one evening and the next morning.' },
   faq: { pose: 'point', title: 'Questions people ask about Napwake.', line: 'Short answers, each complete on its own, with where it comes from.' },
   changelog: { pose: 'tip', title: 'What’s new in Napwake.', line: 'Each release in plain words, then every change. 0.2.0 is in release candidates.' },
-  blog: { pose: 'duty', title: 'From the front desk.', line: 'Release announcements from Napwake, and how it’s built.' },
-  brand: { pose: 'tip', title: 'The doorman, and how to use him.', line: 'The logo, the doorman illustrations under CC BY 4.0, and the trademark rules.' },
+  blog: { pose: 'duty', title: 'The Napwake blog.', line: 'Release announcements from Napwake, and how it’s built.' },
+  brand: { pose: 'tip', title: 'The logo and the doorman, and how to use them.', line: 'The logo, the doorman illustrations under CC BY 4.0, and the trademark rules.' },
 };
 for (const p of PAGES) if (!CARDS[p.card]) throw new Error(`no card for ${p.card}`);
 
