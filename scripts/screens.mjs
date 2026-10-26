@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
 const args = process.argv.slice(2);
 const opt = Object.fromEntries(args.filter((a) => a.startsWith('--')).map((a) => { const i = a.indexOf('='); return i < 0 ? [a.slice(2), true] : [a.slice(2, i), a.slice(i + 1)]; }));
-const PAGES = { home: '/', how: '/how-it-works/', compare: '/compare/', brand: '/brand/', faq: '/faq/', changelog: '/changelog/', blog: '/blog/', post: '/blog/introducing-napwake/', 'scan-report': '/examples/scan-report/', privacy: '/privacy/', '404': '/no-such-room/' };
+const PAGES = { home: '/', how: '/how-it-works/', compare: '/compare/', brand: '/brand/', faq: '/faq/', changelog: '/changelog/', blog: '/blog/', 'scan-report': '/examples/scan-report/', privacy: '/privacy/', '404': '/no-such-page/' };
 const pages = args.filter((a) => !a.startsWith('--'));
 const want = pages.length ? pages : Object.keys(PAGES);
 const VARIANTS = {

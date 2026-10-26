@@ -1,18 +1,21 @@
 // Copies the product's CHANGELOG.md into the site as it is, and the list of published releases, for /changelog/.
-//   node scripts/sync-changelog.mjs                 from the product repo's origin/main (read-only: git show)
-//   node scripts/sync-changelog.mjs --url=<raw URL>  from GitHub, such as
+//   NAPWAKE_PRODUCT=<checkout> node scripts/sync-changelog.mjs   from a product checkout's origin/main (read-only: git show)
+//   node scripts/sync-changelog.mjs --url=<raw URL>               from GitHub, such as
 //     https://raw.githubusercontent.com/napwake/napwake/main/CHANGELOG.md
 // Commit src/content/CHANGELOG.md and src/content/releases.json; the build only reads them.
 import { execFileSync } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { homedir } from 'node:os';
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..');
 const url = process.argv.find((a) => a.startsWith('--url='))?.slice(6);
-// the product's local checkout, which keeps its old folder name
-const repo = process.env.NAPWAKE_PRODUCT || join(homedir(), 'Workspace/experiments/hybernate');
+// a checkout of github.com/napwake/napwake, needed unless --url is given
+const repo = process.env.NAPWAKE_PRODUCT;
+if (!url && !repo) {
+  console.error('Set NAPWAKE_PRODUCT to a checkout of github.com/napwake/napwake, or pass --url=<raw CHANGELOG.md URL>.');
+  process.exit(2);
+}
 
 const source = url
   ? await (await fetch(url)).text()
