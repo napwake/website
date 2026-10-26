@@ -1,12 +1,14 @@
 // The social cards (og:image), 1200 x 630, in the launch card's style: Lamp ground, the wordmark, the
 // page's headline in Big Shoulders, its line in the mono, and the doorman in the page's pose, drawn
-// by the brand's rig with token colours. Rendered with headless Chrome into public/og/<card>.png.
+// by the brand's rig with token colours. Rendered with headless Chrome into public/og/<card>.png,
+// then saved with a 256-colour palette: WhatsApp shows no picture for an image over about 300 KB.
 //   node scripts/cards.mjs        (commit the PNGs; the build only copies them)
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
+import sharp from 'sharp';
 import { figure, POSES, handFilter, poseProps } from '../src/lib/rig/doorman.mjs';
 import { DOORMAN, tokenize } from '../src/lib/art.mjs';
 import { HEADLINE, PLAIN, PAGES } from '../src/lib/site.mjs';
@@ -87,7 +89,9 @@ for (const card of Object.keys(CARDS).filter((c) => !only.length || only.include
   await send('Runtime.evaluate', { expression: 'document.fonts.ready.then(() => true)', awaitPromise: true }, sessionId);
   await sleep(300);
   const shot = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1200, height: 630, scale: 1 } }, sessionId);
-  await writeFile(join(out, `${card}.png`), Buffer.from(shot.data, 'base64'));
+  const png = await sharp(Buffer.from(shot.data, 'base64')).png({ palette: true, quality: 100, compressionLevel: 9, effort: 10 }).toBuffer();
+  if (png.length > 300_000) throw new Error(`public/og/${card}.png is ${png.length} bytes, over WhatsApp's 300 KB`);
+  await writeFile(join(out, `${card}.png`), png);
   console.log(`public/og/${card}.png`);
   await send('Target.closeTarget', { targetId });
 }
