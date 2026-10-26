@@ -5,9 +5,9 @@
 export const NOTES = {
   '0.2.0': {
     summary: [
-      '0.2.0 is the relaunch, a fresh start. Install it new, rather than upgrading from 0.1.x.',
-      'Napwake pauses the workloads you opt in with a label after `idleAfter` with no sign of use. A request to a paused workload’s Service wakes it through the doorman, with a waking page for browsers. The forecast learns each workload’s week. With `autoResume`, it wakes them ahead of demand.',
-      '`kubectl napwake scan` shows what’s idle with nothing installed. Napwake reports what pausing freed apart from what came off the bill.',
+      'Napwake pauses idle Kubernetes workloads in staging, preview and dev, and wakes them on the first request. It never deletes a workload or its data.',
+      '0.2.0 is the first release as Napwake, and a fresh start after the 0.1.x experiments.',
+      'From 0.2.0-rc.9, `helm upgrade` works in place. From Hybernate 0.1.x or its release candidates rc.1 to rc.7, uninstall, then install Napwake and opt your workloads in again.',
     ],
     highlights: [
       { title: 'Opt in with a label', text: 'On a Deployment, a StatefulSet or a whole namespace, with settings as annotations.', entry: 'Label opt-in' },
