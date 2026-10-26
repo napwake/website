@@ -3,7 +3,7 @@
 User-agent: *
 Allow: /
 
-# Named for clarity; the rule above already allows them.
+# Named for clarity. The rule above already allows them.
 User-agent: GPTBot
 User-agent: OAI-SearchBot
 User-agent: ChatGPT-User

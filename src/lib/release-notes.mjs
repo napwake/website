@@ -5,9 +5,9 @@
 export const NOTES = {
   '0.2.0': {
     summary: [
-      '0.2.0 is the relaunch: a fresh start, so install it new rather than upgrading from 0.1.x.',
+      '0.2.0 is the relaunch, a fresh start. Install it new, rather than upgrading from 0.1.x.',
       'Napwake pauses the workloads you opt in with a label after `idleAfter` with no sign of use. A request to a paused workload’s Service wakes it through the doorman, with a waking page for browsers. The forecast learns each workload’s week. With `autoResume`, it wakes them ahead of demand.',
-      '`kubectl napwake scan` shows what’s idle with nothing installed, and Napwake reports what pausing freed apart from what came off the bill.',
+      '`kubectl napwake scan` shows what’s idle with nothing installed. Napwake reports what pausing freed apart from what came off the bill.',
     ],
     highlights: [
       { title: 'Opt in with a label', text: 'On a Deployment, a StatefulSet or a whole namespace, with settings as annotations.', entry: 'Label opt-in' },
