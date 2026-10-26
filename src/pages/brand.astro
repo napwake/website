@@ -8,18 +8,21 @@ import Room from '../components/Room.astro';
 import { links } from '../lib/links.mjs';
 
 const credit = 'Doorman illustrations by Napwake, CC BY 4.0';
-// guidelines/doorman.md, "The eleven poses": the pose, what it's for, and its alt text, captioned by the
-// doorman's rule (only the door is his job; everything else is Napwake's, even with him in the picture)
+// guidelines/doorman.md, "The twelve poses": the pose, what it's for, and its alt text, captioned by the
+// doorman's rule (he only holds the door, wakes a workload on the first request, or asks first; everything else
+// is Napwake's, even with him in the picture), and in plain words first (Tobi, 2026-10-26): what Napwake does,
+// then the picture, with no rooms, lights or rounds in the words
 const poses = [
   ['duty', 'On duty', 'Napwake, running', 'The doorman on duty.'],
-  ['door', 'Holds the door', 'The doorman waking a room when someone knocks', 'The doorman holds the door of a waking room.'],
-  ['lights', 'Lights out', 'Napwake putting an empty room to sleep', 'Lights out: Napwake puts an empty room to sleep.'],
-  ['list', 'The morning list', 'Napwake waking rooms before the team arrives', 'The morning list: Napwake wakes rooms before the team arrives.'],
-  ['rounds', 'Does the rounds', 'Napwake checking which rooms are empty', 'Doing the rounds with a clipboard: Napwake checks which rooms are empty.'],
-  ['watch', 'Checks his watch', 'How long a room has been idle, as Napwake counts it', 'A pocket watch: Napwake counts how long a room has been idle.'],
-  ['note', 'Pins a note', 'Something needs you', 'A note pinned on a door: something needs you.'],
-  ['rest', 'Resting his eyes', 'Everything is asleep', 'The doorman rests his eyes: everything is asleep.'],
-  ['shrug', 'No room by that name', 'Page not found', 'The doorman shrugs: no room by that name.'],
+  ['door', 'Holds the door', 'The doorman waking a workload on the first request', 'The doorman holds a door ajar while its workload wakes.'],
+  ['ask', 'Asks at the door', 'The doorman asking before he wakes a workload, on a public URL set to ask', 'The doorman asks at a shut door, his hand flat on it.'],
+  ['lights', 'At the switch', 'Napwake pausing an idle workload', 'Napwake pauses an idle workload. The doorman has his hand on a switch.'],
+  ['list', 'The morning list', 'Napwake waking workloads before the team arrives', 'Napwake wakes workloads before the team arrives. The doorman reads the morning list.'],
+  ['rounds', 'With a clipboard', 'Napwake checking what’s idle, before anything pauses', 'Napwake checks what’s idle. The doorman walks with a clipboard.'],
+  ['watch', 'Checks his watch', 'How long a workload has been idle, as Napwake counts it', 'Napwake counts how long a workload has been idle. The doorman checks his pocket watch.'],
+  ['note', 'Pins a note', 'Something needs you', 'Something needs you. A note is pinned on a door.'],
+  ['rest', 'Resting his eyes', 'Everything is asleep', 'Everything is asleep. The doorman rests his eyes.'],
+  ['shrug', 'Shrugs', 'Page not found', 'Page not found. The doorman shrugs.'],
   ['point', 'This way', 'Getting started, next steps', 'The doorman points the way.'],
   ['tip', 'Tips his hat', 'Thanks, and what’s new', 'The doorman tips his hat.'],
 ];
@@ -29,7 +32,7 @@ const poses = [
     <div class="wrap intro__in">
       <div>
         <p class="eyebrow">Brand</p>
-        <h1 class="display-1">The doorman, and how to use him.</h1>
+        <h1 class="display-1">The logo and the doorman, and how to use them.</h1>
         <p class="lede">The logo, the doorman illustrations, the doors and the colours are in one public repository. Use the illustrations freely, with credit. Use the name and logo to point to Napwake, unchanged.</p>
         <div class="actions"><a class="nw-btn nw-btn--primary" href={links.brand.href}>github.com/napwake/brand</a></div>
       </div>
@@ -42,7 +45,7 @@ const poses = [
       <div class="section__head">
         <p class="eyebrow"><span class="plate">01</span> The logo</p>
         <h2 id="logo-title" class="display-2">One logo, always the same drawing.</h2>
-        <p>The doorman’s head under his top hat, beside the drawn wordmark. The colour file goes on light grounds, the dark file on Night. Anywhere else, use one colour. Never redrawn, re-coloured or retyped.</p>
+        <p>The doorman’s head under his top hat, beside the drawn wordmark. The colour file goes on light grounds, the dark file on dark grounds, such as Night (#0F1716). Anywhere else, use one colour. Never redrawn, re-coloured or retyped.</p>
       </div>
       <div class="logos">
         <figure class="logos__panel logos__panel--paper"><img src="/media/logo/lockup-horizontal.svg" width="300" height="86" alt="The Napwake logo, in colour, for light grounds" /><figcaption>lockup-horizontal.svg</figcaption></figure>
@@ -57,8 +60,8 @@ const poses = [
     <div class="wrap">
       <div class="section__head">
         <p class="eyebrow"><span class="plate">02</span> The doorman</p>
-        <h2 id="doorman-title" class="display-2">Eleven poses, each a real job.</h2>
-        <p>He’s Napwake’s doorman, the part of Napwake that holds the first request to a paused workload while it wakes. On a public preview set to ask, he asks first. Those are the only jobs his captions give him. Everything else in these pictures is Napwake’s work. He has no name.</p>
+        <h2 id="doorman-title" class="display-2">Twelve poses, each a real job.</h2>
+        <p>The doorman is a real part of Napwake, drawn as a person. It holds the first request to a paused workload while the workload wakes. On a public URL set to ask, it asks first. Those are the only jobs his captions give him. Everything else in these pictures is Napwake’s work. He has no name.</p>
       </div>
       <ul class="poses">
         {poses.map(([n, t, u, alt]) => (
@@ -69,16 +72,12 @@ const poses = [
             <code class="pose-card__f">doorman-{n}.svg</code>
           </li>
         ))}
-        <li class="pose-card pose-card--more">
-          <p class="pose-card__t">A twelfth?</p>
-          <p class="pose-card__u">A new pose shows a new real job. He’s drawn from numbers (lean, turn, lids, arms) by the brand’s rig, never traced, so he stays the same doorman.</p>
-          <a href={`${links.brand.href}/blob/main/guidelines/doorman.md`}>How he’s built</a>
-        </li>
       </ul>
+      <p class="small muted poses__more">A new pose shows a new real job. He’s drawn from numbers (lean, turn, lids, arms) by the brand’s rig, never traced, so he stays the same doorman. <a href={`${links.brand.href}/blob/main/guidelines/doorman.md`}>How he’s built</a>.</p>
       <div class="credit card">
         <div>
           <h3 class="h3">Use them anywhere, with this credit</h3>
-          <p>The illustrations are under <a href={links.ccby.href}>CC BY 4.0</a>: in talks, posts, slides and stickers, even commercially, changed or not, as long as you credit them and link the repository.</p>
+          <p>The illustrations are under <a href={links.ccby.href}>CC BY 4.0</a>. Use them in talks, posts, slides and stickers, even commercially, changed or not. Credit them and link the repository.</p>
         </div>
         <div class="credit__line">
           <code data-credit>{credit}</code>
@@ -93,7 +92,7 @@ const poses = [
       <div class="section__head">
         <p class="eyebrow"><span class="plate">03</span> The doors</p>
         <h2 id="doors-title" class="display-2">Four states, read at a glance.</h2>
-        <p>Every room is an arched door. Always put the state’s word beside its door. Colour is never the only signal.</p>
+        <p>Each workload is drawn as an arched door, in its state. Always put the state’s word beside its door. Colour is never the only signal.</p>
       </div>
       <ul class="doors">
         {['asleep', 'waking', 'awake', 'error'].map((s) => (
@@ -130,8 +129,8 @@ const poses = [
         </div>
         <div class="tm__col tm__col--note">
           <h3 class="tm__h">Forks</h3>
-          <p>A fork is welcome. If you hand a changed build to others, give it a name of its own, so nobody mistakes it for Napwake.</p>
-          <p class="muted">Not sure? <a href={links.brand.href}>Open an issue</a> in the brand repository and ask.</p>
+          <p>A fork is welcome. If you hand a changed build to others, give it its own name. Then nobody mistakes it for Napwake.</p>
+          <p class="muted">Questions about the name or logo go to <a href={links.brand.href}>an issue in the brand repository</a>.</p>
         </div>
       </div>
     </div>
@@ -158,8 +157,7 @@ const poses = [
   .logos__panel--coat figcaption { color: var(--paper); }
 
   .poses { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-4); }
-  .pose-card--more { align-content: end; background: transparent; border-style: dashed; gap: var(--space-2) !important; }
-  .pose-card--more a { font-size: 14px; }
+  .poses__more { margin: var(--space-4) 0 0; max-width: 46em; }
   .pose-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); padding: var(--space-4); display: grid; grid-template-rows: auto auto 1fr auto; justify-items: start; gap: 2px; }
   .pose-card :global(.pose) { justify-self: center; margin-bottom: var(--space-2); }
   .pose-card__t { margin: 0; font-weight: 700; }
