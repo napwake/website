@@ -1,4 +1,4 @@
-# napwake.dev welcomes every crawler, search engines and AI assistants alike: we want to be found and quoted.
+# napwake.dev welcomes every crawler, search engines and AI assistants alike. We want to be found and quoted.
 # A short summary for language models: https://napwake.dev/llms.txt
 User-agent: *
 Allow: /
