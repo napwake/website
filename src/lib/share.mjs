@@ -14,9 +14,8 @@ export const VERSION = '1';
 export const LOW = 1;
 export const HIGH = 100;
 export const SITE_NAME = 'napwake.dev';
-// The docs' Scan your cluster page goes live with 0.2.0's docs, Thu 5 Nov. Until then, the plugin page's section
-// on scanning, which is live. Then 'getting-started/scan'.
-export const SCAN_DOC = 'getting-started/kubectl-plugin#scan-a-cluster';
+// The docs' Scan your cluster page (napwake/napwake#119), as links.scan in links.mjs
+export const SCAN_DOC = 'getting-started/scan';
 
 // Every word the pages and cards show, in one place. The scan's and the status page's own words are the product's
 // (cmd/kubectl-napwake/report.html and statuspage.html at origin/main bb703d29: #card-data, .pace-fig, .pace-early).
