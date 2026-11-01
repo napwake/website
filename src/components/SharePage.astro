@@ -10,6 +10,7 @@ import Base from '../layouts/Base.astro';
 import Terminal from './Terminal.astro';
 import GitHubButton from './GitHubButton.astro';
 import Link from './Link.astro';
+import SendTeam from './SendTeam.astro';
 import { WORDS, DESCRIPTION, cardName, SCAN_DOC } from '../lib/share.mjs';
 import { lobbyArt, viewBox, nightVars } from '../lib/share-art.mjs';
 import { doc } from '../lib/links.mjs';
@@ -87,6 +88,8 @@ const headline = WORDS.headline.split(/(?<=\.) /);
           </div>
         </div>
       </div>
+      {/* Send to your team (brief A7): under the buttons, in a row of its own, so the result's card keeps its height */}
+      <SendTeam commands={[WORDS.install, WORDS.scanCmd]} id="share-send" class="share__send" />
     </div>
   </section>
 </Base>
@@ -121,6 +124,9 @@ const headline = WORDS.headline.split(/(?<=\.) /);
   .share { padding: var(--space-8) 0 var(--space-12); }
   /* a laptop: one screen, the result on the left (what they came for) and what to do beside it, as the hero's row */
   .share__in { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: var(--space-12); align-items: stretch; }
+  /* Send to your team: a second row under the buttons' column. In the first row it would stretch the card, and at
+     1280 × 700 push its street under the window */
+  .share__in > :global(.share__send) { grid-column: 2; }
 
   /* ---------- the result ---------- */
   /* The card: the eyebrow, the figure and its words across it, then the footnote beside the doorman at the street
@@ -195,12 +201,16 @@ const headline = WORDS.headline.split(/(?<=\.) /);
     /* the card is wide here: the doorman beside its words, as the share card has him */
     .res { --pad: var(--space-8); --art: 250px; grid-template-rows: auto auto 1fr auto; grid-template-areas: "head head" "words art" "note art" "floor floor"; }
     .go { padding-top: 0; }
+    /* one column: Send sits under the buttons, a step below them as in the hero, not a section's gap away */
+    .share__in > :global(.share__send) { grid-column: auto; margin-top: calc(var(--space-4) - var(--space-12)); }
   }
   /* from an iPad's portrait width up: what it is beside how to see your own, so nothing sits beside empty page.
      Narrower, the two run on in one column across the page */
   @media (min-width: 800px) and (max-width: 1079px) {
     .go { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: var(--space-8); align-items: start; }
     .go__do :global(.go__term .nw-term) { font-size: 13px; }
+    /* under the buttons' column: the go grid's first column and its gap */
+    .share__in > :global(.share__send) { margin-left: calc((100% - var(--space-8)) * 5 / 11 + var(--space-8)); }
   }
   /* a phone: the result fills the first screen, the figure on two lines and the picture under its words; what
      Napwake is and the commands start on the second */

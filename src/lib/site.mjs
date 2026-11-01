@@ -19,6 +19,11 @@ export const HEADLINE = 'Pause idle Kubernetes workloads in staging, preview and
 export const TRY = 'Try it before you install anything. One scan shows what your idle workloads cost.';
 export const PLAIN = 'Pauses idle Kubernetes workloads in staging, preview and dev, and wakes them on the first request.';
 export const NEVER = 'It never deletes a workload or its data.';
+// Send to your team (brief A7, 2026-11-01): the ask a tech lead pastes into Slack or Teams, before the scan's two
+// commands and the site's address (SendTeam.astro). True to the scan's own help: "It only reads, with your own
+// kubeconfig, and needs nothing installed in the cluster", and run in a terminal it opens the report, one file to
+// send (cmd/kubectl-napwake/scan.go and getting-started/kubectl-plugin.mdx, napwake/napwake origin/main dbbd266f).
+export const TEAM_ASK = 'Could someone run this against staging and send me the report? It’s read-only and installs nothing in the cluster.';
 export const WHAT = 'Napwake is open source (Apache 2.0): an operator, a `kubectl napwake` plugin and a Helm chart.';
 export const FOR = 'For platform and infrastructure engineers who run staging, preview and dev environments on their own Kubernetes clusters.';
 // private or public: the same product, wake on request on or off (company decision 0014)

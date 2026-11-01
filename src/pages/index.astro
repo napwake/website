@@ -8,6 +8,7 @@ import LiveScene from '../components/LiveScene.astro';
 import Terminal from '../components/Terminal.astro';
 import ScanDemo from '../components/ScanDemo.astro';
 import ScanResult from '../components/ScanResult.astro';
+import SendTeam from '../components/SendTeam.astro';
 import TwoWays from '../components/TwoWays.astro';
 import Button from '../components/Button.astro';
 import Link from '../components/Link.astro';
@@ -25,6 +26,14 @@ import { HEADLINE, TRY } from '../lib/site.mjs';
 
 // The design system's scan icon (project/assets/Icons/icon-scan.svg): a clipboard before a door, in brand.
 const scanIcon = '<path d="M3 21V8.5a5.5 5.5 0 0 1 11 0V21Z" opacity=".4"/><rect x="11" y="9" width="10" height="13" rx="1.6"/><rect x="13.5" y="7.6" width="5" height="2.6" rx="1.2"/><path d="M13.5 13.5h5M13.5 17h3.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>';
+
+// The hero's two commands: the Night block copies them, and so does Send to your team, after its ask (brief A7).
+const scanCommands = ['brew install napwake/tap/kubectl-napwake', 'kubectl napwake scan'];
+
+// Section 01's sourced number (brief A7, 2026-11-01): CNCF's Cloud Native FinOps microsurvey, posted 2023-12-20, asked
+// "What factors are leading you to overspend?". "Failure to deactivate resources after they'd been used" tied
+// third, at 43%, of just over 100 responses, June to November 2023. Checked 2026-11-01.
+const CNCF_SURVEY = 'https://www.cncf.io/blog/2023/12/20/cncf-cloud-native-finops-cloud-financial-management-microsurvey/';
 
 // Installing, as the scan's own next steps say it (cmd/kubectl-napwake, the example's output in
 // src/content/examples/scan-first.txt) and the docs' Installation and Quickstart pages. The chart's version is
@@ -125,13 +134,14 @@ const choices = [
       <div class="hero__row">
         <div class="hero__scan">
           <p class="lede hero__lede">{TRY}</p>
-          <Terminal class="hero__term" bar="Install the plugin, then scan" notes={['Install the kubectl plugin', 'Scan your cluster']} command={['brew install napwake/tap/kubectl-napwake', 'kubectl napwake scan']} label="Install the kubectl plugin with Homebrew, then scan your cluster" />
+          <Terminal class="hero__term" bar="Install the plugin, then scan" notes={['Install the kubectl plugin', 'Scan your cluster']} command={scanCommands} label="Install the kubectl plugin with Homebrew, then scan your cluster" />
           <p class="hero__ro"><svg class="hero__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="var(--brand)" set:html={scanIcon} /></svg><span><b>Read-only.</b> Nothing runs on your cluster.</span></p>
           <p class="hero__other">Homebrew, on macOS and Linux. Other ways: <Link to={links.pluginInstall}>Krew</Link> · <Link to={links.pluginInstall}>download</Link></p>
           <div class="actions hero__actions">
             <Button to={links.scan} variant="primary">Scan your cluster</Button>
             <a class="nw-btn nw-btn--secondary" href="/examples/scan-report/">See an example report</a>
           </div>
+          <SendTeam commands={scanCommands} id="hero-send" />
         </div>
         <div class="hero__result">
           <ScanResult />
@@ -146,6 +156,7 @@ const choices = [
         <p class="eyebrow"><span class="plate">01</span> What you’ll see</p>
         <h2 id="scan-title" class="display-2">A report you can send your team.</h2>
         <p>A team that works 10 hours a day, five days a week, uses staging 50 of 168 hours. The other 70%, it’s idle.</p>
+        <p class="source">In <a href={CNCF_SURVEY}>CNCF’s 2023 FinOps survey</a>, <b>43%</b> of respondents blamed overspend on resources left running after use. <a class="source__go" href={links.scan.href}>See yours<span aria-hidden="true">{'\u00a0'}→</span></a></p>
       </div>
       <ScanDemo />
       <ol class="scan__notes">
@@ -341,6 +352,11 @@ const choices = [
   .hero__result { min-width: 0; }
   .licence { margin: var(--space-3) 0 0; }
   .licence a { color: inherit; }
+
+  /* 01's sourced number: a fact from elsewhere, quieter than the brand's own line above it, then the way to yours */
+  .section__head > p.source:not(.eyebrow) { margin-top: calc(-1 * var(--space-2)); font-size: 16px; line-height: 1.55; }
+  .source b { color: var(--text); }
+  .source__go { font-weight: 700; margin-left: var(--space-1); white-space: nowrap; }
 
   .scan__notes { list-style: none; counter-reset: n; margin: var(--space-12) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
   .scan__notes li { counter-increment: n; position: relative; padding-top: var(--space-8); font-size: 15px; line-height: 1.5; color: var(--muted); }

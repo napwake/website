@@ -1,0 +1,86 @@
+---
+// Send to your team (brief A7, 2026-11-01). A lead rarely runs the scan. They ask someone. One quiet control copies
+// the ask, the scan's two commands and the site's address, ready to paste into Slack or Teams. The message then
+// shows under it, so the lead sees what they're about to paste under their own name.
+// Copy tries the clipboard, then the older execCommand, as the Terminal's Copy does. Where both are refused (a
+// page on plain http, or a frame without permission), the message shows selected, to copy by hand.
+// Nothing is sent anywhere: it's a copy, in the browser, with no request (/privacy/).
+// commands: the same list the Terminal beside it copies, so the two can't differ.
+import { TEAM_ASK, SITE } from '../lib/site.mjs';
+
+const { commands = [], id = 'send', class: cls = '' } = Astro.props;
+const message = [TEAM_ASK, ...commands, SITE].join('\n');
+const lines = message.split('\n').length;
+---
+<div class:list={['send', cls]} data-send hidden>
+  <p class="send__row">
+    <button type="button" class="send__btn" aria-describedby={`${id}-hint`} aria-controls={`${id}-panel`} aria-expanded="false" data-message={message}>
+      <svg class="send__ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M9 16V8a5.5 5.5 0 0 1 11 0v8Z" opacity=".45" /><path d="M4 22v-8a5.5 5.5 0 0 1 11 0v8Z" /></svg>
+      <svg class="send__ico send__ico--done" viewBox="0 0 12 12" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M2.5 6.2 5 8.5l4.5-5" /></svg>
+      <span class="send__label">Send to your team</span>
+    </button>
+    <span class="send__hint" id={`${id}-hint`}>Copies a message to paste in Slack or Teams.</span>
+    <span class="send__said" aria-live="polite" data-said></span>
+  </p>
+  <div class="send__panel" id={`${id}-panel`} hidden>
+    <label class="visually-hidden" for={`${id}-text`}>The message</label>
+    <textarea class="send__text" id={`${id}-text`} readonly rows={lines} spellcheck="false">{message}</textarea>
+  </div>
+</div>
+<style>
+  .send { margin-top: var(--space-4); }
+  .send__row { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-3); row-gap: var(--space-1); margin: 0; }
+  /* a quiet control: a link's look with the Copy icon, not a third button */
+  .send__btn { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 0 -4px; padding: 4px; font: 700 16px/1.4 var(--font-sans); color: var(--link); background: none; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
+  .send__label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+  .send__btn:hover .send__label { text-decoration-thickness: 2px; }
+  .send__btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--ring); }
+  .send__ico { flex: none; fill: currentColor; }
+  /* copied: the Copy icon turns into the system's tick, as the Terminal's Copy does */
+  .send__ico--done, .send[data-state="copied"] .send__ico:not(.send__ico--done) { display: none; }
+  .send[data-state="copied"] .send__ico--done { display: block; }
+  .send__hint { font-size: 15px; line-height: 1.5; color: var(--muted); text-wrap: pretty; }
+  .send__said { font-size: 15px; line-height: 1.5; font-weight: 700; color: var(--brand); }
+  /* empty, it takes no room in the row, but stays a live region screen readers already know, so its first words are read */
+  .send__said:empty { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .send[data-state] .send__hint { display: none; }
+  .send[data-state="manual"] .send__said { color: var(--text); }
+  /* the message, as it will read in the chat: plain words, not a terminal */
+  .send__panel { margin-top: var(--space-3); }
+  .send__text { display: block; width: 100%; margin: 0; padding: var(--space-3) var(--space-4); font: 400 15px/1.55 var(--font-sans); color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); resize: none; overflow: hidden; }
+  .send__text:focus-visible { outline: 2px solid transparent; box-shadow: var(--ring); }
+  /* a phone: 16 px, so Safari doesn't zoom when the message takes focus */
+  @media (max-width: 600px) { .send__text { font-size: 16px; } }
+</style>
+<script>
+  for (const box of document.querySelectorAll<HTMLElement>('[data-send]')) {
+    const btn = box.querySelector<HTMLButtonElement>('.send__btn')!;
+    const said = box.querySelector<HTMLElement>('[data-said]')!;
+    const panel = box.querySelector<HTMLElement>('.send__panel')!;
+    const text = box.querySelector<HTMLTextAreaElement>('.send__text')!;
+    const message = btn.dataset.message || '';
+    box.hidden = false;
+    // the message's own height, as it wraps at this width
+    const fit = () => { text.style.height = 'auto'; text.style.height = `${text.scrollHeight + 2}px`; };
+    addEventListener('resize', () => { if (!panel.hidden) fit(); });
+    btn.addEventListener('click', async () => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(message); ok = true; } catch {
+        // plain http has no clipboard API, and a frame may be refused it: the older way, still inside the click
+        const ta = document.createElement('textarea');
+        ta.value = message; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.append(ta); ta.select();
+        try { ok = document.execCommand('copy'); } catch { ok = false; }
+        ta.remove(); btn.focus();
+      }
+      panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); fit();
+      // said again on each copy, so a second press is announced too
+      said.textContent = '';
+      box.dataset.state = ok ? 'copied' : 'manual';
+      requestAnimationFrame(() => {
+        said.textContent = ok ? 'Copied. Paste it to your team.' : 'Select the message below, and copy it.';
+        if (!ok) { text.focus(); text.select(); }
+      });
+    });
+  }
+</script>
