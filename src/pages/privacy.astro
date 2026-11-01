@@ -3,7 +3,9 @@
 // Announcement and GitHubButton keep their values in browser storage), the star count's request
 // (GitHubButton.astro), GitHub's words on what Pages logs, the fonts (public/fonts, global.css), and
 // Cloudflare's own pages on Web Analytics. The analytics lines follow PUBLIC_CF_BEACON_TOKEN (site.mjs),
-// so the page is true with the beacon on or off. The docs' note: their beacon is set by the product repo's
+// so the page is true with the beacon on or off. Share links (src/lib/share.mjs): checked on 2026-10-31 that the
+// /s/ pages read their numbers in the browser and send them nowhere, and Cloudflare's Web Analytics FAQ says it
+// doesn't log query strings (developers.cloudflare.com/web-analytics/faq/). The docs' note: their beacon is set by the product repo's
 // docs publish (.github/workflows/docs.yml, napwake/napwake#105); checked on 2026-10-26 that they set no
 // cookies, keep the theme in browser storage, and fetch only their own files (search is Pagefind's, local).
 import Base from '../layouts/Base.astro';
@@ -54,6 +56,13 @@ const CLOUDFLARE_DATA = 'https://developers.cloudflare.com/web-analytics/data-me
             </article>
           )}
 
+          <article class="note" id="share-links" aria-labelledby="share-links-h">
+            <h2 class="h3" id="share-links-h">Share links</h2>
+            <div class="note__text">
+              <p>A share link from <code>kubectl napwake scan</code> or <code>status</code> holds a few numbers after the <code>?</code> in its address, never a name. They reach this site only when someone opens the link, or a chat such as Slack previews it. Your browser reads them to draw the page. This site stores none of them{CF_BEACON ? ', and Cloudflare’s analytics leave that part of the address out' : ''}. GitHub receives the whole address, as it does for any page.</p>
+            </div>
+          </article>
+
           <article class="note" id="star-count" aria-labelledby="star-count-h">
             <h2 class="h3" id="star-count-h">The star count</h2>
             <div class="note__text">
@@ -83,7 +92,7 @@ const CLOUDFLARE_DATA = 'https://developers.cloudflare.com/web-analytics/data-me
             </div>
           </article>
         </div>
-        <p class="small muted updated">Last changed 27 October 2026.</p>
+        <p class="small muted updated">Last changed 1 November 2026.</p>
       </div>
     </div>
   </section>

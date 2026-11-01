@@ -51,6 +51,10 @@ const rooms = [
     .nf__band :global(svg) { height: 230px; width: 100%; }
   }
 </style>
+<script is:inline>
+  // A share link with no page of its own, such as /s/100/ or an edited one, goes to /s/ (src/lib/share.mjs).
+  if (/^\/s\/./.test(location.pathname)) location.replace('/s/');
+</script>
 <script>
   const el = document.querySelector('[data-path]');
   if (el && location.pathname !== '/404.html') el.textContent = location.pathname;

@@ -6,6 +6,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CF_BEACON } from './src/lib/site.mjs';
+import { drawShareCards } from './scripts/share-cards.mjs';
 
 // A production build has no drafts (src/lib/blog.mjs), so the sitemap lists every page but the 404 and
 // the /docs/ redirect, which Astro builds as a noindex page that refreshes to the docs.
@@ -47,6 +48,19 @@ const csp = {
   },
 };
 
+// The share links' preview cards (scripts/share-cards.mjs), drawn into dist/og/s/ once the pages are built, so
+// none is committed. NAPWAKE_SHARE_CARDS=off builds without them.
+const shareCards = {
+  name: 'napwake-share-cards',
+  hooks: {
+    'astro:build:done': async ({ dir, logger }) => {
+      if (process.env.NAPWAKE_SHARE_CARDS === 'off') { logger.warn('share cards off: /s/ pages have no preview images'); return; }
+      const started = Date.now();
+      await drawShareCards(join(fileURLToPath(dir), 'og/s'), { log: (m) => logger.info(`${m}, in ${((Date.now() - started) / 1000).toFixed(1)} s`) });
+    },
+  },
+};
+
 export default defineConfig({
   site: 'https://napwake.dev',
   trailingSlash: 'always',
@@ -54,5 +68,6 @@ export default defineConfig({
   devToolbar: { enabled: false },
   // the first address people guess for the docs
   redirects: { '/docs': 'https://docs.napwake.dev/' },
-  integrations: [sitemap({ filter: (page) => !/\/404\/?$/.test(page) }), csp],
+  // the share links' pages are noindex (src/components/SharePage.astro), so they stay out of the sitemap too
+  integrations: [sitemap({ filter: (page) => !/\/404\/?$/.test(page) && !/\/s\//.test(page) }), csp, shareCards],
 });

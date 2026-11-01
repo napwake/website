@@ -1,0 +1,180 @@
+---
+// The design system's TerminalBlock: commands after a "$ " that copying skips, then output.
+// output: lines; a line is a string or a list of spans; a span is a string or { text, tone }.
+// Output is copied from the docs and trimmed, never invented, and isn't coloured beyond its tones.
+// A command may run over lines, each ending in " \", as the docs show long ones: the lines after the first
+// get no prompt, and Copy copies them as they are. Each shell word is kept whole, so a page that lets a command
+// wrap breaks it only at a space.
+// bar: the window's title, beside its three dots and Copy, where Copy never covers a command. Every block has the bar.
+// notes: one per command, a muted shell comment over it that says what it does. Like the prompt, a note can't be
+// selected, so Copy, or selecting by hand, takes the commands only: zsh, macOS's shell, doesn't read a pasted
+// comment as one.
+// fill: the values a reader changes, such as ['Europe/London'] or ['my-api', 'dev']. Each is marked where it stands
+// alone, never inside a longer name (dev in napwake.dev stays as it is). The words beside the block say what to put.
+//
+// Each part of a command is coloured at build time by the parser below, with no script: the program (kubectl),
+// its subcommand (napwake scan), flags (--version), values and strings ('timezone: ...', the file after >>),
+// other arguments, the prompt, and the continuation \ and redirects. The tokens are in the style block.
+//
+// Night, Tobi's pick (brief A3, 2026-10-31): always the brand's night, as the hero's result card is, in both themes,
+// its dark tokens read from tokens.css here.
+import tokens from '../styles/tokens.css?raw';
+
+const { command = [], output = [], label, class: cls = '', copy = true, bar, notes = [], fill = [] } = Astro.props;
+const commands = Array.isArray(command) ? command : [command];
+const lines = output.map((l) => (Array.isArray(l) ? l : [l]).map((s) => (typeof s === 'string' ? { text: s } : s)));
+const copyButton = copy && commands.length > 0;
+
+// Night: the dark half of tokens.css, as ScanResult reads it, only the tokens a block uses.
+const darkBlock = tokens.match(/@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{([\s\S]*?)\}\s*\}/)?.[1] || '';
+const USED = ['bg', 'surface', 'text', 'muted', 'line', 'action', 'on-action', 'brand', 'accent-text', 'code-bg', 'code-text', 'asleep', 'waking', 'awake', 'error', 'focus-ring'];
+const night = darkBlock.split(';').map((d) => d.trim()).filter((d) => USED.some((n) => d.startsWith(`--${n}:`))).concat('color-scheme: dark').join('; ');
+
+// The subcommands each program takes, as far as Napwake's pages use them: the words after the program that name
+// what it does. Anything else is an argument.
+const VERBS = {
+  kubectl: { annotate: {}, label: {}, apply: {}, get: {}, describe: {}, krew: { install: {} }, napwake: { scan: {}, status: {}, enable: {}, disable: {}, forecast: {}, wake: {}, pause: {}, version: {} } },
+  helm: { install: {}, upgrade: {}, uninstall: {}, repo: { add: {}, update: {} } },
+  brew: { install: {}, tap: {}, upgrade: {} },
+};
+// flags that take no value, so the word after them is an argument
+const BARE = new Set(['--create-namespace', '--wait', '--atomic', '--overwrite', '--all-namespaces', '-A', '--help', '-h']);
+const OPS = new Set(['>', '>>', '<', '|', '&&', '||']);
+
+// one line of a command, as shell words and the spaces between them; a quoted part keeps its spaces
+function words(line) {
+  const out = [];
+  let cur = '', q = '';
+  for (const ch of line) {
+    if (!q && ch === ' ') { if (cur) out.push({ t: cur }); cur = ''; out.push({ t: ' ', sp: true }); continue; }
+    if (q ? ch === q : ch === "'" || ch === '"') q = q ? '' : ch;
+    cur += ch;
+  }
+  if (cur) out.push({ t: cur });
+  return out;
+}
+// a word's text, cut where a value to fill stands alone: not inside a longer name or path
+const NAMEISH = /[\w./-]/;
+function cut(text) {
+  const segs = [];
+  let i = 0, from = 0;
+  while (i < text.length) {
+    const f = fill.find((v) => text.startsWith(v, i) && !NAMEISH.test(text[i - 1] || '') && !NAMEISH.test(text[i + v.length] || ''));
+    if (f) { if (i > from) segs.push({ t: text.slice(from, i) }); segs.push({ t: f, fill: true }); i += f.length; from = i; } else i++;
+  }
+  if (from < text.length) segs.push({ t: text.slice(from) });
+  return segs;
+}
+// a whole command, line by line, each word with its part
+function parse(cmd) {
+  let atProgram = true, verbs = null, wantValue = false;
+  return cmd.split('\n').map((line) => words(line).map((w) => {
+    if (w.sp) return w;
+    const t = w.t;
+    let k;
+    if (t === '\\') k = 'cont';
+    else if (OPS.has(t)) { k = 'cont'; if (t.startsWith('>') || t === '<') wantValue = true; else atProgram = true; }
+    else if (atProgram) { k = 'prog'; verbs = VERBS[t] || null; atProgram = false; }
+    else if (verbs && Object.hasOwn(verbs, t)) { k = 'sub'; verbs = verbs[t]; }
+    else {
+      verbs = null;
+      if (/^-{1,2}[A-Za-z]/.test(t)) {
+        const eq = t.indexOf('=');
+        if (eq > 0) { wantValue = false; return { ...w, parts: [{ k: 'flag', segs: [{ t: t.slice(0, eq + 1) }] }, { k: 'val', segs: cut(t.slice(eq + 1)) }] }; }
+        wantValue = !BARE.has(t);
+        return { ...w, parts: [{ k: 'flag', segs: [{ t }] }] };
+      }
+      k = wantValue || /^['"]/.test(t) || t.includes('://') || t.includes('=') ? 'val' : 'arg';
+      wantValue = false;
+    }
+    return { ...w, parts: [{ k, segs: k === 'val' || k === 'arg' ? cut(t) : [{ t }] }] };
+  }));
+}
+const parsed = commands.map(parse);
+---
+<div class:list={['term', 'term--night', bar && 'term--titled', cls]} style={night}>
+  <div class="term__bar">
+    <span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    {bar && <span class="term__title">{bar}</span>}
+    {copyButton && (
+      <button type="button" class="term__copy" data-copy={commands.join('\n')} hidden>
+        <svg class="term__ico term__ico--copy" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M9 16V8a5.5 5.5 0 0 1 11 0v8Z" opacity=".45" /><path d="M4 22v-8a5.5 5.5 0 0 1 11 0v8Z" /></svg>
+        <svg class="term__ico term__ico--done" viewBox="0 0 12 12" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M2.5 6.2 5 8.5l4.5-5" /></svg>
+        <span class="term__label">Copy</span>
+      </button>
+    )}
+    {copyButton && <span class="visually-hidden" aria-live="polite" data-copied></span>}
+  </div>
+  <pre class="nw-term" tabindex="0" aria-label={label}><code>{parsed.map((c, k) => (<>{notes[k] && <><span class:list={['nw-term__dim', 'term__note', k > 0 && 'term__note--next']}># {notes[k]}</span>{'\n'}</>}{c.map((line, j) => (<>{j === 0 && <span class="nw-term__prompt t-prompt">$ </span>}<span class="cmd">{line.map((w) => w.sp ? ' ' : <span class="w">{w.parts.map((p) => <span class={`t-${p.k}`}>{p.segs.map((s) => s.fill ? <mark class="t-fill">{s.t}</mark> : s.t)}</span>)}</span>)}</span>{'\n'}</>))}</>))}{lines.map((l, i) => (<>{l.map((s) => s.tone ? <span class={`nw-term__${s.tone}`}>{s.text}</span> : s.text)}{i < lines.length - 1 ? '\n' : ''}</>))}</code></pre>
+</div>
+<style>
+  /* the window: its bar, then the commands. Flat, with a hairline, as the design system's layout asks. */
+  .term { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--code-bg); color: var(--code-text); }
+  .term .nw-term { border-radius: 0; background: none; }
+  .term__bar { display: flex; align-items: center; gap: var(--space-3); min-height: 42px; padding: 5px 6px 5px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .term__dots { display: inline-flex; gap: 6px; flex: none; }
+  .term__dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .term__title { flex: 1 1 auto; min-width: 0; font: 700 12.5px/1.4 var(--font-mono); color: var(--muted); }
+  .term__copy { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px 0 8px; font: 700 12px/1 var(--font-mono); letter-spacing: .04em; color: var(--muted); background: none; border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: color var(--duration-ui-short) var(--ease-calm), border-color var(--duration-ui-short) var(--ease-calm); }
+  .term__copy:hover { color: var(--text); border-color: var(--line); }
+  .term__copy:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+  .term__ico { flex: none; fill: currentColor; }
+  .term__ico--done, .term__copy[data-done] .term__ico--copy { display: none; }
+  .term__copy[data-done] .term__ico--done { display: block; }
+  .term__copy[data-done] { color: var(--brand); }
+  /* Copied is two letters longer than Copy: room for it, so nothing moves */
+  .term__label { min-width: 6ch; text-align: left; }
+
+  /* each part of a command */
+  .t-prompt { color: var(--brand); font-weight: 700; }
+  .t-prog { color: var(--text); font-weight: 700; }
+  .t-sub { color: var(--brand); }
+  .t-flag { color: var(--muted); }
+  .t-val { color: var(--accent-text); }
+  .t-arg { color: var(--code-text); }
+  .t-cont { color: var(--muted); }
+  /* a value to change: Lamp under Night, the highlighter's look, in both themes (Night on Lamp 10.02:1) */
+  .t-fill { background: var(--lamp); color: var(--night); font-weight: 700; border-radius: 3px; padding: 1px 2px; margin: 0 -2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  /* where the system drops backgrounds (Windows' contrast themes), an outline in the text's own colour keeps it marked */
+  @media (forced-colors: active) { .t-fill { outline: 1px solid; } }
+
+  .w { white-space: nowrap; }
+  .term__note { user-select: none; -webkit-user-select: none; }
+  /* a little air before each note after the first, so each note reads with its own command */
+  .term__note--next { display: inline-block; padding-top: .6em; }
+
+  /* night: the brand's night in both themes; the bar is the night itself, the commands on the card's own surface */
+  .term--night .term__bar { background: var(--bg); }
+
+  /* a phone: a title's words before the dots, so each title stays on one line from 375 wide */
+  @media (max-width: 420px) {
+    .term__bar { gap: var(--space-2); padding-left: 14px; }
+    .term--titled .term__dots { display: none; }
+    .term__title { font-size: 12px; }
+    .term__copy { gap: 5px; padding: 0 6px; }
+  }
+</style>
+<script>
+  for (const b of document.querySelectorAll<HTMLButtonElement>('.term__copy')) {
+    const label = b.querySelector('.term__label')!;
+    const live = b.parentElement!.querySelector('[data-copied]');
+    let timer = 0;
+    b.hidden = false;
+    b.addEventListener('click', async () => {
+      const text = b.dataset.copy || '';
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; } catch {
+        // a page in a frame may be refused the clipboard: the older way, still inside the click
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.append(ta); ta.select();
+        try { ok = document.execCommand('copy'); } catch { ok = false; }
+        ta.remove(); b.focus();
+      }
+      if (!ok) return;
+      b.dataset.done = ''; label.textContent = 'Copied'; if (live) live.textContent = 'Copied';
+      clearTimeout(timer);
+      timer = window.setTimeout(() => { delete b.dataset.done; label.textContent = 'Copy'; if (live) live.textContent = ''; }, 2000);
+    });
+  }
+</script>

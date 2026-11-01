@@ -1,0 +1,234 @@
+---
+// A share link's page (src/lib/share.mjs), one composition with three jobs, in order: the result, as the share card
+// shows it; what Napwake is, in one line; and one step to see your own. On a laptop they share the first screen,
+// the result on the left and the rest beside it, as the home page's hero puts its commands beside its card. On a
+// phone the result fills the first screen, and what Napwake is and how to see your own start on the second (brief
+// B2, 2026-10-31). Built once per percentage. The HTML is the percentage alone, which is also what crawlers and
+// chats read; the script below fills in the rest from the link, in the browser.
+// kind: scan, status, or empty (/s/ itself).
+import Base from '../layouts/Base.astro';
+// The command block in Night, Tobi's pick (A3), on this page only until the hero brings it to the whole site,
+// when Terminal.astro becomes it and this import goes back to Terminal.
+import Terminal from './TerminalNight.astro';
+import GitHubButton from './GitHubButton.astro';
+import Link from './Link.astro';
+import { WORDS, DESCRIPTION, cardName, SCAN_DOC } from '../lib/share.mjs';
+import { lobbyArt, viewBox, nightVars } from '../lib/share-art.mjs';
+import { doc } from '../lib/links.mjs';
+import { abs } from '../lib/site.mjs';
+import tokens from '../styles/tokens.css?raw';
+
+const { kind, pct = null } = Astro.props;
+// the design system's scan icon, as the home page's hero draws it beside its read-only line
+const scanIcon = '<path d="M3 21V8.5a5.5 5.5 0 0 1 11 0V21Z" opacity=".4"/><rect x="11" y="9" width="10" height="13" rx="1.6"/><rect x="13.5" y="7.6" width="5" height="2.6" rx="1.2"/><path d="M13.5 13.5h5M13.5 17h3.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>';
+const t = WORDS[kind];
+const empty = kind === 'empty';
+const title = t.title(pct);
+const image = abs(`/og/s/${cardName(kind, pct)}.png`);
+const imageAlt = empty
+  ? `${t.statement}. ${t.label} See your own with ${WORDS.scanCmd}, ${WORDS.hookNote}.`
+  : `${t.eyebrow}. ${pct}% less ${t.alone} See your own with ${WORDS.scanCmd}, ${WORDS.hookNote}.`;
+
+// The result is a night scene in both themes, as the report's building is: its card carries the dark theme's
+// tokens, read from tokens.css, so the page and the card are one drawing.
+const night = nightVars(tokens);
+
+const install = doc('getting-started/kubectl-plugin#installation');
+const scanDoc = doc(SCAN_DOC);
+// the headline's two sentences, each from a new line, as the hero breaks it at a laptop's width
+const headline = WORDS.headline.split(/(?<=\.) /);
+---
+<Base title={title} description={DESCRIPTION[kind]} image={image} imageAlt={imageAlt} noindex>
+  <section class="share">
+    <div class="wrap share__in">
+      {/* the result: the share card's words over the building's street door, its street the card's floor */}
+      <div class:list={['res', empty && 'res--empty']} style={night} data-share data-kind={kind} data-pct={pct}>
+        <div class="res__head">
+          <p class="res__eyebrow">{t.eyebrow}</p>
+          {empty
+            ? <h1 class="res__statement">{t.statement}</h1>
+            : <h1 class="res__fig"><span>{pct}%</span> <span>less</span></h1>}
+        </div>
+        <div class="res__words">
+          {empty
+            ? <p class="res__none">{t.none}</p>
+            : <>
+                <p class="res__label" data-label>{t.alone}</p>
+                <p class="res__detail" data-detail hidden><b data-detail-lead></b> <span data-detail-text></span></p>
+                <p class="res__src" data-src hidden></p>
+                <p class="res__broken" data-broken hidden>{WORDS.broken}</p>
+              </>}
+        </div>
+        {/* what the link carried, the card's footnote, by the kerb */}
+        <div class="res__note">
+          {!empty && <p class="res__private" data-private>{WORDS.privateAlone}</p>}
+        </div>
+        <div class="res__art" aria-hidden="true">
+          <svg viewBox={viewBox} preserveAspectRatio="xMaxYMax meet" focusable="false" set:html={lobbyArt(t.pose, { id: `sa-${kind}` })} />
+        </div>
+        {/* the street: for a colleague on the same cluster, the one command that shows the whole of it */}
+        <div class="res__floor">
+          {!empty && <p class="res__same"><b>{WORDS.same}</b> <code>{t.same}</code> {t.sameText}</p>}
+        </div>
+      </div>
+
+      {/* beside it: what Napwake is, then how to see your own, in the home page's hero's words */}
+      <div class="go">
+        <div class="go__say">
+          <p class="eyebrow go__eyebrow">{WORDS.eyebrow}</p>
+          <h2 class="go__h">{headline.map((x, i) => <>{i > 0 && ' '}<span>{x}</span></>)}</h2>
+          <p class="lede go__lede">{WORDS.try}</p>
+        </div>
+        <div class="go__do">
+          <Terminal class="go__term" bar={WORDS.bar} notes={WORDS.steps} command={[WORDS.install, WORDS.scanCmd]} label="Install the kubectl plugin with Homebrew, then scan your cluster" />
+          <p class="go__ro"><svg class="go__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="var(--brand)" set:html={scanIcon} /></svg><span><b>Read-only.</b> {WORDS.readOnly}</span></p>
+          <p class="go__other">{WORDS.brew}. <span class="go__ways">{WORDS.other}: <Link to={install}>Krew</Link> · <Link to={install}>download</Link></span></p>
+          <div class="actions go__actions">
+            <a class="nw-btn nw-btn--primary" href={scanDoc.href}>{WORDS.scanButton}</a>
+            <GitHubButton wide class="go__gh" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Fills in the result from the link, in the browser: nothing is sent anywhere. Anything that doesn't read, or
+  // doesn't agree with the page's percentage, leaves the percentage alone (src/lib/share.mjs).
+  import { readLink, WORDS } from '../lib/share.mjs';
+  const card = document.querySelector<HTMLElement>('[data-share]');
+  const kind = card?.dataset.kind;
+  if (card && (kind === 'scan' || kind === 'status')) {
+    const r = readLink(kind, Number(card.dataset.pct), location.search);
+    const $ = (s: string) => card.querySelector<HTMLElement>(s);
+    if (r.state === 'full') {
+      $('[data-label]')!.textContent = r.label;
+      $('[data-private]')!.textContent = WORDS[kind].private;
+      if (r.source) { const s = $('[data-src]')!; s.textContent = `From ${r.source}`; s.hidden = false; }
+      if (r.detail) {
+        const lead = $('[data-detail-lead]')!;
+        lead.textContent = r.detail.lead; lead.hidden = !r.detail.lead;
+        $('[data-detail-text]')!.textContent = r.detail.text; $('[data-detail]')!.hidden = false;
+      }
+      card.dataset.state = 'full';
+    } else if (r.state === 'broken') {
+      $('[data-broken]')!.hidden = false;
+      card.dataset.state = 'broken';
+    }
+  }
+</script>
+
+<style>
+  .share { padding: var(--space-8) 0 var(--space-12); }
+  /* a laptop: one screen, the result on the left (what they came for) and what to do beside it, as the hero's row */
+  .share__in { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: var(--space-12); align-items: stretch; }
+
+  /* ---------- the result ---------- */
+  /* The card: the eyebrow, the figure and its words across it, then the footnote beside the doorman at the street
+     door, and the street as its floor. The figure scales with the card, so "100% less" stays on one line. */
+  .res {
+    --pad: var(--space-8);
+    --art: 290px;
+    container-type: inline-size;
+    position: relative; overflow: hidden; display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--art);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas: "head head" "words words" "note art" "floor floor";
+    background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-xl);
+  }
+  .res p { margin: 0; }
+  .res__head { grid-area: head; padding: var(--pad) var(--pad) 0; }
+  .res__words { grid-area: words; position: relative; z-index: 1; padding: 0 var(--pad); }
+  .res__eyebrow { margin: 0 0 var(--space-4) !important; font: 700 14px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .res__fig { margin: 0 0 0 -.03em; font: 800 clamp(76px, 22cqi, 150px)/.82 var(--font-display); letter-spacing: 0; color: var(--paper); }
+  .res__statement { margin: 0; max-width: 8em; font: 800 clamp(52px, 13cqi, 88px)/.9 var(--font-display); letter-spacing: 0; color: var(--paper); text-wrap: balance; }
+  /* the figure's own words under it, across the card */
+  .res__label { margin-top: var(--space-6) !important; max-width: 27em; font: 700 22px/1.3 var(--font-sans); color: var(--paper); text-wrap: balance; }
+  .res__none { margin-top: var(--space-6) !important; max-width: 30em; font: 400 19px/1.5 var(--font-sans); color: var(--text); text-wrap: pretty; }
+  .res__detail { margin-top: var(--space-3) !important; max-width: 34em; font-size: 16px; line-height: 1.5; color: var(--muted); text-wrap: balance; }
+  .res__detail b { color: var(--accent-text); }
+  .res__src { margin-top: var(--space-3) !important; font: 400 14px/1.5 var(--font-mono); color: var(--muted); }
+  .res__broken { margin-top: var(--space-3) !important; max-width: 34em; font-size: 15px; line-height: 1.5; color: var(--accent-text); text-wrap: pretty; }
+  /* the footnote, by the kerb beside the doorman; the street's band runs under its bottom padding */
+  .res__note { grid-area: note; position: relative; z-index: 1; align-self: end; padding: var(--space-6) var(--space-4) var(--space-6) var(--pad); }
+  .res__private { font-size: 14px; line-height: 1.5; color: var(--muted); text-wrap: balance; }
+  /* the doorman beside the shut street door, standing on the floor; the svg's street runs on to the card's edges */
+  .res__art { grid-area: art; align-self: end; padding-right: var(--space-6); }
+  .res__art svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .res__floor { grid-area: floor; min-height: var(--space-6); padding: 0 var(--pad) var(--space-4); background: var(--scene-floor); }
+  .res__same { font-size: 14px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+  .res__same b { color: var(--text); }
+  .res__same code { color: var(--text); }
+
+  /* ---------- what it is, and how to see your own ---------- */
+  .go { min-width: 0; padding-top: var(--space-8); }
+  .go__eyebrow { margin-bottom: var(--space-3); }
+  /* the hero's headline, a step down: here it's second to the result */
+  .go__h { margin: 0 0 var(--space-4); font: 800 36px/1 var(--font-display); letter-spacing: 0; color: var(--text); }
+  /* beside the card, three lines from 1080 wide: a sentence's first line fits the column */
+  @media (min-width: 1080px) { .go__h { font-size: clamp(32px, 2.8vw, 36px); } }
+  .go__h span { display: block; text-wrap: balance; }
+  .go__lede { margin: 0 0 var(--space-6); font-size: 18px; line-height: 1.5; text-wrap: pretty; }
+  .go__do :global(.go__term .nw-term) { font-size: 14px; padding: var(--space-4) 18px 18px; }
+  .go__ro { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-4) 0 var(--space-1); }
+  .go__ro b { color: var(--text); }
+  .go__ro span { text-wrap: pretty; }
+  .go__icon { flex: none; margin-top: 1px; }
+  .go__other { margin: 0 0 var(--space-6) 30px; font-size: 15px; color: var(--muted); text-wrap: pretty; }
+  .go__ways { white-space: nowrap; }
+  /* the star beside the button, as tall as it */
+  .go__actions :global(.nw-btn) { padding-left: 1.5em; padding-right: 1.5em; }
+  .go__actions :global(.go__gh) { height: auto; min-height: 50px; padding: 0 var(--space-6); font-size: 16px; }
+
+  /* A laptop's real window is shorter than its screen: 1280 × 800 leaves about 700 under the browser's bars. There
+     the gaps go one step down, so the first button still shows. The card's picture keeps its size. */
+  @media (min-width: 1080px) and (max-height: 760px) {
+    .share { padding-top: var(--space-4); }
+    .go { padding-top: var(--space-4); }
+    .res__label { margin-top: var(--space-4) !important; }
+    .go__h { margin-bottom: var(--space-3); }
+    .go__lede { margin-bottom: var(--space-4); }
+    .go__other { margin-bottom: var(--space-4); }
+  }
+  /* a tablet, and a laptop's narrow window: the result across the page, then what it is and how to see your own */
+  @media (max-width: 1079px) {
+    .share__in { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-12); }
+    /* the card is wide here: the doorman beside its words, as the share card has him */
+    .res { --pad: var(--space-8); --art: 250px; grid-template-rows: auto auto 1fr auto; grid-template-areas: "head head" "words art" "note art" "floor floor"; }
+    .go { padding-top: 0; }
+  }
+  /* from an iPad's portrait width up: what it is beside how to see your own, so nothing sits beside empty page.
+     Narrower, the two run on in one column across the page */
+  @media (min-width: 800px) and (max-width: 1079px) {
+    .go { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: var(--space-8); align-items: start; }
+    .go__do :global(.go__term .nw-term) { font-size: 13px; }
+  }
+  /* a phone: the result fills the first screen, the figure on two lines and the picture under its words; what
+     Napwake is and the commands start on the second */
+  @media (max-width: 640px) {
+    .share { padding-top: var(--space-4); }
+    .res { --pad: var(--space-6); grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "words" "note" "art" "floor"; }
+    .res__eyebrow { font-size: 12px; margin-bottom: var(--space-3) !important; }
+    .res__fig { font-size: clamp(76px, 26vw, 112px); }
+    .res__statement { font-size: 52px; }
+    .res__label { margin-top: var(--space-4) !important; font-size: 20px; }
+    .res__none { margin-top: var(--space-4) !important; font-size: 18px; }
+    .res__note { padding: var(--space-6) var(--pad) 0; }
+    .res__art { justify-self: end; width: min(100%, 260px); margin-top: var(--space-2); padding-right: var(--space-4); }
+    .go__h { font-size: 34px; }
+    .go__lede { font-size: 17px; margin-bottom: var(--space-4); }
+    .go__do :global(.go__term .nw-term) { font-size: 13px; padding: var(--space-3) 14px 14px; }
+    .go__other { margin-bottom: var(--space-4); }
+    .go__actions :global(.nw-btn), .go__actions :global(.go__gh) { flex: 1 1 100%; justify-content: center; }
+  }
+  /* each command on one line at 390 wide, as the hero has it */
+  @media (max-width: 420px) {
+    .go__do :global(.go__term .nw-term) { font-size: 12px; }
+  }
+  /* and at 360, the narrowest phone we check: one step smaller, so the brew line and the block's title still fit */
+  @media (max-width: 380px) {
+    .go__do :global(.go__term .nw-term) { font-size: 11px; padding-left: var(--space-3); padding-right: var(--space-3); }
+    .go__do :global(.go__term .term__title) { font-size: 11px; }
+  }
+</style>

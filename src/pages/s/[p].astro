@@ -1,0 +1,17 @@
+---
+// A share link's page, one per percentage: /s/1/ to /s/99/ for a scan, /s/less-1/ to /s/less-99/ for a status
+// page. Each has its own preview card, drawn at build time (scripts/share-cards.mjs).
+import SharePage from '../../components/SharePage.astro';
+import { LOW, HIGH } from '../../lib/share.mjs';
+
+export function getStaticPaths() {
+  const paths = [];
+  for (let p = LOW; p <= HIGH; p++) {
+    paths.push({ params: { p: String(p) }, props: { kind: 'scan', pct: p } });
+    paths.push({ params: { p: `less-${p}` }, props: { kind: 'status', pct: p } });
+  }
+  return paths;
+}
+const { kind, pct } = Astro.props;
+---
+<SharePage kind={kind} pct={pct} />
