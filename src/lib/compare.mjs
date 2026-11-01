@@ -141,6 +141,28 @@ export const captionAt = (approach, t) => lastAt(CAPTIONS[approach], t);
 export const MOMENTS = ['17:00', '17:20', '18:35', '20:05', '20:25', '22:16', '23:50', '08:05', '08:50', '09:05'].map(toMin);
 export const DEFAULT = MOMENTS[0];
 
+// ---------- the home page's picture: a schedule's two leaks, from the same evening ----------
+// The home page (TwoWays.astro) cuts this evening to two rows, Napwake and the timetable, and shows each room at the
+// moment the timetable gets it wrong, so both leaks read in one glance: idle while the clock says up, and needed while
+// it says down. The two of each sit together, so one mark covers each pair, and the doorman's gap is between them,
+// before staging, whose door he holds. The states come from TIMELINE, so the two pages never disagree, and the build
+// stops if a change to TIMELINE leaves a moment that no longer leaks (Kede's brief A4, 2026-10-31).
+export const LEAK_SAY = { idle: 'Idle, and the clock says up', needed: 'Needed, and the clock says down' };
+export const LEAKS = [
+  { room: 'dev', at: '19:00', leak: 'idle' },
+  { room: 'qa', at: '09:00', leak: 'idle' },
+  { room: 'staging', at: '22:15', leak: 'needed' },
+  { room: 'pr-42', at: '20:30', leak: 'needed' },
+].map((l) => {
+  const t = toMin(l.at);
+  const timetable = stateAt('timetable', l.room, t), napwake = stateAt('napwake', l.room, t);
+  const ok = l.leak === 'idle'
+    ? timetable === 'idle' && switchAt(t) === 'on' && napwake === 'asleep'
+    : timetable === 'out' && switchAt(t) === 'off' && (napwake === 'active' || napwake === 'waking');
+  if (!ok) throw new Error(`compare.mjs LEAKS: ${l.room} at ${l.at} no longer shows "${LEAK_SAY[l.leak]}" (timetable ${timetable}, Napwake ${napwake})`);
+  return { ...l, t, states: { timetable, napwake } };
+});
+
 // ---------- what only Napwake does, each with the pose that earns it ----------
 // state is the rig's: an awake door with nobody in it is idle
 export const ONLY = [

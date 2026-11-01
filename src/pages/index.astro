@@ -1,10 +1,14 @@
 ---
-// Home: what Napwake is in seconds, then one idea per section.
-// Every claim about Napwake is from the product's docs (docs/index.md, concepts/, getting-started/), checked 2026-10-22.
+// Home: whoever lands here sees at once how to scan their cluster and what they get, then what the report
+// shows, then how to install Napwake and pause one workload, then one idea per section (Tobi, 2026-10-31).
+// Every claim about Napwake is from the product's docs (docs/index.md, concepts/, getting-started/), checked
+// 2026-10-22, and the scan's from the plugin page and the scan's own output, checked 2026-10-31.
 import Base from '../layouts/Base.astro';
 import LiveScene from '../components/LiveScene.astro';
 import Terminal from '../components/Terminal.astro';
 import ScanDemo from '../components/ScanDemo.astro';
+import ScanResult from '../components/ScanResult.astro';
+import TwoWays from '../components/TwoWays.astro';
 import Button from '../components/Button.astro';
 import Link from '../components/Link.astro';
 import StateBadge from '../components/StateBadge.astro';
@@ -14,7 +18,26 @@ import Pose from '../components/Pose.astro';
 import WakingMock from '../components/WakingMock.astro';
 import AsleepMock from '../components/AsleepMock.astro';
 import { links } from '../lib/links.mjs';
+import { corridor } from '../lib/art.mjs';
 import { software } from '../lib/jsonld.mjs';
+import { LATEST_TAG } from '../lib/changelog.mjs';
+import { HEADLINE, TRY } from '../lib/site.mjs';
+
+// The design system's scan icon (project/assets/Icons/icon-scan.svg): a clipboard before a door, in brand.
+const scanIcon = '<path d="M3 21V8.5a5.5 5.5 0 0 1 11 0V21Z" opacity=".4"/><rect x="11" y="9" width="10" height="13" rx="1.6"/><rect x="13.5" y="7.6" width="5" height="2.6" rx="1.2"/><path d="M13.5 13.5h5M13.5 17h3.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>';
+
+// Installing, as the scan's own next steps say it (cmd/kubectl-napwake, the example's output in
+// src/content/examples/scan-first.txt) and the docs' Installation and Quickstart pages. The chart's version is
+// LATEST_TAG's without its v (src/lib/changelog.mjs): the newest full release, or the newest release candidate
+// while there's none, so the command works today. 0.2.0-rc.11 until 0.2.0 ships, then never a later candidate.
+const chart = (LATEST_TAG?.tag || 'v0.2.0').replace(/^v/, '');
+const helm = `helm install napwake \\\n  oci://ghcr.io/napwake/charts/napwake \\\n  --version ${chart} \\\n  --namespace napwake-system \\\n  --create-namespace \\\n  -f napwake-values.yaml`;
+// The values file, made by the copy so nobody writes one by hand for one line (Tobi, 2026-10-31, cmo-076). >> keeps
+// a file that is already there, such as one with prometheus.url, and Helm takes the last timezone line (cto-074).
+// printf, not echo: its leading line break keeps a file whose last line has no break, such as a comment, from
+// swallowing the timezone line, which Helm would then miss and install on UTC (cto-079, the product's #118).
+// Broken before the redirect, as the helm line is at its flags, so both fit a phone at 390 and copy as shown.
+const values = `printf '\\ntimezone: Europe/London\\n' \\\n  >> napwake-values.yaml`;
 
 const states = [
   { state: 'asleep', text: 'Scaled to zero. The Deployment or StatefulSet stays, and so do its Services, its PVCs and their data. Only the pods are removed. Its Services now point at the doorman.' },
@@ -54,66 +77,180 @@ const others = [
   { who: 'Tooling, by an annotation or <code>kubectl napwake wake</code>', both: { state: 'waking', html: 'Wakes it, either way.' } },
   { who: 'The forecast, if you turn it on', both: { state: 'waking', html: 'Wakes it 15 minutes before an hour it expects busy, either way.' } },
 ];
+
+// 07, who it's for: decision 0024's three groups, in its order, each a choice with one next step (brief A5).
+// Each card's picture is one door and one of the doorman's poses, drawn by the rig on the same wall and floor, so
+// the three read as doors on one corridor. The poses are the design system's for the job each card names: lights
+// (Napwake pauses what nobody uses), rounds (the scan) and ask (a public preview). The svg slices from the bottom,
+// so a wider card shows more wall and the floor stays put. It's wide enough that height decides the scale at every
+// card shape the page has, up to a stacked card 700 px wide, so no head is ever cut.
+const CW = 1000, CH = 236, CFY = 202, CDOOR = 512;
+const choices = [
+  {
+    key: 'cron', pose: 'lights', state: 'asleep', shift: -72, title: 'You have a cron',
+    text: 'Napwake goes by use, not the hour. The first request wakes staging, so nobody brings it back by hand.',
+    next: 'See what it misses', href: '#schedule',
+    alt: 'Napwake pauses what nobody is using, drawn as the doorman at the switch beside a shut door.',
+  },
+  {
+    key: 'none', pose: 'rounds', state: 'awake', shift: -60, title: 'You have nothing yet',
+    text: 'One read-only scan shows what your idle workloads cost, in a report you can send your team.',
+    next: 'Scan your cluster', href: links.scan.href,
+    alt: 'Napwake checks what’s idle, drawn as the doorman with a clipboard beside an open, empty door.',
+  },
+  {
+    key: 'previews', pose: 'ask', state: 'asleep', shift: 1, title: 'You run previews',
+    text: 'One per pull request, used at hours no schedule can guess. On a public URL, Napwake can ask before waking one.',
+    next: 'Set up public previews', href: links.guide('preview-environments').href,
+    alt: 'The doorman asks before waking a preview, his hand flat on its shut door.',
+  },
+].map((c) => ({
+  ...c,
+  svg: corridor({
+    w: CW, h: CH, floorY: CFY, x0: CDOOR - 82, sc: 1, rooms: [{ state: c.state, label: '' }], doormanAt: 0, pose: c.pose,
+    labels: false, stateLabels: false,
+    // the switch and the clipboard are the jobs' props. He stands clear of the door, with the switch on the wall
+    // beside its frame; at the ask, his hand lies flat on the leaf, as on the compare page.
+    props: c.pose === 'lights' || c.pose === 'rounds', shiftDoorman: c.shift,
+  }),
+}));
 ---
 <Base jsonld={[software()]}>
-  <section class="hero">
-    <div class="wrap hero__in">
-      <p class="eyebrow">Open source · for Kubernetes</p>
-      <h1 class="display-1 hero__h1">Non-prod environments that sleep when nobody’s using them, and wake when someone does.</h1>
-      <div class="hero__side">
-        <p class="lede">Pauses idle Kubernetes workloads in staging, preview and dev, and wakes them on the first request.</p>
-        <p class="hero__never"><StateDoor state="asleep" size={20} /> It never deletes a workload or its data.</p>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero__head">
+        <p class="eyebrow">Open source · No cron to write</p>
+        <h1 id="hero-title" class="display-1 hero__h1">{HEADLINE}</h1>
+      </div>
+      <div class="hero__row">
+        <div class="hero__scan">
+          <p class="lede hero__lede">{TRY}</p>
+          <Terminal class="hero__term" bar="Install the plugin, then scan" notes={['Install the kubectl plugin', 'Scan your cluster']} command={['brew install napwake/tap/kubectl-napwake', 'kubectl napwake scan']} label="Install the kubectl plugin with Homebrew, then scan your cluster" />
+          <p class="hero__ro"><svg class="hero__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="var(--brand)" set:html={scanIcon} /></svg><span><b>Read-only.</b> Nothing runs on your cluster.</span></p>
+          <p class="hero__other">Homebrew, on macOS and Linux. Other ways: <Link to={links.pluginInstall}>Krew</Link> · <Link to={links.pluginInstall}>download</Link></p>
+          <div class="actions hero__actions">
+            <Button to={links.scan} variant="primary">Scan your cluster</Button>
+            <a class="nw-btn nw-btn--secondary" href="/examples/scan-report/">See an example report</a>
+          </div>
+        </div>
+        <div class="hero__result">
+          <ScanResult />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="scan-title">
+    <div class="wrap">
+      <div class="section__head head--wide">
+        <p class="eyebrow"><span class="plate">01</span> What you’ll see</p>
+        <h2 id="scan-title" class="display-2">A report you can send your team.</h2>
+        <p>A team that works 10 hours a day, five days a week, uses staging 50 of 168 hours. The other 70%, it’s idle.</p>
+      </div>
+      <ScanDemo />
+      <ol class="scan__notes">
+        <li>It shows what’s idle right now, and what that costs while it runs, at your nodes’ list prices.</li>
+        <li>Switch it to <b>With Napwake</b> to see the idle ones paused. The last week, replayed from Prometheus, says what that would have freed.</li>
+        <li>It ends with your next steps, with your own workloads’ names. Install Napwake, then measure one workload, which pauses nothing.</li>
+      </ol>
+      <p class="scan__send"><b>Send it to your team.</b> It’s one self-contained file, with nothing loaded from elsewhere, and it prints cleanly to PDF. <a href="/examples/scan-report/" target="_blank" rel="noopener">Open the example report in a new tab <span aria-hidden="true">↗</span></a></p>
+    </div>
+  </section>
+
+  <section class="section guess" id="schedule" aria-labelledby="guess-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">02</span> If you already have a cron</p>
+        <h2 id="guess-title" class="display-2">A schedule guesses. Napwake watches.</h2>
+        <p>A cron leaves staging up while nobody’s using it, and down when someone needs it. Napwake pauses on idleness, and the first request wakes it.</p>
+      </div>
+    </div>
+    <TwoWays>
+      <p class="guess__key">Each door is one room at the moment a schedule gets it wrong.</p>
+      <p class="guess__more"><a href="/compare/">How it compares</a> runs the whole evening, with a scale-to-zero proxy too, and a table of all three.</p>
+    </TwoWays>
+  </section>
+
+  <section class="section install" aria-labelledby="install-title">
+    <div class="wrap">
+      <div class="install__top">
+        <div class="install__art"><Pose name="point" alt="The doorman points the way." width={200} /></div>
+        <div class="section__head install__head head--wide">
+          <p class="eyebrow"><span class="plate">03</span> Then install</p>
+          <h2 id="install-title" class="display-2">Install Napwake, and pause one workload.</h2>
+          <p>It measures in dry-run first, so nothing pauses until you say so. It never deletes a workload or its data.</p>
+        </div>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__say">
+            <p class="step__n" aria-hidden="true">1</p>
+            <h3 class="h3">Install it with Helm</h3>
+            <p>Change <code class="fill">Europe/London</code> to your users’ time zone. It needs Kubernetes 1.30 or later, and metrics-server.</p>
+            <p class="step__other">Other ways: <Link to={links.installNoHelm}>without Helm</Link> · <Link to={links.installGitOps}>Argo CD or Flux</Link></p>
+          </div>
+          <Terminal class="step__term" bar="Helm 3.8 or later" fill={['Europe/London']} command={[values, helm]} label="Make the values file with your time zone, then install Napwake with Helm" />
+        </li>
+        <li class="step">
+          <div class="step__say">
+            <p class="step__n" aria-hidden="true">2</p>
+            <h3 class="h3">Opt one workload in, measuring first</h3>
+            <p>The annotation starts it in dry-run, measured and never paused. The label opts it in. <code>kubectl napwake status</code> shows what it measures.</p>
+          </div>
+          <Terminal class="step__term" bar="Use your workload and namespace" fill={['my-api', 'dev']} command={['kubectl annotate deployment my-api \\\n    -n dev napwake.dev/dry-run=true', 'kubectl label deployment my-api \\\n    -n dev napwake.dev/managed=true']} label="Opt a workload in, in dry-run" />
+        </li>
+        <li class="step">
+          <div class="step__say">
+            <p class="step__n" aria-hidden="true">3</p>
+            <h3 class="h3">Let it pause</h3>
+            <p>Do this once what it measured looks right. After <code>idleAfter</code> with no activity, an hour by default, Napwake pauses it.</p>
+          </div>
+          <Terminal class="step__term" bar="Ends dry-run for it" fill={['my-api', 'dev']} command="kubectl napwake enable my-api -n dev" label="End dry-run for the workload" />
+        </li>
+      </ol>
+      <div class="install__foot">
         <div class="actions">
-          <Button to={links.quickstart} variant="primary">Get started</Button>
-          <a class="nw-btn nw-btn--secondary" href="/how-it-works/">How it works</a>
+          <Button to={links.install} variant="primary">Installation guide</Button>
+          <Button to={links.quickstart}>Quickstart</Button>
         </div>
         <p class="licence small muted">Free and open source under <a href={links.apache.href}>Apache 2.0</a>.</p>
       </div>
     </div>
   </section>
 
-  <LiveScene />
+  <LiveScene eyebrow="Once it’s on" plate="04">
+    <a slot="after" class="live__more" href="/how-it-works/">How it works, in full</a>
+  </LiveScene>
 
-  <section class="section" aria-labelledby="scan-title">
+  <section class="section fit" id="who" aria-labelledby="fit-title">
     <div class="wrap">
       <div class="section__head">
-        <p class="eyebrow"><span class="plate">01</span> Before you install</p>
-        <h2 id="scan-title" class="display-2">One command, and a report you can send your team.</h2>
-        <p>A team that works 10 hours a day, five days a week, uses staging 50 of 168 hours. The other 70%, it’s idle. <code>kubectl napwake scan</code> shows your cluster’s own number before you install anything.</p>
+        <p class="eyebrow"><span class="plate">05</span> Who it’s for</p>
+        <h2 id="fit-title" class="display-2">For any environment that isn’t production.</h2>
+        <p>For platform and infrastructure engineers who run staging, preview and dev on their own Kubernetes clusters.</p>
       </div>
-      <ScanDemo />
-      <ol class="scan__notes">
-        <li>It’s read-only. It runs with your kubeconfig, and installs nothing in the cluster.</li>
-        <li>It shows what’s idle right now, and what that costs while it runs, at your nodes’ list prices.</li>
-        <li>Switch it to <b>With Napwake</b> to see the idle ones paused. The last week, replayed from Prometheus, says what that would have freed.</li>
-      </ol>
-      <p class="scan__send"><b>Send it to your team.</b> It’s one self-contained file, with nothing loaded from elsewhere, and it prints cleanly to PDF. <a href="/examples/scan-report/" target="_blank" rel="noopener">Open the example report in a new tab <span aria-hidden="true">↗</span></a></p>
-    </div>
-  </section>
-
-  <section class="section" aria-labelledby="states-title">
-    <div class="wrap">
-      <div class="section__head">
-        <p class="eyebrow"><span class="plate">02</span> Four states</p>
-        <h2 id="states-title" class="display-2">Paused, resuming, running, or it needs you.</h2>
-        <p>Each state is drawn as a door. Shut is asleep, ajar is waking up, open is awake, and a note means it needs you. Each card gives the plain word, then the one <code>kubectl napwake status</code> prints.</p>
-      </div>
-      <ul class="states">
-        {states.map((s) => (
-          <li class="card state">
-            <Room state={s.state} w={240} h={232} class="state__art" />
-            <StateBadge state={s.state} vocabulary="both" />
-            <p set:html={s.text} />
+      <ul class="choices">
+        {choices.map((c) => (
+          <li class={`choice choice--${c.key}`}>
+            <div class="choice__art">
+              <svg viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="xMidYMax slice" role="img" aria-label={c.alt} focusable="false" set:html={c.svg} />
+            </div>
+            <div class="choice__body">
+              <h3 class="choice__h" id={`choice-${c.key}`}>{c.title}</h3>
+              <p>{c.text}</p>
+              <a class="choice__next" href={c.href} aria-describedby={`choice-${c.key}`}>{c.next}<span aria-hidden="true">{'\u00a0'}→</span></a>
+            </div>
           </li>
         ))}
       </ul>
+      <p class="fit__more">See <a href="/compare/">how it compares</a> with a schedule and a <span class="nowrap">scale-to-zero</span> proxy, or read the <a href="/faq/">FAQ</a>.</p>
     </div>
   </section>
 
   <section class="section" aria-labelledby="wake-title">
     <div class="wrap">
       <div class="section__head">
-        <p class="eyebrow"><span class="plate">03</span> How a wake works</p>
+        <p class="eyebrow"><span class="plate">06</span> How a wake works</p>
         <h2 id="wake-title" class="display-2">Behind your VPN, the first request wakes it.<br /> On a public URL, it can ask first.</h2>
         <p>A paused workload’s Services point at the doorman, Napwake’s small proxy. Behind a VPN, single sign-on or an allowlist, he wakes it on the first request. On a public URL, most requests are robots. Set <code>napwake.dev/wake: ask</code> there, and the doorman asks a person first. Either way, the app and its Ingress don’t change.</p>
       </div>
@@ -159,54 +296,51 @@ const others = [
     </div>
   </section>
 
-  <section class="section" aria-labelledby="fit-title">
-    <div class="wrap grid-2 fit">
-      <div>
-        <p class="eyebrow"><span class="plate">04</span> Who it’s for</p>
-        <h2 id="fit-title" class="display-2">For any environment that isn’t production.</h2>
-        <p class="lede fit__lede">For platform and infrastructure engineers who run staging, preview and dev environments on their own Kubernetes clusters.</p>
+  <section class="section" aria-labelledby="states-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="eyebrow"><span class="plate">07</span> Four states</p>
+        <h2 id="states-title" class="display-2">Paused, resuming, running, or it needs you.</h2>
+        <p>Each state is drawn as a door. Shut is asleep, ajar is waking up, open is awake, and a note means it needs you. Each card gives the plain word, then the one <code>kubectl napwake status</code> prints.</p>
       </div>
-      <div class="fit__list">
-        <h3 class="h3">What it won’t do</h3>
-        <ul>
-          <li>Delete anything. Its one action is to pause, which scales a workload to zero. A StatefulSet whose PVCs would be deleted on scale-down is never paused.</li>
-          <li>Guess who’s a person. Napwake can’t tell. On an environment anyone can reach, set it to ask. Then requests wake nothing, and a browser gets a <b>Wake it</b> button.</li>
-          <li>Run to a timetable. It pauses on idleness, not at 8pm. A workload idle all afternoon is paused, and a request at midnight wakes it.</li>
-          <li>Replace your autoscaler. While a workload runs, its HPA or KEDA decides how many replicas it needs. Napwake only decides whether it should run at all.</li>
-        </ul>
-        <p><a href="/compare/">How it compares</a></p>
-      </div>
+      <ul class="states">
+        {states.map((s) => (
+          <li class="card state">
+            <Room state={s.state} w={240} h={232} class="state__art" />
+            <StateBadge state={s.state} vocabulary="both" />
+            <p set:html={s.text} />
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
 
-  <section class="section start" aria-labelledby="start-title">
-    <div class="wrap start__in">
-      <div class="start__art"><Pose name="point" alt="The doorman points the way." width={220} /></div>
-      <div class="start__body">
-        <p class="eyebrow"><span class="plate">05</span> Start</p>
-        <h2 id="start-title" class="display-2">Scan, then try one workload.</h2>
-        <p class="muted">The Quickstart takes one workload from idle to paused. It measures in dry-run first, so nothing pauses until you say so.</p>
-        <Terminal class="start__term" command={['brew install napwake/tap/kubectl-napwake', 'kubectl napwake scan']} label="Install the kubectl plugin and scan a cluster" />
-        <div class="actions">
-          <Button to={links.install} variant="primary">Install</Button>
-          <Button to={links.quickstart}>Quickstart</Button>
-        </div>
-        <p class="licence small muted">Free and open source under <a href={links.apache.href}>Apache 2.0</a>.</p>
-      </div>
-    </div>
-  </section>
 </Base>
 
 <style>
-  .hero { padding: var(--space-18) 0 var(--space-12); }
-  .hero__in { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); column-gap: var(--space-12); align-items: end; }
-  .hero__in > .eyebrow { grid-column: 1 / -1; }
-  .hero__h1 { max-width: 12.5em; }
-  .hero__side { padding-bottom: 6px; }
-  .hero__side .lede { margin-bottom: var(--space-4); }
+  /* the hero: the headline says what Napwake does, then try it first: the two commands, each labelled, and what they show */
+  .hero { padding: var(--space-12) 0 var(--space-18); }
+  .hero__head { max-width: 62rem; }
+  .hero__h1 { max-width: 13.5em; }
+  /* Sections 01 and 02: their one-sentence lines on one line wherever they fit, as Tobi asked; balanced where they
+     can't, so no word sits alone. The longer intros below keep the 46em measure. */
+  .head--wide { max-width: none; }
+  .head--wide > p:not(.eyebrow) { text-wrap: balance; }
+  /* One step under display-1 from tablets up (Tobi, 2026-10-31): a full sentence across the page, beside the card's
+     own big number, read as shouting at 72. 56 is what tablets already get, and phones keep theirs. */
+  @media (min-width: 901px) { .hero__h1 { font-size: 56px; } }
+  .hero__lede { margin: 0 0 var(--space-6); max-width: 34em; }
+  .hero__row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--space-12); align-items: start; margin-top: var(--space-8); }
+  .hero__scan :global(.hero__term .nw-term) { font-size: 14px; padding: var(--space-4) 18px 18px; }
+  .hero__lede, .hero__ro span, .hero__other { text-wrap: pretty; }
+  .hero__ro { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-4) 0 var(--space-1); }
+  .hero__ro b { color: var(--text); }
+  .hero__icon { flex: none; margin-top: 1px; }
+  .hero__other { margin: 0 0 var(--space-6) 30px; font-size: 15px; color: var(--muted); }
+  .hero__actions :global(.nw-btn) { padding-left: 1.5em; padding-right: 1.5em; }
+  .hero__result { min-width: 0; }
   .licence { margin: var(--space-3) 0 0; }
   .licence a { color: inherit; }
-  .hero__never { display: flex; align-items: center; gap: var(--space-2); font-weight: 700; margin-bottom: var(--space-6); }
 
   .scan__notes { list-style: none; counter-reset: n; margin: var(--space-12) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
   .scan__notes li { counter-increment: n; position: relative; padding-top: var(--space-8); font-size: 15px; line-height: 1.5; color: var(--muted); }
@@ -245,38 +379,94 @@ const others = [
   .others__both { background: var(--bg); }
   .wake__foot { margin: var(--space-4) 0 0; max-width: 60em; }
 
-  .fit { align-items: start; }
-  .fit__lede { margin-top: var(--space-4); }
-  .fit__list ul { list-style: none; padding: 0; margin: var(--space-4) 0 var(--space-6); display: grid; gap: var(--space-4); }
-  .fit__list li { padding-left: var(--space-6); position: relative; color: var(--muted); }
-  .fit__list li b { color: var(--text); }
-  .fit__list li::before { content: ""; position: absolute; left: 0; top: .55em; width: 10px; height: 12px; border-radius: 5px 5px 0 0; background: var(--glyph-slate); }
+  /* 07: three choices, each a door on the same corridor with its one next step. The whole card is the link's target,
+     and the ring goes round the card when the link has focus. */
+  .choices { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); }
+  .choice { position: relative; display: grid; grid-template-rows: auto 1fr; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl); overflow: hidden; transition: border-color var(--duration-ui-short) var(--ease-calm); }
+  .choice__art { background: var(--scene-wall); border-bottom: 1px solid var(--line); }
+  .choice__art svg { display: block; width: 100%; height: 216px; }
+  .choice__body { display: flex; flex-direction: column; padding: var(--space-6); }
+  .choice__h { font: 700 21px/1.3 var(--font-sans); margin: 0 0 var(--space-2); }
+  .choice__body p { margin: 0 0 var(--space-6); color: var(--muted); font-size: 16px; line-height: 1.55; text-wrap: pretty; }
+  .choice__next { margin-top: auto; font-weight: 700; }
+  .choice__next::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  @supports selector(:has(a)) {
+    .choice__next:focus-visible { box-shadow: none; }
+    .choice:has(.choice__next:focus-visible) { box-shadow: var(--ring); }
+  }
+  .choice:hover { border-color: var(--action); }
+  .choice:hover .choice__next { text-decoration-thickness: 2px; }
+  .fit__more { margin: var(--space-8) 0 0; font-size: 15px; color: var(--muted); text-wrap: pretty; }
+  .fit__more .nowrap { white-space: nowrap; }
+  /* 02: the schedule's two leaks, then the way to the whole evening */
+  .guess { padding-bottom: var(--space-12); }
+  .guess__key { margin: 0 0 var(--space-3); font-size: 17px; line-height: 1.5; color: var(--text); }
+  .guess__more { margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+  .guess__more a { font-weight: 700; }
 
-  .start { background: var(--surface); }
-  .start__in { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-12); align-items: center; }
-  .start__art { display: grid; place-items: center; }
-  .start__body h2 { margin-bottom: var(--space-4); }
-  .start__body :global(.start__term) { margin: var(--space-6) 0; max-width: 40em; }
+  /* installing: three steps, each its words and its commands */
+  .install { background: var(--surface); }
+  .install__top { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-12); align-items: end; margin-bottom: var(--space-12); }
+  .install__art { display: grid; place-items: end center; }
+  .install__head { margin-bottom: 0; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .step { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-4) var(--space-12); align-items: start; padding: var(--space-8) 0; border-top: 1px solid var(--line); }
+  .step__say { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: var(--space-3); align-items: baseline; }
+  .step__say > :not(.step__n) { grid-column: 2; }
+  .step__say .step__n { grid-row: 1 / span 3; margin: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: var(--bg); font: 700 15px/1 var(--font-mono); align-self: start; }
+  .step__say .h3 { margin: 2px 0 var(--space-2); }
+  .step__say p { margin: 0 0 var(--space-2); color: var(--muted); font-size: 16px; line-height: 1.55; }
+  .step__say p.step__other { font-size: 15px; }
+  .step :global(.step__term) { min-width: 0; }
+  /* the value to change, marked as the block beside marks it (Terminal.astro's fill) */
+  .step__say code.fill { background: var(--lamp); color: var(--night); font-weight: 700; }
+  .install__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); padding-top: var(--space-8); border-top: 1px solid var(--line); }
+  .install__foot .licence { margin: 0; }
+  .live__more { font-weight: 700; font-size: 14px; }
 
   @media (max-width: 1000px) {
-    .hero__in { grid-template-columns: minmax(0, 1fr); }
-    .hero__side { margin-top: var(--space-6); }
+    .hero__row { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-12); }
+    .hero__scan { max-width: 36rem; }
+    .step { grid-template-columns: minmax(0, 1fr); }
+    .step :global(.step__term) { margin-left: 52px; }
     .states { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .doors { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; row-gap: var(--space-12); }
     .door { grid-row: auto; grid-template-rows: none; row-gap: var(--space-6); }
+    .choices { gap: var(--space-4); }
+    .choice__art svg { height: 184px; }
+    .choice__body { padding: var(--space-4) var(--space-4) var(--space-6); }
+    .choice__h { font-size: 19px; }
+  }
+  /* Who it’s for: three side by side from an iPad mini in portrait (744) up, stacked below */
+  @media (max-width: 700px) {
+    .choices { grid-template-columns: minmax(0, 1fr); }
+    .choice__art svg { height: 168px; }
   }
   @media (max-width: 760px) {
     .states { grid-template-columns: minmax(0, 1fr); }
-    .start__in { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
-    .start__art { justify-content: start; }
-    .start__art :global(svg) { width: 150px; }
+    .install__top { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+    .install__art { place-items: start; }
+    .install__art :global(svg) { width: 130px; }
   }
   @media (max-width: 600px) {
-    .hero { padding: var(--space-12) 0 var(--space-8); }
+    .hero { padding: var(--space-8) 0 var(--space-12); }
+    .hero__lede { margin-bottom: var(--space-4); font-size: 17px; }
+    .hero__row { margin-top: var(--space-4); row-gap: var(--space-8); }
+    .hero__scan :global(.hero__term .nw-term) { font-size: 13px; padding: var(--space-3) 14px 14px; }
+    .hero__other { margin-bottom: var(--space-4); }
+    .hero__actions :global(.nw-btn) { flex: 1 1 100%; justify-content: center; }
+    .step { padding: var(--space-6) 0; }
+    .step :global(.step__term) { margin-left: 0; }
+    .step :global(.step__term .nw-term) { font-size: 12.5px; padding: var(--space-3) 14px 14px; }
+    .step__say { grid-template-columns: 32px minmax(0, 1fr); }
+    .step__say .step__n { width: 26px; height: 26px; font-size: 13px; }
+  }
+  /* a phone: the headline in five lines, and each command on one line at 390 wide */
+  @media (max-width: 420px) {
+    .hero__h1 { font-size: 40px; }
+    .hero__scan :global(.hero__term .nw-term) { font-size: 12px; }
     .scan__notes { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
     .scan__notes li { padding: 0 0 0 var(--space-8); }
-    /* the install line wraps after `install` rather than scroll sideways */
-    .start__body :global(.start__term .nw-term) { white-space: pre-wrap; font-size: 13px; }
     .door__steps li { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
     .others { background: none; border: 0; overflow: visible; }
     .others table, .others tbody, .others tr, .others th, .others td { display: block; }

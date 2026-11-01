@@ -11,7 +11,8 @@ const here = page(Astro.url.pathname);
 const { title, noindex = false, jsonld = [], type = 'website' } = Astro.props;
 const description = Astro.props.description || here?.description || PAGES[0].description;
 const card = Astro.props.card || here?.card || 'home';
-const fullTitle = title ? `${title} · ${NAME}` : 'Napwake: non-prod environments that sleep when nobody’s using them';
+// the home's title (and og:title, which X reads too) is the headline's first sentence
+const fullTitle = title ? `${title} · ${NAME}` : 'Napwake: pause idle Kubernetes workloads in staging, preview and dev';
 // a noindex page, such as the 404, has no address of its own to name
 const canonical = new URL(Astro.url.pathname, Astro.site);
 // a page with a card of its own, such as a share link's (/s/), passes its address and words

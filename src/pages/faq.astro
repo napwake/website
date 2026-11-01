@@ -47,7 +47,7 @@ const isDoc = (l) => l.doc === true;
             <div class="qa__a">
               {f.a.map((p, j) => <p class:list={[j === 0 && 'qa__first']} set:html={html(p)} />)}
             </div>
-            {f.commands && <Terminal command={f.commands} label="Scan, then try one workload in dry-run" />}
+            {f.commands && <Terminal command={f.commands} fill={['my-api', 'dev']} label="Scan, then try one workload in dry-run" />}
             <div class="qa__src">
               <span class="qa__src-label">{f.sources.some(([, l]) => !isDoc(l) && l !== links.apache) ? `Sources, checked ${f.checked || '2026-10-22'}` : 'From the docs'}</span>
               <ul>{f.sources.map(([t, l]) => <li>{isDoc(l) ? <Link to={l}>{t}</Link> : <a href={l.href} rel="noopener">{t}</a>}</li>)}</ul>

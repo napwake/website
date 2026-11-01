@@ -1,0 +1,139 @@
+---
+// A schedule's two leaks, in one glance: the compare page's evening (ThreeWays, src/lib/compare.mjs) cut to two rows,
+// Napwake and the timetable, with each room at the moment the timetable gets it wrong (LEAKS). The same data, the same
+// rooms and the same drawing code (art.mjs roomStill, the doorman's layer), so the two pages never disagree. Napwake's
+// row comes first, as on the compare page. Each leak is marked on the timetable's row, under the rooms it happens to.
+// Nothing moves but the waking room's wedge, which breathes as it does there, and stands still under reduced motion.
+// The home page names no tool (CMO decision 0006), so the timetable's row is "A schedule", with its hours.
+import { roomStill, doormanLayer, finishFilter } from '../lib/art.mjs';
+import { code } from '../lib/text.mjs';
+import { LEAKS, LEAK_SAY, WORD, TONE, SAY, clock, day, dayLong } from '../lib/compare.mjs';
+
+// the compare page's corridor, with 20 more units over the doors for each room's moment, and the doorman's gap
+// before staging, whose door he holds
+const W = 544, H = 272, FY = 232, X0 = 30, DW = 78, GAP = 30, PGAP = 112;
+const AT = LEAKS.findIndex((l) => l.room === 'staging');
+const XS = LEAKS.reduce((xs, _, i) => [...xs, i === 0 ? X0 : xs[i - 1] + DW + (i === AT ? PGAP : GAP)], []);
+const pc = (n, of = W) => `${Math.round((n / of) * 100000) / 1000}%`;
+
+const ROWS = [
+  { key: 'napwake', name: 'Napwake', also: 'Pauses after `idleAfter` with no use, an hour by default.' },
+  { key: 'timetable', name: 'A schedule', also: 'Down at 20:00, up at 08:00.' },
+].map((r, i) => {
+  const fid = `twy${i}`;
+  let svg = `<defs>${finishFilter(fid)}</defs>`;
+  svg += LEAKS.map((l, j) => roomStill(XS[j], FY, { filter: fid, state: l.states[r.key], name: l.room })).join('');
+  if (r.key === 'napwake') {
+    const rooms = LEAKS.map((l) => ({ state: 'asleep', label: l.room }));
+    svg += doormanLayer({ w: W, h: H, rooms, x0: X0, floorY: FY, doormanAt: AT, pose: 'door' });
+  }
+  return { ...r, svg };
+});
+
+// one mark per leak, under the two rooms it happens to
+const MARKS = ['idle', 'needed'].map((leak) => {
+  const js = LEAKS.flatMap((l, j) => (l.leak === leak ? [j] : []));
+  const from = XS[js[0]], to = XS[js[js.length - 1]] + DW;
+  return { leak, left: pc(from), width: pc(to - from), say: LEAK_SAY[leak] };
+});
+
+// for screen readers, room by room
+const SAID = LEAKS.map((l) => {
+  const nw = SAY[l.states.napwake] + (l.states.napwake === 'waking' ? ', and the doorman holds its door' : '');
+  return `${l.room}, ${dayLong(l.t)} ${clock(l.t)}. With Napwake, ${nw}. With a schedule, ${SAY[l.states.timetable]}. ${LEAK_SAY[l.leak]}.`;
+});
+---
+<figure class="twy" aria-labelledby="twy-title">
+  <figcaption id="twy-title" class="visually-hidden">Four workloads from one evening and the next morning, each at the moment a schedule gets it wrong, run by Napwake and by a schedule that turns them down at 20:00 and up at 08:00.</figcaption>
+  <ul class="visually-hidden">{SAID.map((s) => <li>{s}</li>)}</ul>
+  {ROWS.map((r) => (
+    <div class:list={['twy__row', `twy__row--${r.key}`]}>
+      <div class="wrap twy__row-in">
+        <div class="twy__name">
+          <p class="twy__h">{r.name}</p>
+          <p class="twy__also" set:html={code(r.also)} />
+        </div>
+        <div class="twy__stage">
+          <div class="twy__art">
+            <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false" set:html={r.svg} />
+            {LEAKS.map((l, j) => (
+              <span class="twy__at" aria-hidden="true" style={`left:${pc(XS[j] + DW / 2)}`}>
+                <span class="twy__room">{l.room}</span>
+                <span class="twy__time">{day(l.t)} {clock(l.t)}</span>
+              </span>
+            ))}
+            {LEAKS.map((l, j) => (
+              <span class="twy__word" aria-hidden="true" data-tone={TONE[l.states[r.key]]} style={`left:${pc(XS[j] + DW / 2)};top:${pc(FY + 6, H)}`}>{WORD[l.states[r.key]]}</span>
+            ))}
+          </div>
+          {r.key === 'timetable' && (
+            <div class="twy__marks" aria-hidden="true">
+              {MARKS.map((m) => (
+                <p class:list={['twy__mark', `twy__mark--${m.leak}`]} style={`left:${m.left};width:${m.width}`}><span>{m.say}</span></p>
+              ))}
+            </div>
+          )}
+        </div>
+        {r.key === 'timetable' && <div class="twy__aside"><slot /></div>}
+      </div>
+    </div>
+  ))}
+</figure>
+
+<style>
+  .twy { margin: 0; background: var(--scene-wall); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow-x: clip; }
+
+  /* the rows: a corridor each, the floor running the width of the page, as on the compare page */
+  .twy__row + .twy__row { border-top: 1px solid var(--line); }
+  .twy__row-in { display: grid; grid-template-columns: 200px minmax(0, 600px) minmax(0, 1fr); column-gap: var(--space-8); align-items: end; padding-top: var(--space-4); }
+  /* what the picture is, and the way to the whole evening: beside the schedule's row, or under it on a narrow screen */
+  .twy__aside { align-self: center; max-width: 22rem; padding-bottom: 64px; }
+  .twy__name { align-self: center; padding-bottom: 38px; }
+  .twy__h { margin: 0 0 var(--space-1); font: 700 21px/1.25 var(--font-sans); color: var(--text); }
+  .twy__row--napwake .twy__h { color: var(--brand); }
+  .twy__also { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+  .twy__stage { position: relative; }
+  .twy__art { position: relative; }
+  .twy__art::before { content: ""; position: absolute; top: calc(232 / 272 * 100%); bottom: 0; left: -100vw; right: -100vw; background: var(--scene-floor); z-index: 0; }
+  .twy__art svg { position: relative; z-index: 1; display: block; width: 100%; height: auto; }
+  .twy__at, .twy__word { position: absolute; z-index: 2; transform: translateX(-50%); text-align: center; font-family: var(--font-mono); pointer-events: none; white-space: nowrap; }
+  /* each room and its moment, over its door */
+  .twy__at { top: 0; display: grid; gap: 2px; font-size: 12px; line-height: 1.15; }
+  .twy__room { color: var(--scene-label); }
+  .twy__time { color: var(--text); font-weight: 700; }
+  /* each state's word on a small plate in the page's colour, as on the compare page */
+  .twy__word { width: max-content; max-width: 19%; padding: 1px 5px 2px; border-radius: var(--radius-sm); background: var(--bg); font-size: 12px; line-height: 1.15; font-weight: 700; letter-spacing: .02em; color: var(--asleep); white-space: normal; }
+  .twy__word[data-tone="awake"] { color: var(--awake); }
+  .twy__word[data-tone="waking"] { color: var(--waking); }
+
+  /* the waking room's wedge breathes, as on the compare page; global.css stills it under reduced motion */
+  .twy :global(.nr .wedge) { opacity: var(--light-wedge); transform-box: fill-box; transform-origin: 0 0; animation: twy-breathe var(--duration-breathe) var(--ease-breathe) infinite; }
+  @keyframes twy-breathe { 50% { opacity: .3; transform: scaleX(.88); } }
+
+  /* the leaks, marked under the schedule's rooms: a bracket over the two doors, the words under it */
+  .twy__marks { position: relative; height: 84px; }
+  .twy__mark { position: absolute; top: var(--space-3); margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .twy__mark::before { content: ""; justify-self: stretch; height: 10px; border: 2px solid var(--accent-text); border-top: 0; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+  .twy__mark span { margin-top: var(--space-2); width: max-content; max-width: 150%; font: 700 15px/1.3 var(--font-sans); color: var(--text); text-align: center; text-wrap: balance; }
+
+  @media (max-width: 1180px) {
+    .twy__row-in { grid-template-columns: 180px minmax(0, 560px) minmax(0, 1fr); column-gap: var(--space-6); }
+  }
+  /* a tablet: the name beside a corridor no wider than on a laptop, so both rows still fit one screen, and the note under them */
+  @media (max-width: 1000px) {
+    .twy__row-in { grid-template-columns: 150px minmax(0, 560px); }
+    .twy__aside { grid-column: 1 / -1; max-width: 40rem; padding: 0 0 var(--space-6); }
+    .twy__h { font-size: 19px; }
+  }
+  /* a phone: the name over the corridor, and the corridor the width of the screen */
+  @media (max-width: 600px) {
+    .twy__row-in { grid-template-columns: minmax(0, 1fr); padding-top: var(--space-6); }
+    .twy__name { padding-bottom: var(--space-3); align-self: start; }
+    .twy__stage { margin: 0 calc(-1 * var(--gutter)); }
+    .twy__aside { max-width: none; padding: var(--space-4) 0 var(--space-6); }
+    .twy__at { font-size: 11px; }
+    .twy__word { font-size: 11px; max-width: 21%; padding: 1px 4px 2px; }
+    .twy__marks { height: 76px; }
+    .twy__mark span { font-size: 13px; max-width: 100%; }
+  }
+</style>

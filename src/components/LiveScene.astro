@@ -7,6 +7,10 @@ import { corridor, corridorWidth } from '../lib/art.mjs';
 import { code } from '../lib/text.mjs';
 import StateDoor from './StateDoor.astro';
 
+// eyebrow and plate: a visible head over the band, where the scene opens a section of its own
+const { eyebrow, plate } = Astro.props;
+const TITLE = 'What Napwake does with one environment';
+
 const W = 1800, H = 420, sc = 1.25, P = 5;
 const rooms = [
   { state: 'asleep', label: 'dev' }, { state: 'asleep', label: 'qa' }, { state: 'awake', label: 'pr-38', guest: true },
@@ -38,8 +42,10 @@ const layers = steps.map((s) => corridor({
 }));
 const start = steps.length - 1;
 ---
-<section class="live" aria-labelledby="live-title" data-live>
-  <h2 id="live-title" class="visually-hidden">What Napwake does with one environment</h2>
+<section class:list={['live', eyebrow && 'live--head']} aria-labelledby="live-title" data-live>
+  {eyebrow
+    ? <div class="wrap"><div class="section__head live__head"><p class="eyebrow">{plate && <span class="plate">{plate}</span>} {eyebrow}</p><h2 id="live-title" class="display-2">{TITLE}.</h2></div></div>
+    : <h2 id="live-title" class="visually-hidden">{TITLE}</h2>}
   <div class="live__band">
     <svg class="live__art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" role="img"
       aria-label="A corridor of twelve doors at night, one per environment. Most are asleep, and a few are awake. Staging's door, with the doorman beside it, changes through the four steps listed below."
@@ -63,12 +69,15 @@ const start = steps.length - 1;
     <div class="live__ctl">
       <button type="button" class="live__play" data-play hidden aria-label="Pause the scene">Pause</button>
       <span class="live__note">The environments are examples. <code>kubectl napwake status</code> shows yours.</span>
+      <slot name="after" />
     </div>
   </div>
 </section>
 
 <style>
   .live { padding: 0 0 var(--space-12); }
+  .live--head { padding-top: var(--section); border-top: 1px solid var(--line); }
+  .live__head { margin-bottom: var(--space-8); }
   .live__band { background: var(--scene-wall); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .live__art { width: 100%; height: clamp(260px, 26vw, 420px); }
   .live__beat { opacity: 0; transition: opacity var(--duration-ui-long) var(--ease-calm); }

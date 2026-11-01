@@ -25,8 +25,9 @@ const menu = [
   BLOG && { href: '/blog/', label: 'Blog' },
 ].filter(Boolean);
 const here = (h) => h && (path === h || path.startsWith(h));
-const pill = LATEST_TAG; // the newest published release or release candidate
-const start = links.quickstart;
+const pill = LATEST_TAG; // the newest full release, or the newest release candidate while there's none
+// Get started opens the docs' Scan your cluster: one read-only command first, installing Napwake after
+const start = links.scan;
 ---
 <header class:list={['hdr', nav.length > 4 && 'hdr--many']}>
   <div class="wrap hdr__in">

@@ -139,6 +139,10 @@ export const RELEASES = all
 const early = all.filter((r) => cmp(r.version, FIRST) < 0 && r.date).sort((a, b) => cmp(a.version, b.version));
 export const EARLY = early.length ? { first: early[0], last: early.at(-1) } : null;
 
-// the newest published tag, for the header's version pill
-export const LATEST_TAG = tags.length ? [...tags].sort((a, b) => b.date.localeCompare(a.date) || b.tag.localeCompare(a.tag, 'en', { numeric: true }))[0] : null;
+// The newest version the site shows: the header's pill and the home page's Helm command. The newest full release,
+// and the newest release candidate only while no full release exists, so after 0.2.0 a 0.2.1 candidate never
+// shows (Kede, 2026-10-31).
+const newest = (list) => [...list].sort((a, b) => b.date.localeCompare(a.date) || b.tag.localeCompare(a.tag, 'en', { numeric: true }))[0] || null;
+const isCandidate = (t) => t.prerelease === true || /-/.test(t.tag);
+export const LATEST_TAG = newest(tags.filter((t) => !isCandidate(t))) || newest(tags);
 export const SOURCE = published.source;

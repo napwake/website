@@ -33,7 +33,7 @@ const { Content } = post;
         <h2 class="h3" id="try-h">Try it on your own cluster</h2>
         <p class="muted">See what’s idle first, with nothing installed.</p>
         <Terminal command="kubectl napwake scan" label="See what's idle in a cluster" />
-        <p class="actions"><a class="nw-btn nw-btn--primary" href={links.quickstart.href}>Get started</a><a class="nw-btn" href="/blog/">More from the blog</a></p>
+        <p class="actions"><a class="nw-btn nw-btn--primary" href={links.scan.href}>Get started</a><a class="nw-btn" href="/blog/">More from the blog</a></p>
       </aside>
     </div>
   </article>
@@ -61,7 +61,6 @@ const { Content } = post;
   .try { max-width: 40em; margin: 0 0 var(--space-18); padding: var(--space-6); border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--surface); }
   .try .h3 { margin-bottom: var(--space-2); }
   .try :global(.term) { margin: var(--space-4) 0; }
-  .try :global(.nw-term) { border: 1px solid var(--line); }
   .try .actions { margin: 0; }
   @media (max-width: 760px) {
     .post__head-in { grid-template-columns: minmax(0, 1fr); gap: 0; padding-top: var(--space-12); }

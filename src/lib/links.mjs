@@ -30,9 +30,17 @@ export const doc = (target) => {
 
 export const links = {
   docs: doc(''),
+  // Scan your cluster: where every "Get started" goes. The docs' own page (napwake/napwake#119) goes live with
+  // 0.2.0's docs, Thu 5 Nov. Until then, the plugin page's section on scanning, which is live. Then
+  // 'getting-started/scan', with SCAN_DOC in share.mjs.
+  scan: doc('getting-started/kubectl-plugin#scan-a-cluster'),
   install: doc('getting-started/installation'),
+  installNoHelm: doc('getting-started/installation#install-without-helm'),
+  installGitOps: doc('getting-started/installation#with-argo-cd-or-flux'),
   quickstart: doc('getting-started/quickstart'),
   plugin: doc('getting-started/kubectl-plugin'),
+  // the plugin page's install tabs: Homebrew, Krew, Download, Source
+  pluginInstall: doc('getting-started/kubectl-plugin#installation'),
   repo: now(REPO_NOW),
   releases: now(`${REPO_NOW}/releases`),
   changelogFile: now(`${REPO_NOW}/blob/main/CHANGELOG.md`),

@@ -4,8 +4,9 @@
 // window opens on the real report for the same cluster, live: hover the doors, sort the tables. Both come
 // from the product's code on the same made-up data (scripts/render-scan-example.sh), so every number agrees.
 // The report takes the mouse wheel only once clicked or focused, so the page never scrolls into it by accident.
-// Reduced motion or no script: the final state, still. Phones: the command, then a tap-to-open preview.
-import Terminal from './Terminal.astro';
+// It opens at the report's list of workloads, by name, which the hero's card above doesn't show (Tobi, 2026-10-31).
+// Reduced motion or no script: the final state, still. Phones: a tap-to-open picture of that list, as the hero has
+// the commands.
 import raw from '../content/examples/scan-first.txt?raw';
 
 const out = raw.split('\n');
@@ -36,7 +37,7 @@ const cluster = out[0].split(':')[0];
     <div class="win win--web" data-web>
       <div class="win__bar"><span class="win__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="win__url">file://{file}</span><span class="win__tag">Example cluster</span></div>
       <div class="web" data-view>
-        <iframe data-src="/examples/scan-report/" title={`The scan report for an example cluster, ${cluster}: live, scrollable, sortable`} loading="lazy"></iframe>
+        <iframe data-src="/examples/scan-report/" data-at="every-workload" title={`The scan report for an example cluster, ${cluster}: live, scrollable, sortable`} loading="lazy"></iframe>
         <div class="web__shield" data-shield aria-hidden="true" hidden><span class="web__hint">Click to scroll and sort</span></div>
         <noscript><a class="web__open" href="/examples/scan-report/">Open the example report</a></noscript>
       </div>
@@ -44,11 +45,11 @@ const cluster = out[0].split(':')[0];
   </div>
 
   <div class="demo__phone">
-    <Terminal command="kubectl napwake scan" label="The command" />
+    <!-- the report at 390 wide, from its first workload, light and dark, at 2x (Kede, 2026-10-31) -->
     <a class="preview" href="/examples/scan-report/" target="_blank" rel="noopener">
       <span class="preview__bar" aria-hidden="true"><span class="win__dots"><i></i><i></i><i></i></span><span class="win__tag">Example cluster</span></span>
-      <img class="on-light" src="/examples/scan-report-phone-light.webp" width="390" height="560" alt="" loading="lazy" decoding="async" />
-      <img class="on-dark" src="/examples/scan-report-phone-dark.webp" width="390" height="560" alt="" loading="lazy" decoding="async" />
+      <img class="on-light" src="/examples/scan-report-workloads-phone-light.webp" width="390" height="560" alt="" loading="lazy" decoding="async" />
+      <img class="on-dark" src="/examples/scan-report-workloads-phone-dark.webp" width="390" height="560" alt="" loading="lazy" decoding="async" />
       <span class="preview__go">Open the example report <span aria-hidden="true">↗</span></span>
     </a>
   </div>
@@ -127,6 +128,15 @@ const cluster = out[0].split(':')[0];
     const fit = () => view.style.setProperty('--s', String(Math.min(1, view.clientWidth / 1000)));
     new ResizeObserver(fit).observe(view);
     const load = () => { if (!frame.src) frame.src = frame.dataset.src || ''; };
+    // Open the report at data-at, scrolled in the frame's own window: a #fragment in the src would scroll the page
+    // to the frame as well, mid-scroll, when it loads. At most 56 px under the top, so the report's Contents, which
+    // counts a section from 60 px down, names this one and not the one before.
+    frame.addEventListener('load', () => {
+      const w = frame.contentWindow, d = frame.contentDocument, at = d?.getElementById(frame.dataset.at || '');
+      if (!w || !d || !at) return;
+      const pad = parseFloat(w.getComputedStyle(d.documentElement).scrollPaddingTop) || 0;
+      w.scrollTo(0, at.getBoundingClientRect().top + w.scrollY - Math.min(pad, 56));
+    }, { once: true });
 
     // The report takes the wheel only once clicked, or focused from the keyboard. The pointer leaving it,
     // or a click or focus elsewhere on the page, gives the wheel back to the page.
@@ -155,7 +165,7 @@ const cluster = out[0].split(':')[0];
       replay.hidden = false;
     };
 
-    if (!wide.matches) continue; // phones get the command and the preview; the iframe never loads there
+    if (!wide.matches) continue; // phones get the picture; the iframe never loads there
     if (still.matches) { finish(); }
     else { demo.dataset.state = 'idle'; }
     const seen = new IntersectionObserver((entries) => {

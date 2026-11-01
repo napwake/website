@@ -13,7 +13,10 @@ export const ANNOUNCEMENT = { id: 'v0.2.0-rc', text: 'Napwake 0.2.0 is in releas
 export const CF_BEACON = (globalThis.process?.env?.PUBLIC_CF_BEACON_TOKEN || '').trim() || null;
 
 export const NAME = 'Napwake';
-export const HEADLINE = 'Non-prod environments that sleep when nobody’s using them, and wake when someone does.';
+// The headline says what Napwake does (Tobi, 2026-10-31), and TRY sits under it, before the scan's commands.
+// PLAIN says the same in the third person, where a description needs a subject: the JSON-LD.
+export const HEADLINE = 'Pause idle Kubernetes workloads in staging, preview and dev. Wake them on the first request.';
+export const TRY = 'Try it before you install anything. One scan shows what your idle workloads cost.';
 export const PLAIN = 'Pauses idle Kubernetes workloads in staging, preview and dev, and wakes them on the first request.';
 export const NEVER = 'It never deletes a workload or its data.';
 export const WHAT = 'Napwake is open source (Apache 2.0): an operator, a `kubectl napwake` plugin and a Helm chart.';
@@ -31,7 +34,7 @@ export const STATUS = 'Version 0.2.0 is in release candidates.';
 
 // the website's pages: title, description (also each page's meta description), and its social card
 export const PAGES = [
-  { path: '/', title: 'Home', card: 'home', description: `${PLAIN} ${NEVER}`, line: 'What Napwake is, `kubectl napwake scan`, the four states, and how a wake works.' },
+  { path: '/', title: 'Home', card: 'home', description: `${HEADLINE} ${NEVER}`, line: 'What Napwake is, `kubectl napwake scan` and its report, installing Napwake to pause one workload, the four states, and how a wake works.' },
   { path: '/how-it-works/', title: 'How it works', card: 'how-it-works', description: 'How Napwake pauses idle Kubernetes workloads, holds the first request while they wake, can wake them 15 minutes early, and never deletes anything.', line: 'The activity clock, the doorman that holds the first request, the forecast’s `autoResume`, and what a pause changes.' },
   { path: '/compare/', title: 'How it compares', card: 'compare', description: 'Napwake pauses idle staging and wakes it on the first request. See it beside a timetable and a scale-to-zero proxy, from evening to morning.', line: 'Napwake, a timetable and a scale-to-zero proxy, through one evening and the next morning, and side by side.' },
   { path: '/faq/', title: 'FAQ', card: 'faq', description: 'Short answers to what people ask about Napwake: scaling staging to zero at night, the first request, Argo CD and Flux, GKE and EKS, production, cost.', line: 'Short answers, each complete on its own, with its source.' },

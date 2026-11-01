@@ -11,14 +11,15 @@ import { tmpdir } from 'node:os';
 import sharp from 'sharp';
 import { figure, POSES, handFilter, poseProps } from '../src/lib/rig/doorman.mjs';
 import { DOORMAN, tokenize } from '../src/lib/art.mjs';
-import { HEADLINE, PLAIN, PAGES } from '../src/lib/site.mjs';
+import { HEADLINE, PAGES } from '../src/lib/site.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'public/og');
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const CARDS = {
-  home: { pose: 'door', title: HEADLINE, line: PLAIN, size: 64 },
+  // the hero's try-it line, cut to two lines so it clears the four-line headline
+  home: { pose: 'door', title: HEADLINE, line: 'One read-only scan shows what your idle workloads cost.', size: 64 },
   'how-it-works': { pose: 'lights', title: 'It pauses workloads. Here’s when, and how they wake.', line: 'The activity clock, the doorman that holds the first request, and the forecast that can wake workloads 15 minutes early.' },
   compare: { pose: 'watch', title: 'Three ways to stop paying for idle staging.', line: 'Napwake, a timetable and a scale-to-zero proxy, through one evening and the next morning.' },
   faq: { pose: 'point', title: 'Questions people ask about Napwake.', line: 'Short answers, each complete on its own, with where it comes from.' },

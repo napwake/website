@@ -130,8 +130,7 @@ const forecast = [
         <h3 class="h3">Opting in</h3>
         <p>You opt in with a label on a workload or a whole namespace. Settings are annotations, in the manifests or Helm values you already keep in Git.</p>
         <p>Start in dry-run. It measures what it would pause and free, and never pauses anything. It can’t see requests, so a workload used with little CPU looks idler than it is. A Prometheus query on its request rate at the ingress fixes that.</p>
-        <Terminal command={[]} copy={false} label="deployment.yaml, opted in, in dry-run" output={[
-          [{ text: '# deployment.yaml', tone: 'dim' }],
+        <Terminal command={[]} copy={false} bar="deployment.yaml" label="deployment.yaml, opted in, in dry-run" output={[
           'metadata:', '  name: my-api', '  namespace: dev', '  labels:',
           '    napwake.dev/managed: "true"', '  annotations:', '    napwake.dev/dry-run: "true"', '    napwake.dev/idle-after: "1h"',
         ]} />

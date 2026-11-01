@@ -1,0 +1,258 @@
+---
+// What the scan shows, beside the commands that run it: the share card's words and the cluster drawn as the
+// building, for the example cluster (src/lib/scan-example.mjs reads both from the example report the product
+// rendered). It's the design system's WithNapwake, drawn at build time with the rig's building() and the tokens:
+// once the card is 55% in view, after duration-beat, each room lit for nobody goes dark in turn, top floor first,
+// duration-stagger apart, light first, and it rests on With Napwake. Now is one click away, and Play again replays.
+// Reduced motion: Now and With Napwake side by side, still. No script: Now.
+// The building is a night scene in both themes, so the card carries every token's dark value (tokens.css's own).
+import { building, BUILDING } from '../lib/rig/scene.mjs';
+import { SCENE, tokenize } from '../lib/art.mjs';
+import { readScan } from '../lib/scan-example.mjs';
+import report from '../../public/examples/scan-report/index.html?raw';
+import tokens from '../styles/tokens.css?raw';
+
+const scan = readScan(report);
+const fmt = (n) => n.toLocaleString('en-US');
+
+// the dark half of tokens.css, as the design system's DARK_TOKENS sets it on its Building
+const darkBlock = tokens.match(/@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{([\s\S]*?)\}\s*\}/)?.[1] || '';
+const dark = darkBlock.split(';').map((d) => d.trim()).filter((d) => d.startsWith('--')).join('; ');
+
+// The rig writes the scene's opacities as numbers: written as their tokens here, as the design system does.
+const art = tokenize(building({
+  at: scan.plan.at, T: SCENE, pose: 'rounds', id: 'hero-bldg',
+  O: { shadow: 'var(--cast-shadow-dark)', grain: 'var(--grain-dark)' },
+})).replace(/opacity="\.55"/g, 'style="opacity:var(--light-wedge)"').replace(/opacity="\.32"/g, 'style="opacity:var(--light-glow)"').replace(/opacity="\.28"/g, 'style="opacity:var(--lamp-halo)"');
+
+// the design system's words for the building (components.js: BLDG_WORDS, bldgLabel, bldgDrawn)
+const WORDS = { idle: ['lit for nobody', 'idle'], active: ['in use', 'active'], asleep: ['asleep', 'paused'], other: ['not judged', 'the notes say why'] };
+const describe = scan.kinds.filter((x) => x.n).map((x) => `${fmt(x.n)} ${WORDS[x.k][0]} (${WORDS[x.k][1]})`).join(', ');
+const exact = scan.plan.exact;
+const nowLabel = `A hotel at night, the cluster ${exact ? 'with one room per workload' : `drawn as ${BUILDING.ROOMS} rooms`}: ${describe}${exact && scan.total < BUILDING.ROOMS ? '. The rooms it doesn’t fill are shuttered.' : '.'}`;
+const afterLabel = 'The same hotel with Napwake: the rooms lit for nobody dark, the rest as they were.';
+const drawn = `${fmt(scan.total)} ${scan.total === 1 ? 'workload' : 'workloads'}, ${exact ? 'one room each' : `drawn as ${BUILDING.ROOMS} rooms`}.`;
+---
+<figure class="result" style={dark} data-result data-goers={scan.goers}>
+  <div class="result__in">
+  <div class="result__words">
+    <p class="result__eyebrow"><span>{scan.eyebrow}</span><span class="result__tag">Example cluster</span></p>
+    <p class="result__statement">{scan.statement}</p>
+    <p class="result__fig">{scan.value}</p>
+    <p class="result__label">{scan.label}.</p>
+    <p class="result__src">{scan.source}</p>
+  </div>
+  <div class="result__art" data-pics>
+    <div class="result__pic result__pic--now">
+      <p class="result__pl" aria-hidden="true">Now</p>
+      <svg class="result__svg" viewBox={`0 0 ${BUILDING.W} ${BUILDING.H}`} role="img" aria-label={nowLabel} data-label-now={nowLabel} data-label-after={afterLabel} focusable="false" set:html={art} />
+    </div>
+  </div>
+  <figcaption class="result__bar">
+    <div class="result__seg" role="group" aria-label="Show the building" data-seg hidden>
+      <button type="button" data-mode="now" aria-pressed="true">Now</button>
+      <button type="button" data-mode="after" aria-pressed="false" class="result__would">With Napwake</button>
+    </div>
+    <p class="result__cap">
+      <span class="result__cap-now">{drawn}</span>
+      <span class="result__cap-after">Nothing is paused. This is what Napwake would do.</span>
+      <span class="result__cap-still">{drawn} With Napwake shows what Napwake would do, and nothing is paused.</span>
+    </p>
+    <span class="result__ticker" data-ticker aria-hidden="true" hidden></span>
+    <button type="button" class="result__replay" data-replay hidden>Play again</button>
+  </figcaption>
+  </div>
+</figure>
+
+<style>
+  .result {
+    container-type: inline-size; color-scheme: dark; position: relative; margin: 0; min-width: 0; overflow: hidden;
+    border-radius: var(--radius-xl); background: var(--surface); color: var(--text); font-family: var(--font-sans);
+    border: 1px solid var(--line);
+  }
+  .result__in { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "words" "art" "bar"; }
+  .result__words { grid-area: words; min-width: 0; padding: var(--space-6) var(--space-6) var(--space-2); }
+  .result__words p { margin: 0; }
+  .result__eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .result__tag { font: 700 11px/1 var(--font-mono); letter-spacing: .06em; color: var(--accent-text); border: 1px solid currentColor; border-radius: var(--radius-sm); padding: 4px 6px; }
+  .result__statement { margin-top: var(--space-4) !important; font: 700 19px/1.3 var(--font-sans); color: var(--paper); text-wrap: balance; }
+  .result__fig { margin-top: var(--space-2) !important; font: 800 96px/.82 var(--font-display); color: var(--paper); white-space: nowrap; padding-top: .06em; }
+  .result__label { margin-top: var(--space-4) !important; font: 700 17px/1.4 var(--font-sans); color: var(--paper); max-width: 26em; text-wrap: pretty; }
+  .result__src { margin-top: var(--space-3) !important; font: 400 13px/1.5 var(--font-mono); color: var(--muted); }
+
+  .result__art { grid-area: art; display: grid; grid-template-columns: minmax(0, 1fr); align-items: end; justify-items: center; min-width: 0; padding: var(--space-4) var(--space-6) 0; }
+  .result__pic { grid-area: 1 / 1; width: 100%; max-width: 200px; min-width: 0; }
+  .result__pl { display: none; margin: 0 0 var(--space-2); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text); text-align: center; }
+  .result__pic--after .result__pl { color: var(--accent-text); }
+  /* the street runs past the drawing's edges, so it meets the card's at any width */
+  .result__svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .result :global(.room) { transition: none; }
+
+  /* Now, With Napwake, and what the picture counts, on the street */
+  /* One height in every state, as the design system asks: the count and Play again share one place, and the
+     caption keeps room for its two lines. Narrow, the switch and that place on one row, the caption under them. */
+  .result__bar { grid-area: bar; position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(39px, auto) auto; grid-template-areas: "seg end" "cap cap"; align-items: center; gap: var(--space-2) var(--space-4); margin: 0; padding: var(--space-3) var(--space-6) var(--space-4); background: var(--scene-floor); }
+  .result__seg { grid-area: seg; }
+  /* no script, or still: no switch and no count, so no row kept for them */
+  .result__bar:has(> .result__seg[hidden]) { grid-template-rows: auto; }
+  .result__ticker, .result__replay { grid-area: end; justify-self: end; text-align: right; }
+  .result__cap { grid-area: cap; min-height: 2.9em; margin: 0; font: 400 14px/1.45 var(--font-sans); color: var(--muted); }
+  .result__cap-after, .result__cap-still { display: none; }
+  .result.is-would .result__cap-now { display: none; }
+  .result.is-would .result__cap-after { display: inline; }
+  .result__seg { display: inline-flex; flex: none; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg); }
+  .result__seg[hidden] { display: none; }
+  .result__seg button { margin: 0; padding: var(--space-1) 10px; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--muted); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: color var(--duration-ui-short) var(--ease-calm), background-color var(--duration-ui-short) var(--ease-calm); }
+  .result__seg button:hover { color: var(--text); }
+  .result__seg button:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+  .result__seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--line); }
+  .result__seg button.result__would[aria-pressed="true"] { color: var(--accent-text); }
+  .result__ticker { flex: none; font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+  .result__replay { flex: none; margin: 0; padding: var(--space-1) 0; border: 0; background: none; color: var(--action); font: 700 12px/1.6 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .result__replay:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+  .result__ticker[hidden], .result__replay[hidden] { display: none; }
+
+  /* still: Now and With Napwake side by side, each labelled (the script adds With Napwake) */
+  .result.is-still .result__art { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--space-4); }
+  .result.is-still .result__pic { grid-area: auto; }
+  .result.is-still .result__pl { display: block; }
+  .result.is-still .result__cap-now, .result.is-still .result__cap-after { display: none; }
+  .result.is-still .result__cap-still { display: inline; }
+
+  /* wide: the words on the left, the building on the right with its street on the bar */
+  @container (min-width: 540px) {
+    .result__words { padding: var(--space-8) 0 var(--space-6) var(--space-8); }
+    /* "54% less" is about 3.3em wide: as large as the words column allows, at most 132 px */
+    .result__fig { font-size: clamp(80px, calc(18.6cqi - 14px), 132px); }
+    .result__statement { font-size: 20px; }
+    .result__art { padding: var(--space-6) var(--space-6) 0 0; }
+    .result__pic { max-width: none; }
+    .result__bar { padding: var(--space-3) var(--space-8) var(--space-4); }
+  }
+  @container (min-width: 540px) {
+    .result__in { grid-template-columns: minmax(0, 1fr) 38%; grid-template-areas: "words art" "bar bar"; }
+    .result.is-still .result__in { grid-template-columns: minmax(0, 1fr); grid-template-areas: "words" "art" "bar"; }
+  }
+  @container (min-width: 540px) {
+    .result.is-still .result__art { padding: 0 var(--space-8); }
+    .result.is-still .result__pic { max-width: 220px; justify-self: center; }
+  }
+  /* wide: one row, as before, where the count fits beside the caption. Only the switch, shown once the motion
+     starts, would add height, so its row is kept from the start */
+  @container (min-width: 540px) {
+    .result__bar { display: flex; flex-wrap: wrap; min-height: calc(41px + var(--space-3) + var(--space-4)); }
+    .result__cap { flex: 1 1 12em; min-height: 0; }
+    .result__ticker, .result__replay { flex: none; }
+  }
+</style>
+
+<script>
+  // Turning the lights off, as the design system's WithNapwake does (tools/components.js: paintRooms):
+  // the lamp goes out (duration-ui-short), the room's light from 150 ms (duration-ui-long), then the leaf swings
+  // shut over the dark room from 600 ms (duration-ui-long) and the knob shows. Its end is exactly the asleep door.
+  type T = { ease: (x: number) => number; short: number; long: number; stagger: number; beat: number };
+  const tokenTime = (el: Element, name: string, fallback: number) => {
+    const m = /^([\d.]+)(ms|s)$/.exec(getComputedStyle(el).getPropertyValue('--' + name).trim());
+    return m ? parseFloat(m[1]) * (m[2] === 's' ? 1000 : 1) : fallback;
+  };
+  const bezier = (x1: number, y1: number, x2: number, y2: number) => (x: number) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const dx = 3 * x1 * t * (1 - t) * (1 - t) + 3 * x2 * t * t * (1 - t) + t * t * t - x;
+      const d = 3 * x1 * (1 - t) * (1 - 3 * t) + 3 * x2 * t * (2 - 3 * t) + 3 * t * t;
+      if (Math.abs(dx) < 1e-5 || !d) break;
+      t = Math.max(0, Math.min(1, t - dx / d));
+    }
+    return 3 * y1 * t * (1 - t) * (1 - t) + 3 * y2 * t * t * (1 - t) + t * t * t;
+  };
+  const timing = (el: Element): T => {
+    const m = /cubic-bezier\(([^)]*)\)/.exec(getComputedStyle(el).getPropertyValue('--ease-calm'));
+    const p = m ? m[1].split(',').map(parseFloat) : [0.45, 0, 0.2, 1];
+    return { ease: bezier(p[0], p[1], p[2], p[3]), short: tokenTime(el, 'duration-ui-short', 300), long: tokenTime(el, 'duration-ui-long', 600), stagger: tokenTime(el, 'duration-stagger', 340), beat: tokenTime(el, 'duration-beat', 1200) };
+  };
+  const paint = (rooms: Element[], t: number, T: T) => {
+    const end = 600 + T.long;
+    rooms.forEach((g, i) => {
+      const u = t - i * T.stagger;
+      const q = (s: string) => g.querySelector<SVGElement>(s);
+      const lamp = q('.r-lamp'), lit = q('.r-lit'), open = q('.r-open'), shut = q('.r-shut');
+      if (lamp) lamp.style.opacity = String(1 - T.ease(u / T.short));
+      if (lit) lit.style.opacity = String(1 - T.ease((u - 150) / T.long));
+      if (open) open.style.opacity = String(1 - T.ease((u - 600) / T.short));
+      if (shut) { shut.style.opacity = u < 600 ? '0' : String(T.ease((u - 600) / 150)); shut.setAttribute('transform', `scale(${(0.06 + 0.94 * T.ease((u - 600) / T.long)).toFixed(3)} 1)`); }
+      g.classList.toggle('is-off', u >= end);
+    });
+    return rooms.length ? (rooms.length - 1) * T.stagger + end : 0;
+  };
+  // the rooms that go dark, in the order they do: lit for nobody and not kept on, top floor first, left to right
+  const goers = (root: Element) => [...root.querySelectorAll('.room[data-k="idle"]')].filter((g) => !g.hasAttribute('data-stays'));
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-result]')) {
+    const T = timing(root);
+    const pics = root.querySelector<HTMLElement>('[data-pics]')!;
+    const nowPic = pics.querySelector<HTMLElement>('.result__pic--now')!;
+    const svg = nowPic.querySelector('svg')!;
+    const seg = root.querySelector<HTMLElement>('[data-seg]')!;
+    const btns = [...seg.querySelectorAll<HTMLButtonElement>('button')];
+    const ticker = root.querySelector<HTMLElement>('[data-ticker]')!;
+    const replay = root.querySelector<HTMLButtonElement>('[data-replay]')!;
+    const go = Number(root.dataset.goers || 0);
+    const rooms = goers(svg);
+    if (!rooms.length) continue;
+    const fmt = (n: number) => n.toLocaleString('en-US');
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window) || !window.requestAnimationFrame;
+
+    if (still) {
+      // Now and With Napwake side by side, still, each labelled. The copy's ids get a suffix, so none repeats.
+      const after = nowPic.cloneNode(true) as HTMLElement;
+      after.className = 'result__pic result__pic--after';
+      after.querySelector('.result__pl')!.textContent = 'With Napwake';
+      const s = after.querySelector('svg')!;
+      s.innerHTML = s.innerHTML.replace(/id="([^"]+)"/g, 'id="$1-after"').replace(/url\(#([^)]+)\)/g, 'url(#$1-after)');
+      s.setAttribute('aria-label', s.dataset.labelAfter || '');
+      pics.appendChild(after);
+      paint(goers(s), Infinity, T);
+      root.classList.add('is-still');
+      continue;
+    }
+
+    let anim = 0, timer = 0, played = false;
+    const show = (would: boolean) => {
+      root.classList.toggle('is-would', would);
+      svg.setAttribute('aria-label', (would ? svg.dataset.labelAfter : svg.dataset.labelNow) || '');
+      btns.forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.mode === 'after') === would)));
+    };
+    const count = (p: number) => { ticker.textContent = `Lights off: ${fmt(Math.round(go * p))} of ${fmt(go)}`; };
+    const play = () => {
+      cancelAnimationFrame(anim);
+      played = true; replay.hidden = true; count(0); ticker.hidden = false; show(true);
+      let t0: number | null = null;
+      const len = paint(rooms, 0, T);
+      const step = (t: number) => {
+        if (t0 === null) t0 = t;
+        paint(rooms, t - t0, T);
+        const off = rooms.filter((g) => g.classList.contains('is-off')).length / rooms.length;
+        count(off);
+        if (t - t0 < len) anim = requestAnimationFrame(step);
+        else { anim = 0; ticker.hidden = true; replay.hidden = false; }
+      };
+      anim = requestAnimationFrame(step);
+    };
+    seg.hidden = false;
+    const io = new IntersectionObserver((es) => {
+      if (played || !es[0].isIntersecting) return;
+      io.disconnect(); played = true; timer = window.setTimeout(play, T.beat);
+    }, { threshold: 0.55 });
+    io.observe(pics);
+    btns.forEach((b) => b.addEventListener('click', () => {
+      played = true; clearTimeout(timer); cancelAnimationFrame(anim); anim = 0; io.disconnect();
+      ticker.hidden = true; replay.hidden = false;
+      const would = b.dataset.mode === 'after';
+      paint(rooms, would ? Infinity : 0, T);
+      show(would);
+    }));
+    replay.addEventListener('click', () => { paint(rooms, 0, T); show(false); replay.hidden = true; timer = window.setTimeout(play, T.long); });
+  }
+</script>

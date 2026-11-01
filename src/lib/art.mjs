@@ -117,6 +117,14 @@ export function roomLayers(x, fy, { sc = 1, filter = null, state = 'asleep', nam
   return tokenize(`<g class="nr" data-room="${name}" data-s="${state}" transform="translate(${f(x)} 0)"${filter ? ` filter="url(#${filter})"` : ''}>${layers}</g>`);
 }
 
+// The same room, still: roomLayers with only the layers its state shows, as ThreeWays' CSS shows them at rest, so a
+// picture that never changes state needs none of that CSS. The waking wedge keeps class="wedge" for the page to breathe.
+export const ROOM_SHOWS = { asleep: ['r-shut'], out: ['r-shut', 'r-out'], idle: ['r-lit', 'r-open', 'r-lamp'], active: ['r-lit', 'r-guest', 'r-open', 'r-lamp'], waking: ['r-wake'] };
+export function roomStill(x, fy, o = {}) {
+  const shows = ROOM_SHOWS[o.state ?? 'asleep'];
+  return roomLayers(x, fy, o).replace(/<g class="(r-[a-z]+)">.*?<\/g>/g, (m, layer) => (shows.includes(layer) ? m : ''));
+}
+
 // The light switch on a corridor's wall, from the rig's props: one for a whole floor, as a timetable is.
 export function wallSwitch(cx, cy, { k = 1.6 } = {}) {
   const at = (on) => `<g class="sw sw--${on ? 'on' : 'off'}" transform="translate(${f(cx)} ${f(cy)}) scale(${k})">${PROPS.switchplate(0, 0, on, DOORMAN)}</g>`;

@@ -1,6 +1,6 @@
 // /llms.txt (llmstxt.org): what Napwake is, who it's for, what it won't do, and every page with one line,
 // for assistants and agents. Built from src/lib/site.mjs and faq.mjs, the same words as the pages.
-import { NAME, HEADLINE, PLAIN, NEVER, WHAT, FOR, REACH, WONT, STATUS, PAGES, DOC_PAGES, abs } from '../lib/site.mjs';
+import { NAME, HEADLINE, NEVER, WHAT, FOR, REACH, WONT, STATUS, PAGES, DOC_PAGES, abs } from '../lib/site.mjs';
 import { FAQ } from '../lib/faq.mjs';
 import { REPO, links } from '../lib/links.mjs';
 import { BLOG } from '../lib/blog.mjs';
@@ -11,9 +11,9 @@ export function GET() {
   const out = [
     `# ${NAME}`,
     '',
-    `> ${PLAIN}`,
+    `> ${HEADLINE}`,
     '',
-    `${HEADLINE} ${NEVER} ${WHAT}`,
+    `${NEVER} ${WHAT}`,
     '',
     `- For: ${FOR.replace(/^For /, '')}`,
     `- Where: non-production environments, private or public. ${REACH}`,
