@@ -2,6 +2,18 @@
   "source": "github.com/napwake/napwake",
   "releases": [
     {
+      "tag": "v0.2.0",
+      "date": "2026-11-08",
+      "prerelease": false,
+      "url": "https://github.com/napwake/napwake/releases/tag/v0.2.0"
+    },
+    {
+      "tag": "v0.2.0-rc.13",
+      "date": "2026-11-01",
+      "prerelease": true,
+      "url": "https://github.com/napwake/napwake/releases/tag/v0.2.0-rc.13"
+    },
+    {
       "tag": "v0.2.0-rc.11",
       "date": "2026-10-27",
       "prerelease": true,

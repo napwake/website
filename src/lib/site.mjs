@@ -4,8 +4,8 @@
 import { SITE, DOCS, doc } from './links.mjs';
 
 // The announcement bar: its id is what a visitor's dismissal remembers, so a new announcement shows again.
-// It must stay true: 0.2.0 is in release candidates until it ships.
-export const ANNOUNCEMENT = { id: 'v0.2.0-rc', text: 'Napwake 0.2.0 is in release candidates', link: { href: '/changelog/', label: 'Read the changelog' } };
+// It must stay true: 0.2.0 was released on 8 Nov 2026.
+export const ANNOUNCEMENT = { id: 'v0.2.0', text: 'Napwake 0.2.0 is out', link: { href: '/changelog/', label: 'Read the changelog' } };
 
 // Cloudflare Web Analytics' beacon, on every page when PUBLIC_CF_BEACON_TOKEN is set at build time (the deploy
 // workflow sets it), and off otherwise (Base.astro). The token is public by design. /privacy/ says what it
@@ -35,7 +35,7 @@ export const WONT = [
   'Replace your autoscaler. While a workload runs, its HPA or KEDA decides how many replicas it needs. Napwake only decides whether it should run at all.',
   'Guess who’s a person. Napwake can’t tell. On an environment anyone can reach, set it to ask. Then requests wake nothing, and a browser gets a Wake it button.',
 ];
-export const STATUS = 'Version 0.2.0 is in release candidates.';
+export const STATUS = 'Version 0.2.0, released on 8 November 2026.';
 
 // the website's pages: title, description (also each page's meta description), and its social card
 export const PAGES = [
@@ -43,7 +43,7 @@ export const PAGES = [
   { path: '/how-it-works/', title: 'How it works', card: 'how-it-works', description: 'How Napwake pauses idle Kubernetes workloads, holds the first request while they wake, can wake them 15 minutes early, and never deletes anything.', line: 'The activity clock, the doorman that holds the first request, the forecast’s `autoResume`, and what a pause changes.' },
   { path: '/compare/', title: 'How it compares', card: 'compare', description: 'Napwake pauses idle staging and wakes it on the first request. See it beside a timetable and a scale-to-zero proxy, from evening to morning.', line: 'Napwake, a timetable and a scale-to-zero proxy, through one evening and the next morning, and side by side.' },
   { path: '/faq/', title: 'FAQ', card: 'faq', description: 'Short answers to what people ask about Napwake: scaling staging to zero at night, the first request, Argo CD and Flux, GKE and EKS, production, cost.', line: 'Short answers, each complete on its own, with its source.' },
-  { path: '/changelog/', title: 'Changelog', card: 'changelog', description: 'What’s new in each Napwake release, newest first. A summary in plain words, then everything added, changed and fixed. 0.2.0 is in release candidates.', line: 'What’s new in each release from 0.2.0, newest first. 0.2.0 is in release candidates.' },
+  { path: '/changelog/', title: 'Changelog', card: 'changelog', description: 'What’s new in each Napwake release, newest first. A summary in plain words, then everything added, changed and fixed.', line: 'What’s new in each release from 0.2.0, newest first.' },
   { path: '/blog/', title: 'Blog', card: 'blog', description: 'Release announcements from Napwake, and how it’s built.', line: 'Release announcements, and how Napwake is built.' },
   { path: '/brand/', title: 'Brand and trademarks', card: 'brand', description: 'The Napwake logo, the doorman and the doors: where to get them, how to credit the illustrations, and how you may use the name and logo.', line: 'The logo, the doorman illustrations (CC BY 4.0), and the trademark rules.' },
   CF_BEACON

@@ -17,7 +17,8 @@ func TestTerminalSample(t *testing.T) {
 	}
 	require.NoError(t, os.MkdirAll(dir, 0o755))
 	var out bytes.Buffer
-	require.NoError(t, writeTable(&out, firstScan(), 25))
+	// The share link as the plugin prints it, from the same report the HTML page is built from.
+	require.NoError(t, writeTable(&out, firstScan(), 25, buildReport(firstScan(), 3600e9).ShareLink))
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "scan-first.txt"), out.Bytes(), 0o644))
 	var page bytes.Buffer
 	require.NoError(t, writeHTML(&page, firstScan(), 3600e9))

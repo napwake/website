@@ -38,7 +38,7 @@ const CNCF_SURVEY = 'https://www.cncf.io/blog/2023/12/20/cncf-cloud-native-finop
 // Installing, as the scan's own next steps say it (cmd/kubectl-napwake, the example's output in
 // src/content/examples/scan-first.txt) and the docs' Installation and Quickstart pages. The chart's version is
 // LATEST_TAG's without its v (src/lib/changelog.mjs): the newest full release, or the newest release candidate
-// while there's none, so the command works today. 0.2.0-rc.11 until 0.2.0 ships, then never a later candidate.
+// while there's none, so the command works today. 0.2.0 from 8 Nov 2026, and never a later candidate.
 const chart = (LATEST_TAG?.tag || 'v0.2.0').replace(/^v/, '');
 const helm = `helm install napwake \\\n  oci://ghcr.io/napwake/charts/napwake \\\n  --version ${chart} \\\n  --namespace napwake-system \\\n  --create-namespace \\\n  -f napwake-values.yaml`;
 // The values file, made by the copy so nobody writes one by hand for one line (Tobi, 2026-10-31, cmo-076). >> keeps

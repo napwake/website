@@ -59,9 +59,10 @@ Prices: AWS us-east-1 list prices · 3 node types · 3 workloads on spot, priced
 Pass --cpu-price and --memory-price for yours.
 
 Next steps:
-  1. Install Napwake, if the cluster doesn't have it yet. Put your users' time zone in
-     napwake-values.yaml first, such as timezone: Europe/London. Then:
-       helm install napwake oci://ghcr.io/napwake/charts/napwake --version 0.2.0-rc.11 --namespace napwake-system --create-namespace -f napwake-values.yaml
+  1. Install Napwake, if the cluster doesn't have it yet.
+     Change Europe/London to your users' time zone.
+       printf '\ntimezone: Europe/London\n' >> napwake-values.yaml
+       helm install napwake oci://ghcr.io/napwake/charts/napwake --version 0.2.0 --namespace napwake-system --create-namespace -f napwake-values.yaml
      See https://docs.napwake.dev/getting-started/installation/
   2. Measure a workload first, in dry-run, which pauses nothing:
        kubectl annotate statefulset search -n staging napwake.dev/dry-run=true
@@ -69,3 +70,4 @@ Next steps:
   3. When you're happy with what it measures, start pausing it while idle:
        kubectl napwake enable statefulset/search -n staging
 
+Share these numbers: https://napwake.dev/s/54/?v=1&with=600&without=1290&src=7
